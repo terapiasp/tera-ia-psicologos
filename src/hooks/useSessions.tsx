@@ -64,8 +64,13 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
 
       const { data, error } = await query.order('scheduled_at', { ascending: true });
 
-      if (error) throw error;
-      return data as Session[];
+      if (error) {
+        console.error('Sessions query error:', error);
+        throw error;
+      }
+      
+      console.log('Sessions query result:', { data, startDate, endDate });
+      return data as Session[] || [];
     },
     enabled: !!user?.id,
   });
