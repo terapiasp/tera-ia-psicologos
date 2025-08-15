@@ -103,7 +103,7 @@ const Index = () => {
     return 'pending';
   }
 
-  const isLoading = profileLoading || todayLoading || tomorrowLoading;
+  const isLoading = profileLoading;
 
   if (isLoading) {
     return (
