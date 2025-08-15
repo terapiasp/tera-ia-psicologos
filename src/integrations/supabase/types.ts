@@ -132,29 +132,62 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          clinic_name: string | null
+          country: string | null
           created_at: string
+          crp_number: string | null
           email: string
           id: string
+          metadata: Json
           name: string
+          onboarding_completed: boolean | null
           phone: string | null
+          state: string | null
+          timezone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          clinic_name?: string | null
+          country?: string | null
           created_at?: string
+          crp_number?: string | null
           email: string
           id?: string
+          metadata?: Json
           name: string
+          onboarding_completed?: boolean | null
           phone?: string | null
+          state?: string | null
+          timezone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          clinic_name?: string | null
+          country?: string | null
           created_at?: string
+          crp_number?: string | null
           email?: string
           id?: string
+          metadata?: Json
           name?: string
+          onboarding_completed?: boolean | null
           phone?: string | null
+          state?: string | null
+          timezone?: string | null
           updated_at?: string
           user_id?: string
         }
