@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ const Profile = () => {
   });
 
   // Atualizar formData quando o profile carrega
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setFormData({
         name: profile.name || "",
@@ -38,7 +38,7 @@ const Profile = () => {
         state: profile.state || "",
       });
     }
-  });
+  }, [profile]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

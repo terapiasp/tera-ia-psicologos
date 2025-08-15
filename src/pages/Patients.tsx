@@ -1,59 +1,14 @@
-import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-
-interface Patient {
-  id: string;
-  name: string;
-  nickname?: string;
-  email?: string;
-  phone?: string;
-  whatsapp: string;
-  birth_date?: string;
-  therapy_type: string;
-  frequency: string;
-  session_mode: string;
-  status: string;
-  created_at: string;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePatients } from "@/hooks/usePatients";
+import { NewPatientDialog } from "@/components/patients/NewPatientDialog";
 
 const Patients = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      fetchPatients();
-    }
-  }, [user]);
-
-  const fetchPatients = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPatients(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar pacientes: " + error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { patients, isLoading } = usePatients();
 
   const getTherapyTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -87,7 +42,7 @@ const Patients = () => {
     return statuses[status] || status;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -122,10 +77,12 @@ const Patients = () => {
                   Gerencie seus pacientes e acompanhe o histórico de atendimentos
                 </p>
               </div>
-              <Button className="bg-gradient-primary hover:opacity-90">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Paciente
-              </Button>
+              <NewPatientDialog>
+                <Button className="bg-gradient-primary hover:opacity-90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Paciente
+                </Button>
+              </NewPatientDialog>
             </div>
 
             {patients.length === 0 ? (
@@ -138,10 +95,12 @@ const Patients = () => {
                   <p className="text-muted-foreground mb-4">
                     Comece adicionando seu primeiro paciente
                   </p>
-                  <Button className="bg-gradient-primary hover:opacity-90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Primeiro Paciente
-                  </Button>
+                  <NewPatientDialog>
+                    <Button className="bg-gradient-primary hover:opacity-90">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Primeiro Paciente
+                    </Button>
+                  </NewPatientDialog>
                 </CardContent>
               </Card>
             ) : (

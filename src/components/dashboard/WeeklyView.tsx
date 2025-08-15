@@ -8,17 +8,11 @@ interface WeekDay {
   isToday?: boolean;
 }
 
-const weekData: WeekDay[] = [
-  { date: "15", day: "SEG", sessions: 4, isToday: true },
-  { date: "16", day: "TER", sessions: 6 },
-  { date: "17", day: "QUA", sessions: 3 },
-  { date: "18", day: "QUI", sessions: 5 },
-  { date: "19", day: "SEX", sessions: 4 },
-  { date: "20", day: "SÁB", sessions: 2 },
-  { date: "21", day: "DOM", sessions: 0 },
-];
+interface WeeklyViewProps {
+  weekData: WeekDay[];
+}
 
-export function WeeklyView() {
+export function WeeklyView({ weekData }: WeeklyViewProps) {
   return (
     <Card className="shadow-soft">
       <CardHeader>
