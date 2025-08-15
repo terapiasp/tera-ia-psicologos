@@ -9,14 +9,14 @@ const navigation = [
     icon: Home,
   },
   {
+    name: "Pacientes",
+    href: "/patients",
+    icon: Users,
+  },
+  {
     name: "Agenda",
     href: "/agenda",
     icon: CalendarDays,
-  },
-  {
-    name: "Pacientes",
-    href: "/pacientes",
-    icon: Users,
   },
   {
     name: "Relatórios",

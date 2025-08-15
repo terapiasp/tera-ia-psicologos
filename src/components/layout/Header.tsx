@@ -1,4 +1,4 @@
-import { Bell, Calendar, Menu, User } from "lucide-react";
+import { Bell, Calendar, LogOut, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,8 +7,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast({ title: "Logout realizado com sucesso!" });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer logout: " + error.message,
+        variant: "destructive"
+      });
+    }
+  };
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between px-4">
@@ -73,13 +92,16 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <User className="h-4 w-4" />
-                <span className="hidden md:block ml-2">Dr. Maria Silva</span>
+                <span className="hidden md:block ml-2">{user?.email}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Perfil</DropdownMenuItem>
               <DropdownMenuItem>Configurações</DropdownMenuItem>
-              <DropdownMenuItem>Sair</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
