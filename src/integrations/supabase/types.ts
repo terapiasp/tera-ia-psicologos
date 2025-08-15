@@ -67,42 +67,68 @@ export type Database = {
           address: string | null
           birth_date: string | null
           created_at: string
+          custom_frequency: string | null
           email: string | null
+          frequency: string
           id: string
           name: string
+          nickname: string | null
           phone: string | null
-          source: string
+          service_modality_id: string | null
+          session_mode: string
           status: string
+          therapy_type: string
           updated_at: string
           user_id: string
+          whatsapp: string
         }
         Insert: {
           address?: string | null
           birth_date?: string | null
           created_at?: string
+          custom_frequency?: string | null
           email?: string | null
+          frequency?: string
           id?: string
           name: string
+          nickname?: string | null
           phone?: string | null
-          source?: string
+          service_modality_id?: string | null
+          session_mode?: string
           status?: string
+          therapy_type?: string
           updated_at?: string
           user_id: string
+          whatsapp?: string
         }
         Update: {
           address?: string | null
           birth_date?: string | null
           created_at?: string
+          custom_frequency?: string | null
           email?: string | null
+          frequency?: string
           id?: string
           name?: string
+          nickname?: string | null
           phone?: string | null
-          source?: string
+          service_modality_id?: string | null
+          session_mode?: string
           status?: string
+          therapy_type?: string
           updated_at?: string
           user_id?: string
+          whatsapp?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "patients_service_modality_id_fkey"
+            columns: ["service_modality_id"]
+            isOneToOne: false
+            referencedRelation: "service_modalities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -129,6 +155,48 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_modalities: {
+        Row: {
+          commission_percentage: number | null
+          commission_type: string | null
+          commission_value: number | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          session_value: number | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission_percentage?: number | null
+          commission_type?: string | null
+          commission_value?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          session_value?: number | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission_percentage?: number | null
+          commission_type?: string | null
+          commission_value?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          session_value?: number | null
+          type?: string
           updated_at?: string
           user_id?: string
         }
@@ -192,7 +260,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_default_terapia_sp_modality: {
+        Args: { target_user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
