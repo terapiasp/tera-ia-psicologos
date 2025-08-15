@@ -18,6 +18,18 @@ const Index = () => {
   const { sessions: tomorrowSessionsRaw, isLoading: tomorrowLoading } = useTomorrowSessions();
   const { patients } = usePatients();
   
+  // Debug logs
+  console.log('Dashboard Debug:', {
+    profile,
+    profileLoading,
+    todaySessionsRaw,
+    todayLoading,
+    tomorrowSessionsRaw,
+    tomorrowLoading,
+    patients,
+    patientsLength: patients?.length
+  });
+  
   // Dados para estatísticas mensais
   const currentMonth = new Date();
   const { sessions: monthSessions } = useSessions(startOfMonth(currentMonth), endOfMonth(currentMonth));
