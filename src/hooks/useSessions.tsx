@@ -155,6 +155,11 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
 // Hook especializado para sessions de hoje
 export const useTodaySessions = () => {
   const today = new Date();
+  console.log('Today hook - Date range:', { 
+    start: startOfDay(today).toISOString(), 
+    end: endOfDay(today).toISOString(),
+    today: today.toISOString()
+  });
   return useSessions(today, today);
 };
 
@@ -162,5 +167,10 @@ export const useTodaySessions = () => {
 export const useTomorrowSessions = () => {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
+  console.log('Tomorrow hook - Date range:', { 
+    start: startOfDay(tomorrow).toISOString(), 
+    end: endOfDay(tomorrow).toISOString(),
+    tomorrow: tomorrow.toISOString()
+  });
   return useSessions(tomorrow, tomorrow);
 };
