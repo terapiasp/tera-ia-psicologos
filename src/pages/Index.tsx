@@ -78,6 +78,19 @@ const Index = () => {
     isToday: isSameDay(day, new Date())
   }));
 
+  // Função para saudação baseada no horário
+  function getTimeGreeting() {
+    const currentHour = new Date().getHours();
+    
+    if (currentHour >= 5 && currentHour < 12) {
+      return "Bom dia";
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return "Boa tarde";
+    } else {
+      return "Boa noite";
+    }
+  }
+
   function getSessionTypeLabel(type: string) {
     const types: Record<string, string> = {
       'individual': 'Individual',
@@ -140,7 +153,7 @@ const Index = () => {
             {/* Welcome Section */}
             <div className="bg-gradient-primary p-6 rounded-lg text-white shadow-medium">
               <h1 className="text-2xl font-bold mb-2">
-                Bem-vind{profile?.name?.includes('a') ? 'a' : 'o'}, {profile?.name?.split(' ')[0] || 'Dr(a)'}
+                {getTimeGreeting()}, {profile?.name?.split(' ')[0] || 'Dr(a)'}!
               </h1>
               <p className="text-white/80">
                 Hoje você tem {todaySessionsCount} sessão{todaySessionsCount !== 1 ? 's' : ''} agendada{todaySessionsCount !== 1 ? 's' : ''}
