@@ -18,17 +18,6 @@ const Index = () => {
   const { sessions: tomorrowSessionsRaw, isLoading: tomorrowLoading } = useTomorrowSessions();
   const { patients } = usePatients();
   
-  // Debug logs
-  console.log('Dashboard Debug:', {
-    profile,
-    profileLoading,
-    todaySessionsRaw,
-    todayLoading,
-    tomorrowSessionsRaw,
-    tomorrowLoading,
-    patients,
-    patientsLength: patients?.length
-  });
   
   // Dados para estatísticas mensais
   const currentMonth = new Date();
@@ -66,7 +55,12 @@ const Index = () => {
   const confirmedToday = todaySessions.filter(s => s.status === 'confirmed').length;
   const pendingToday = todaySessions.filter(s => s.status === 'pending').length;
   
-  const monthlyRevenue = monthSessions
+  // Receita prevista (todas as sessões com valor) e recebida (apenas pagas)
+  const monthlyPredicted = monthSessions
+    .filter(s => s.value)
+    .reduce((sum, s) => sum + (s.value || 0), 0);
+  
+  const monthlyReceived = monthSessions
     .filter(s => s.paid && s.value)
     .reduce((sum, s) => sum + (s.value || 0), 0);
   
@@ -170,8 +164,8 @@ const Index = () => {
               />
               <StatsCard
                 title="Receita Mensal"
-                value={`R$ ${monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                description={format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+                value={`R$ ${monthlyPredicted.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                description={`Recebido R$ ${monthlyReceived.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} · ${format(currentMonth, "MMMM yyyy", { locale: ptBR })}`}
                 icon={DollarSign}
               />
               <StatsCard

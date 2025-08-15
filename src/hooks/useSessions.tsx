@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
+import { useMemo } from 'react';
 
 export interface Session {
   id: string;
@@ -37,7 +38,17 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const queryKey = ['sessions', startDate?.toISOString(), endDate?.toISOString()];
+  // Memoizar os filtros de data para evitar mudanças desnecessárias
+  const dateFilters = useMemo(() => {
+    if (!startDate || !endDate) return { startISO: null, endISO: null };
+    
+    return {
+      startISO: startOfDay(startDate).toISOString(),
+      endISO: endOfDay(endDate).toISOString()
+    };
+  }, [startDate, endDate]);
+
+  const queryKey = ['sessions', dateFilters.startISO || 'none', dateFilters.endISO || 'none'];
 
   const { data: sessions = [], isLoading, error } = useQuery({
     queryKey,
@@ -55,13 +66,10 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         `)
         .eq('user_id', user.id);
 
-      if (startDate && endDate) {
-        const startISO = startOfDay(startDate).toISOString();
-        const endISO = endOfDay(endDate).toISOString();
-        console.log('Query date filters:', { startISO, endISO, startDate, endDate });
+      if (dateFilters.startISO && dateFilters.endISO) {
         query = query
-          .gte('scheduled_at', startISO)
-          .lte('scheduled_at', endISO);
+          .gte('scheduled_at', dateFilters.startISO)
+          .lte('scheduled_at', dateFilters.endISO);
       }
 
       const { data, error } = await query.order('scheduled_at', { ascending: true });
@@ -71,10 +79,11 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         throw error;
       }
       
-      console.log('Sessions query result:', { data, count: data?.length, filters: { startDate, endDate } });
       return data as Session[] || [];
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
+    refetchOnWindowFocus: false,
   });
 
   const createSessionMutation = useMutation({
@@ -156,23 +165,16 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
 
 // Hook especializado para sessions de hoje
 export const useTodaySessions = () => {
-  const today = new Date();
-  console.log('Today hook - Date range:', { 
-    start: startOfDay(today).toISOString(), 
-    end: endOfDay(today).toISOString(),
-    today: today.toISOString()
-  });
+  const today = useMemo(() => new Date(), []);
   return useSessions(today, today);
 };
 
 // Hook especializado para sessions de amanhã
 export const useTomorrowSessions = () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  console.log('Tomorrow hook - Date range:', { 
-    start: startOfDay(tomorrow).toISOString(), 
-    end: endOfDay(tomorrow).toISOString(),
-    tomorrow: tomorrow.toISOString()
-  });
+  const tomorrow = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date;
+  }, []);
   return useSessions(tomorrow, tomorrow);
 };
