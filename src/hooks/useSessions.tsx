@@ -55,11 +55,13 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         `)
         .eq('user_id', user.id);
 
-      if (startDate) {
-        query = query.gte('scheduled_at', startOfDay(startDate).toISOString());
-      }
-      if (endDate) {
-        query = query.lte('scheduled_at', endOfDay(endDate).toISOString());
+      if (startDate && endDate) {
+        const startISO = startOfDay(startDate).toISOString();
+        const endISO = endOfDay(endDate).toISOString();
+        console.log('Query date filters:', { startISO, endISO, startDate, endDate });
+        query = query
+          .gte('scheduled_at', startISO)
+          .lte('scheduled_at', endISO);
       }
 
       const { data, error } = await query.order('scheduled_at', { ascending: true });
@@ -69,7 +71,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         throw error;
       }
       
-      console.log('Sessions query result:', { data, startDate, endDate });
+      console.log('Sessions query result:', { data, count: data?.length, filters: { startDate, endDate } });
       return data as Session[] || [];
     },
     enabled: !!user?.id,
