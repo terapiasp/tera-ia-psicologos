@@ -58,7 +58,7 @@ const Index = () => {
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 md:ml-64">
+        <main className="flex-1 md:ml-64 transition-all duration-300">
           <div className="p-6 space-y-6">
             {/* Welcome Section */}
             <div className="bg-gradient-primary p-6 rounded-lg text-white shadow-medium">
