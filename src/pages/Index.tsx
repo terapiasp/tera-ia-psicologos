@@ -56,13 +56,29 @@ const Index = () => {
   const pendingToday = todaySessions.filter(s => s.status === 'pending').length;
   
   // Receita prevista (todas as sessões com valor) e recebida (apenas pagas)
-  const monthlyPredicted = monthSessions
-    .filter(s => s.value)
+  const sessionsWithValue = monthSessions.filter(s => s.value);
+  console.log('Sessões do mês com valor:', sessionsWithValue.map(s => ({ 
+    id: s.id, 
+    patient: s.patients?.name, 
+    value: s.value, 
+    paid: s.paid, 
+    scheduled_at: s.scheduled_at 
+  })));
+  
+  const monthlyPredicted = sessionsWithValue
     .reduce((sum, s) => sum + (s.value || 0), 0);
   
   const monthlyReceived = monthSessions
     .filter(s => s.paid && s.value)
     .reduce((sum, s) => sum + (s.value || 0), 0);
+    
+  console.log('Cálculo receita mensal:', {
+    totalSessions: monthSessions.length,
+    sessionsWithValue: sessionsWithValue.length,
+    monthlyPredicted,
+    monthlyReceived,
+    month: format(currentMonth, "MMMM yyyy", { locale: ptBR })
+  });
   
   const attendanceRate = monthSessions.length > 0 
     ? Math.round((monthSessions.filter(s => s.status === 'completed').length / monthSessions.length) * 100)
