@@ -124,7 +124,8 @@ const Index = () => {
         <Header />
         <div className="flex">
           <Sidebar />
-          <main className="flex-1 lg:ml-64 p-4 lg:p-6 space-y-6">
+          <main className="flex-1 lg:ml-64 p-4 lg:p-6">
+            <div className="w-full max-w-7xl mx-auto space-y-6">
             {/* Welcome Section */}
             <div className="space-y-2">
               <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
@@ -215,16 +216,21 @@ const Index = () => {
               )}
             </div>
 
-            {/* Weekly Overview */}
-            <WeeklyView 
-              onDateClick={(date) => {
-                console.log('Data clicada:', date);
-                // Aqui você pode implementar navegação para a agenda
-              }}
-            />
-
-            {/* Quick Actions */}
-            <QuickActions />
+            {/* Weekly Overview + Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-8">
+                <WeeklyView 
+                  onDateClick={(date) => {
+                    console.log('Data clicada:', date);
+                    // Aqui você pode implementar navegação para a agenda
+                  }}
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <QuickActions />
+              </div>
+            </div>
+            </div>
           </main>
         </div>
       </div>
