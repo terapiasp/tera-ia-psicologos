@@ -18,7 +18,7 @@ export interface RecurringSchedule {
   patient_id: string;
   rrule_json: any; // JSON field from Supabase
   duration_minutes: number;
-  session_type: string;
+  session_type: 'individual' | 'couple' | 'group' | 'online';
   session_value?: number;
   is_active: boolean;
   created_at: string;
@@ -29,7 +29,7 @@ export interface CreateRecurringScheduleData {
   patient_id: string;
   rrule_json: RecurrenceRule;
   duration_minutes: number;
-  session_type: string;
+  session_type: 'individual' | 'couple' | 'group' | 'online';
   session_value?: number;
 }
 
@@ -52,7 +52,8 @@ export const useRecurringSchedules = () => {
       if (error) throw error;
       return data.map(item => ({
         ...item,
-        rrule_json: item.rrule_json as unknown as RecurrenceRule
+        rrule_json: item.rrule_json as unknown as RecurrenceRule,
+        session_type: item.session_type as 'individual' | 'couple' | 'group' | 'online'
       })) as RecurringSchedule[];
     },
     enabled: !!user?.id,
@@ -75,13 +76,19 @@ export const useRecurringSchedules = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (newSchedule) => {
+    onSuccess: async (newSchedule) => {
       queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
+      
       // Materializar sessões para os próximos 12 meses
-      materializeSessionsForSchedule({
+      await materializeSessionsForSchedule({
         ...newSchedule,
-        rrule_json: newSchedule.rrule_json as unknown as RecurrenceRule
+        rrule_json: newSchedule.rrule_json as unknown as RecurrenceRule,
+        session_type: newSchedule.session_type as 'individual' | 'couple' | 'group' | 'online'
       });
+      
+      // Invalidar todas as queries de sessions para atualizar o dashboard
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      
       toast({
         title: "Recorrência criada",
         description: "Agendamento recorrente configurado com sucesso!",
@@ -120,7 +127,8 @@ export const useRecurringSchedules = () => {
       // Regenerar sessões futuras
       regenerateFutureSessionsForSchedule({
         ...updatedSchedule,
-        rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule
+        rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule,
+        session_type: updatedSchedule.session_type as 'individual' | 'couple' | 'group' | 'online'
       });
       toast({
         title: "Recorrência atualizada",
@@ -150,7 +158,7 @@ export const useRecurringSchedules = () => {
       schedule_id: schedule.id,
       scheduled_at: sessionDate.toISOString(),
       duration_minutes: schedule.duration_minutes,
-      type: schedule.session_type,
+      type: 'individual', // Usar valor padrão válido para o constraint
       value: schedule.session_value,
       status: 'scheduled',
       origin: 'recurring'
@@ -163,6 +171,7 @@ export const useRecurringSchedules = () => {
 
       if (error) {
         console.error('Erro ao materializar sessões:', error);
+        throw error; // Propagar o erro para poder fazer o handling adequado
       }
     } catch (error) {
       console.error('Erro ao inserir sessões:', error);

@@ -101,7 +101,7 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
             patient_id: newPatient.id,
             rrule_json: recurrenceRule,
             duration_minutes: 50,
-            session_type: data.therapy_type,
+            session_type: 'individual', // Usar valor padrão válido
             session_value: sessionValue,
           });
         }
