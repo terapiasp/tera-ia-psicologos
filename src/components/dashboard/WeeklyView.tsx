@@ -1,95 +1,93 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import { addDays, subDays, format, isSameDay } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, addDays, startOfWeek, isSameDay, isToday, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Session } from "@/hooks/useSessions";
+import { useSessionsRange } from "@/hooks/useSessionsRange";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WeekDay {
-  date: string;
-  day: string;
-  sessions: number;
-  isToday?: boolean;
-  fullDate: Date;
+  date: Date;
+  dayName: string;
+  sessionCount: number;
+  isToday: boolean;
 }
 
 interface WeeklyViewProps {
   onDateClick?: (date: Date) => void;
-  sessionsData: Array<{ scheduled_at: string; [key: string]: any }>;
 }
 
-export function WeeklyView({ onDateClick, sessionsData }: WeeklyViewProps) {
-  const [currentStartDate, setCurrentStartDate] = useState(() => {
-    const today = new Date();
-    // Começar com um dia antes de hoje
-    return subDays(today, 1);
+export function WeeklyView({ onDateClick }: WeeklyViewProps) {
+  const [currentStartDate, setCurrentStartDate] = useState<Date>(() => {
+    return startOfWeek(new Date(), { weekStartsOn: 1 });
   });
-  
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Gerar 7 dias consecutivos começando do currentStartDate
-  const generateWeekData = (): WeekDay[] => {
-    const days: WeekDay[] = [];
+  // Buscar sessões da semana atual dinamicamente
+  const weekEndDate = endOfWeek(currentStartDate, { weekStartsOn: 1 });
+  const { sessions: sessionsData, isLoading } = useSessionsRange(currentStartDate, weekEndDate);
+
+  const generateWeekData = (startDate: Date): WeekDay[] => {
+    const weekData: WeekDay[] = [];
     
     for (let i = 0; i < 7; i++) {
-      const date = addDays(currentStartDate, i);
-      const sessionsCount = sessionsData.filter(session => 
-        isSameDay(new Date(session.scheduled_at), date)
+      const currentDate = addDays(startDate, i);
+      
+      // Contar sessões para esta data
+      const daySessionsCount = sessionsData.filter(session => 
+        isSameDay(new Date(session.scheduled_at), currentDate)
       ).length;
       
-      days.push({
-        date: format(date, "dd/MM"),
-        day: format(date, "EEEEEE", { locale: ptBR }),
-        sessions: sessionsCount,
-        isToday: isSameDay(date, new Date()),
-        fullDate: date
+      weekData.push({
+        date: currentDate,
+        dayName: format(currentDate, 'EEE', { locale: ptBR }),
+        sessionCount: daySessionsCount,
+        isToday: isToday(currentDate)
       });
     }
     
-    return days;
+    return weekData;
   };
 
-  const weekData = generateWeekData();
+  const weekData = generateWeekData(currentStartDate);
 
   const handlePrevious = () => {
-    setCurrentStartDate(prev => subDays(prev, 1));
+    setCurrentStartDate(prev => addDays(prev, -7));
   };
 
   const handleNext = () => {
-    setCurrentStartDate(prev => addDays(prev, 1));
+    setCurrentStartDate(prev => addDays(prev, 7));
   };
 
-  const handleDayClick = (day: WeekDay) => {
+  const handleDayClick = (date: Date) => {
     if (onDateClick) {
-      onDateClick(day.fullDate);
+      onDateClick(date);
     }
   };
 
-  // Auto-avançar os dias conforme o tempo passa
+  // Ajustar para mostrar a semana atual na inicialização
   useEffect(() => {
     const today = new Date();
-    const todayIndex = weekData.findIndex(day => day.isToday);
+    const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
     
-    // Se hoje não está no índice 1 (segundo da lista), ajustar
-    if (todayIndex !== -1 && todayIndex !== 1) {
-      const daysToAdjust = todayIndex - 1;
-      setCurrentStartDate(prev => addDays(prev, daysToAdjust));
+    if (currentStartDate.getTime() !== currentWeekStart.getTime()) {
+      setCurrentStartDate(currentWeekStart);
     }
   }, []);
 
   return (
-    <Card className="shadow-soft">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Visão Semanal</CardTitle>
+    <Card className="shadow-soft hover:shadow-medium transition-all duration-200 border-0 bg-gradient-soft">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-foreground">Visão Semanal</h3>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePrevious}
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-primary/10"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -97,50 +95,65 @@ export function WeeklyView({ onDateClick, sessionsData }: WeeklyViewProps) {
               variant="ghost"
               size="icon"
               onClick={handleNext}
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-primary/10"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="w-full" ref={scrollRef}>
-          <div className="flex gap-2 pb-2">
-            {weekData.map((day) => (
-              <div
-                key={day.date}
-                onClick={() => handleDayClick(day)}
-                className={`min-w-[120px] text-center p-3 rounded-lg transition-colors cursor-pointer ${
-                  day.isToday
-                    ? "bg-gradient-primary text-white"
-                    : "bg-muted/50 hover:bg-muted"
-                }`}
-              >
-                <div className="text-xs font-medium opacity-75 mb-1">
-                  {day.day}
+
+        <ScrollArea className="w-full">
+          <div className="flex gap-2 px-1">
+            {isLoading ? (
+              // Loading skeletons
+              Array.from({ length: 7 }).map((_, index) => (
+                <div key={index} className="flex-1 min-w-[80px] p-3 rounded-lg border">
+                  <div className="text-center space-y-1">
+                    <Skeleton className="h-3 w-8 mx-auto" />
+                    <Skeleton className="h-6 w-6 mx-auto" />
+                    <Skeleton className="h-4 w-12 mx-auto" />
+                  </div>
                 </div>
-                <div className={`text-lg font-bold mb-2 ${
-                  day.isToday ? "text-white" : "text-foreground"
-                }`}>
-                  {day.date}
-                </div>
-                <Badge 
-                  variant={day.isToday ? "secondary" : "outline"} 
-                  className={`text-xs ${
-                    day.isToday 
-                      ? "bg-white/20 text-white border-white/30" 
-                      : day.sessions === 0 
-                      ? "opacity-50" 
-                      : ""
-                  }`}
+              ))
+            ) : (
+              weekData.map((day, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleDayClick(day.date)}
+                  className={`
+                    flex-1 min-w-[80px] p-3 rounded-lg border cursor-pointer transition-all
+                    hover:shadow-md hover:border-primary/20
+                    ${day.isToday 
+                      ? 'bg-primary/10 border-primary/30' 
+                      : 'bg-card border-border hover:bg-accent/50'
+                    }
+                  `}
                 >
-                  {day.sessions === 0 ? "Livre" : `${day.sessions} sessões`}
-                </Badge>
-              </div>
-            ))}
+                  <div className="text-center space-y-1">
+                    <p className={`text-xs font-medium ${
+                      day.isToday ? 'text-primary' : 'text-muted-foreground'
+                    }`}>
+                      {day.dayName}
+                    </p>
+                    <p className={`text-lg font-bold ${
+                      day.isToday ? 'text-primary' : 'text-foreground'
+                    }`}>
+                      {format(day.date, 'd')}
+                    </p>
+                    {day.sessionCount > 0 && (
+                      <div className={`text-xs px-2 py-1 rounded-full ${
+                        day.isToday 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-accent text-accent-foreground'
+                      }`}>
+                        {day.sessionCount} sessão{day.sessionCount !== 1 ? 'ões' : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </CardContent>
     </Card>

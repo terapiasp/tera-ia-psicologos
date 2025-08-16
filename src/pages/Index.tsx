@@ -1,73 +1,60 @@
-
-import { CalendarDays, DollarSign, TrendingUp, Users } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { AgendaCard } from "@/components/dashboard/AgendaCard";
-import { StatsCard } from "@/components/dashboard/StatsCard";
-import { WeeklyView } from "@/components/dashboard/WeeklyView";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useProfile } from "@/hooks/useProfile";
-import { useTodaySessions, useTomorrowSessions, useSessions } from "@/hooks/useSessions";
-import { usePatients } from "@/hooks/usePatients";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import React from 'react';
+import { Header } from '@/components/layout/Header';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { AgendaCard } from '@/components/dashboard/AgendaCard';
+import { WeeklyView } from '@/components/dashboard/WeeklyView';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { useTodaySessions, useTomorrowSessions } from '@/hooks/useSessions';
+import { usePatients } from '@/hooks/usePatients';
+import { useProfile } from '@/hooks/useProfile';
+import { Calendar, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { useSessions } from '@/hooks/useSessions';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SessionsCacheProvider } from '@/contexts/SessionsCacheContext';
 
 const Index = () => {
-  const { profile, isLoading: profileLoading } = useProfile();
-  const { sessions: todaySessionsRaw, isLoading: todayLoading } = useTodaySessions();
-  const { sessions: tomorrowSessionsRaw, isLoading: tomorrowLoading } = useTomorrowSessions();
-  const { patients } = usePatients();
-  
+  const { profile, isLoading: isLoadingProfile } = useProfile();
+  const { sessions: todaySessionsRaw, isLoading: isLoadingToday } = useTodaySessions();
+  const { sessions: tomorrowSessionsRaw, isLoading: isLoadingTomorrow } = useTomorrowSessions();
+  const { patients, isLoading: isLoadingPatients } = usePatients();
   
   // Dados para estatísticas mensais
   const currentMonth = new Date();
-  const { sessions: monthSessions } = useSessions(startOfMonth(currentMonth), endOfMonth(currentMonth));
-  
-  // WeeklyView agora gerencia seus próprios dados via cache
+  const { sessions: monthSessions, isLoading: isLoadingMonth } = useSessions(startOfMonth(currentMonth), endOfMonth(currentMonth));
 
   // Transformar sessions para o formato do AgendaCard
   const todaySessions = todaySessionsRaw.map(session => ({
     id: session.id,
     patient: session.patients?.name || "Paciente não encontrado",
     time: format(new Date(session.scheduled_at), "HH:mm"),
-    type: getModalityLabel(session.modality || 'individual'), // Usar modality
+    type: getModalityLabel(session.modality || 'individual'),
     status: mapSessionStatus(session.status),
-    location: "Online", // TODO: pegar do paciente ou session
+    location: "Online",
   }));
 
   const tomorrowSessions = tomorrowSessionsRaw.map(session => ({
     id: session.id,
     patient: session.patients?.name || "Paciente não encontrado",
     time: format(new Date(session.scheduled_at), "HH:mm"),
-    type: getModalityLabel(session.modality || 'individual'), // Usar modality
+    type: getModalityLabel(session.modality || 'individual'),
     status: mapSessionStatus(session.status),
     location: "Online",
   }));
 
   // Estatísticas calculadas
-  const activePatients = patients.filter(p => p.status === 'active').length;
-  const todaySessionsCount = todaySessions.length;
-  const confirmedToday = todaySessions.filter(s => s.status === 'confirmed').length;
-  const pendingToday = todaySessions.filter(s => s.status === 'pending').length;
-  
-  // Cálculo de receita simplificado - soma TODAS as sessões com valor no mês
-  const monthlyPredicted = monthSessions
-    .filter(s => s.value !== null && s.value !== undefined)
-    .reduce((sum, s) => sum + Number(s.value), 0);
-  
-  const monthlyReceived = monthSessions
-    .filter(s => s.paid && s.value !== null && s.value !== undefined)
-    .reduce((sum, s) => sum + Number(s.value), 0);
-  
-  const attendanceRate = monthSessions.length > 0 
-    ? Math.round((monthSessions.filter(s => s.status === 'completed').length / monthSessions.length) * 100)
-    : 0;
-
-  // Callback para lidar com cliques na data
-  const handleDateClick = (date: Date) => {
-    console.log("Data selecionada:", format(date, "dd/MM/yyyy"));
-    // TODO: Implementar navegação para agenda do dia selecionado
+  const monthlyStats = {
+    predicted: monthSessions
+      .filter(s => s.value !== null && s.value !== undefined)
+      .reduce((sum, s) => sum + Number(s.value), 0),
+    received: monthSessions
+      .filter(s => s.paid && s.value !== null && s.value !== undefined)
+      .reduce((sum, s) => sum + Number(s.value), 0),
+    attendanceRate: monthSessions.length > 0 
+      ? Math.round((monthSessions.filter(s => s.status === 'completed').length / monthSessions.length) * 100)
+      : 0
   };
 
   // Função para saudação baseada no horário
@@ -105,116 +92,143 @@ const Index = () => {
     return 'pending';
   }
 
-  const isLoading = profileLoading;
-
-  if (isLoading) {
+  if (isLoadingProfile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 md:ml-64 transition-all duration-300">
-            <div className="p-6 space-y-6">
+      <SessionsCacheProvider>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <div className="flex">
+            <Sidebar />
+            <main className="flex-1 lg:ml-64 p-4 lg:p-6 space-y-6">
               <Skeleton className="h-24 w-full rounded-lg" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
                   <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Skeleton className="h-48 w-full" />
-                    <Skeleton className="h-48 w-full" />
-                  </div>
-                  <Skeleton className="h-32 w-full" />
-                </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Skeleton className="h-64 w-full" />
                 <Skeleton className="h-64 w-full" />
               </div>
-            </div>
-          </main>
+              <Skeleton className="h-48 w-full" />
+            </main>
+          </div>
         </div>
-      </div>
+      </SessionsCacheProvider>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 md:ml-64 transition-all duration-300">
-          <div className="p-6 space-y-6">
+    <SessionsCacheProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 lg:ml-64 p-4 lg:p-6 space-y-6">
             {/* Welcome Section */}
-            <div className="bg-gradient-primary p-6 rounded-lg text-white shadow-medium">
-              <h1 className="text-2xl font-bold mb-2">
-                {getTimeGreeting()}, {profile?.name?.split(' ')[0] || 'Dr(a)'}!
+            <div className="space-y-2">
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+                {getTimeGreeting()}, {profile?.name?.split(' ')[0] || 'Doutor(a)'}!
               </h1>
-              <p className="text-white/80">
-                Hoje você tem {todaySessionsCount} sessão{todaySessionsCount !== 1 ? 's' : ''} agendada{todaySessionsCount !== 1 ? 's' : ''}
-                {todaySessionsCount > 0 && `. ${confirmedToday} confirmada${confirmedToday !== 1 ? 's' : ''}, ${pendingToday} pendente${pendingToday !== 1 ? 's' : ''}`}
+              <p className="text-muted-foreground">
+                Aqui está um resumo do seu dia e agenda.
               </p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatsCard
-                title="Sessões Hoje"
-                value={todaySessionsCount.toString()}
-                description={todaySessionsCount > 0 ? `${confirmedToday} confirmada${confirmedToday !== 1 ? 's' : ''}, ${pendingToday} pendente${pendingToday !== 1 ? 's' : ''}` : "Nenhuma sessão hoje"}
-                icon={CalendarDays}
-              />
-              <StatsCard
-                title="Pacientes Ativos"
-                value={activePatients.toString()}
-                description="Total cadastrados"
-                icon={Users}
-              />
-              <StatsCard
-                title="Receita Mensal"
-                value={`R$ ${monthlyPredicted.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                description={`Recebido R$ ${monthlyReceived.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} · ${format(currentMonth, "MMMM yyyy", { locale: ptBR })}`}
-                icon={DollarSign}
-              />
-              <StatsCard
-                title="Taxa de Comparecimento"
-                value={`${attendanceRate}%`}
-                description="Últimos 30 dias"
-                icon={TrendingUp}
-              />
-            </div>
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Agenda */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <AgendaCard
-                    title="Hoje"
-                    date={format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                    sessions={todaySessions}
-                  />
-                  <AgendaCard
-                    title="Amanhã"
-                    date={format(new Date(Date.now() + 24 * 60 * 60 * 1000), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                    sessions={tomorrowSessions}
-                  />
-                </div>
-                <WeeklyView 
-                  onDateClick={handleDateClick}
-                  sessionsData={weekSessions}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {isLoadingToday ? (
+                <Skeleton className="h-32" />
+              ) : (
+                <StatsCard
+                  title="Sessões hoje"
+                  value={todaySessionsRaw.length}
+                  description={`${todaySessionsRaw.filter(s => s.paid).length} pagas`}
+                  icon={Calendar}
                 />
-              </div>
-
-              {/* Right Column - Quick Actions */}
-              <div className="space-y-6">
-                <QuickActions />
-              </div>
+              )}
+              
+              {isLoadingPatients ? (
+                <Skeleton className="h-32" />
+              ) : (
+                <StatsCard
+                  title="Pacientes ativos"
+                  value={patients.filter(p => p.status === 'active').length}
+                  description={`${patients.length} total`}
+                  icon={Users}
+                />
+              )}
+              
+              {isLoadingMonth ? (
+                <Skeleton className="h-32" />
+              ) : (
+                <StatsCard
+                  title="Receita do mês"
+                  value={`R$ ${monthlyStats.predicted.toLocaleString('pt-BR', { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2 
+                  })}`}
+                  description={`R$ ${monthlyStats.received.toLocaleString('pt-BR', { 
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2 
+                  })} recebido`}
+                  icon={DollarSign}
+                />
+              )}
+              
+              {isLoadingMonth ? (
+                <Skeleton className="h-32" />
+              ) : (
+                <StatsCard
+                  title="Taxa de comparecimento"
+                  value={`${monthlyStats.attendanceRate}%`}
+                  description="Este mês"
+                  icon={TrendingUp}
+                  trend={{
+                    value: 5,
+                    label: "vs mês anterior"
+                  }}
+                />
+              )}
             </div>
-          </div>
-        </main>
+
+            {/* Today's and Tomorrow's Agenda */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {isLoadingToday ? (
+                <Skeleton className="h-64" />
+              ) : (
+                <AgendaCard
+                  title="Hoje"
+                  date={format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  sessions={todaySessions}
+                />
+              )}
+              
+              {isLoadingTomorrow ? (
+                <Skeleton className="h-64" />
+              ) : (
+                <AgendaCard
+                  title="Amanhã"
+                  date={format(new Date(Date.now() + 24 * 60 * 60 * 1000), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  sessions={tomorrowSessions}
+                />
+              )}
+            </div>
+
+            {/* Weekly Overview */}
+            <WeeklyView 
+              onDateClick={(date) => {
+                console.log('Data clicada:', date);
+                // Aqui você pode implementar navegação para a agenda
+              }}
+            />
+
+            {/* Quick Actions */}
+            <QuickActions />
+          </main>
+        </div>
       </div>
-    </div>
+    </SessionsCacheProvider>
   );
 };
 
