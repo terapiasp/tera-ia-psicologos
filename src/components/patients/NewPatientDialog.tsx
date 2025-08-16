@@ -32,6 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
+import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
 const patientSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -59,6 +60,7 @@ export function NewPatientDialog({ children, patient, isEdit = false }: NewPatie
   const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
   const { createPatient, updatePatient, isCreating, isUpdating } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
+  const { clearCache } = useSessionsCache();
 
   // Carregar agenda existente do paciente quando for edição
   useEffect(() => {
@@ -128,6 +130,9 @@ export function NewPatientDialog({ children, patient, isEdit = false }: NewPatie
                 session_value: sessionValue,
               });
             }
+            
+            // Limpar cache de sessões para forçar atualização imediata
+            clearCache();
           }
           
           form.reset();

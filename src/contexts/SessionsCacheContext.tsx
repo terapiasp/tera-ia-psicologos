@@ -13,6 +13,7 @@ interface SessionsCacheContextType {
   getSessionsForRange: (startDate: Date, endDate: Date) => Session[];
   prefetchMonth: (date: Date) => void;
   isMonthLoading: (date: Date) => boolean;
+  clearCache: () => void;
 }
 
 const SessionsCacheContext = createContext<SessionsCacheContextType | undefined>(undefined);
@@ -33,6 +34,12 @@ export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ ch
   const { user } = useAuth();
   const [cache, setCache] = useState<SessionsCache>({});
   const [loadingMonths, setLoadingMonths] = useState<Set<string>>(new Set());
+
+  // Limpar cache quando mudança de usuário
+  React.useEffect(() => {
+    setCache({});
+    setLoadingMonths(new Set());
+  }, [user?.id]);
 
   const getMonthKey = useCallback((date: Date) => {
     return format(date, 'yyyy-MM');
@@ -142,11 +149,17 @@ export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ ch
     return loadingMonths.has(monthKey);
   }, [loadingMonths, getMonthKey]);
 
+  const clearCache = useCallback(() => {
+    setCache({});
+    setLoadingMonths(new Set());
+  }, []);
+
   return (
     <SessionsCacheContext.Provider value={{
       getSessionsForRange,
       prefetchMonth,
-      isMonthLoading
+      isMonthLoading,
+      clearCache
     }}>
       {children}
     </SessionsCacheContext.Provider>

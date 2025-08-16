@@ -57,6 +57,8 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
     queryFn: async () => {
       if (!user?.id) throw new Error('Usuário não autenticado');
       
+      console.log('Fetching sessions for date range:', dateFilters.startISO, 'to', dateFilters.endISO);
+      
       let query = supabase
         .from('sessions')
         .select(`
@@ -81,6 +83,8 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         throw error;
       }
       
+      console.log('Sessions fetched:', (data || []).length);
+      
       // Garantir que value seja sempre número quando presente
       const normalizedData = (data || []).map(session => ({
         ...session,
@@ -90,8 +94,9 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
       return normalizedData as Session[];
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 2, // 2 minutos de cache
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Sempre buscar dados frescos
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
   });
 
   const createSessionMutation = useMutation({

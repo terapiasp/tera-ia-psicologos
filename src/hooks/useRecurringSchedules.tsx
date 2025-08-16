@@ -121,13 +121,20 @@ export const useRecurringSchedules = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (updatedSchedule) => {
+    onSuccess: async (updatedSchedule) => {
       queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
+      
       // Regenerar sessões futuras
-      regenerateFutureSessionsForSchedule({
+      await regenerateFutureSessionsForSchedule({
         ...updatedSchedule,
         rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule
       });
+      
+      // Forçar invalidação completa do cache de sessões
+      queryClient.removeQueries({ queryKey: ['sessions'] });
+      queryClient.removeQueries({ queryKey: ['today-sessions'] });
+      queryClient.removeQueries({ queryKey: ['tomorrow-sessions'] });
+      
       toast({
         title: "Recorrência atualizada",
         description: "Agendamento recorrente atualizado com sucesso!",
@@ -191,19 +198,25 @@ export const useRecurringSchedules = () => {
   const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule) => {
     if (!user?.id) return;
 
+    console.log('Regenerando sessões futuras para schedule:', schedule.id);
+
     // Deletar sessões futuras existentes desta recorrência
     const now = new Date();
-    await supabase
+    const { error: deleteError } = await supabase
       .from('sessions')
       .delete()
       .eq('schedule_id', schedule.id)
       .gte('scheduled_at', now.toISOString());
 
+    if (deleteError) {
+      console.error('Erro ao deletar sessões futuras:', deleteError);
+      throw deleteError;
+    }
+
     // Regenerar sessões
     await materializeSessionsForSchedule(schedule);
     
-    // Invalidar queries relacionadas
-    queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    console.log('Sessões regeneradas com sucesso');
   };
 
   // Função para gerar ocorrências de sessões baseadas na regra
