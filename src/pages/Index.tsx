@@ -69,15 +69,11 @@ const Index = () => {
     ? Math.round((monthSessions.filter(s => s.status === 'completed').length / monthSessions.length) * 100)
     : 0;
 
-  // Dados para WeeklyView
-  const weekData = currentWeek.map(day => ({
-    date: format(day, "dd/MM"),
-    day: format(day, "EEEEEE", { locale: ptBR }),
-    sessions: weekSessions.filter(session => 
-      isSameDay(new Date(session.scheduled_at), day)
-    ).length,
-    isToday: isSameDay(day, new Date())
-  }));
+  // Callback para lidar com cliques na data
+  const handleDateClick = (date: Date) => {
+    console.log("Data selecionada:", format(date, "dd/MM/yyyy"));
+    // TODO: Implementar navegação para agenda do dia selecionado
+  };
 
   // Função para saudação baseada no horário
   function getTimeGreeting() {
@@ -209,7 +205,10 @@ const Index = () => {
                     sessions={tomorrowSessions}
                   />
                 </div>
-                <WeeklyView weekData={weekData} />
+                <WeeklyView 
+                  onDateClick={handleDateClick}
+                  sessionsData={weekSessions}
+                />
               </div>
 
               {/* Right Column - Quick Actions */}
