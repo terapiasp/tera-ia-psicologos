@@ -35,6 +35,7 @@ export interface CreatePatientData {
   custom_frequency?: string;
   session_mode: string;
   address?: string;
+  frequency_preset_id?: string;
 }
 
 export const usePatients = () => {

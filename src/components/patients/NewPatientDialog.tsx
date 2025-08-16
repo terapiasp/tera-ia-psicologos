@@ -50,68 +50,92 @@ type PatientFormData = z.infer<typeof patientSchema>;
 
 interface NewPatientDialogProps {
   children: React.ReactNode;
+  patient?: any; // Patient to edit, if provided
+  isEdit?: boolean;
 }
 
-export function NewPatientDialog({ children }: NewPatientDialogProps) {
+export function NewPatientDialog({ children, patient, isEdit = false }: NewPatientDialogProps) {
   const [open, setOpen] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
-  const { createPatient, isCreating } = usePatients();
+  const { createPatient, updatePatient, isCreating, isUpdating } = usePatients();
   const { createSchedule } = useRecurringSchedules();
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
-      name: "",
-      nickname: "",
-      email: "",
-      phone: "",
-      whatsapp: "",
-      birth_date: "",
-      therapy_type: "",
-      session_mode: "online",
-      address: "",
+      name: patient?.name || "",
+      nickname: patient?.nickname || "",
+      email: patient?.email || "",
+      phone: patient?.phone || "",
+      whatsapp: patient?.whatsapp || "",
+      birth_date: patient?.birth_date || "",
+      therapy_type: patient?.therapy_type || "",
+      session_mode: patient?.session_mode || "online",
+      address: patient?.address || "",
       session_value: "80",
     },
   });
 
   const onSubmit = (data: PatientFormData) => {
-    // A frequência agora vem do agendamento recorrente
-    const frequency = recurrenceRule?.frequency || 'custom';
-    
-    const patientData: CreatePatientData = {
-      name: data.name,
-      whatsapp: data.whatsapp,
-      therapy_type: data.therapy_type,
-      frequency: frequency,
-      session_mode: data.session_mode,
-      email: data.email || undefined,
-      phone: data.phone || undefined,
-      nickname: data.nickname || undefined,
-      birth_date: data.birth_date || undefined,
-      address: data.address || undefined,
-      frequency_preset_id: recurrenceRule?.presetId || undefined,
-    };
+    if (isEdit && patient) {
+      // Modo edição
+      const updates = {
+        name: data.name,
+        whatsapp: data.whatsapp,
+        therapy_type: data.therapy_type,
+        session_mode: data.session_mode,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        nickname: data.nickname || undefined,
+        birth_date: data.birth_date || undefined,
+        address: data.address || undefined,
+      };
 
-    createPatient(patientData, {
-      onSuccess: (newPatient: any) => {
-        // Se há regra de recorrência, criar o agendamento recorrente
-        if (recurrenceRule && newPatient) {
-          const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+      updatePatient({ id: patient.id, updates }, {
+        onSuccess: () => {
+          form.reset();
+          setOpen(false);
+        },
+      });
+    } else {
+      // Modo criação
+      const frequency = recurrenceRule?.frequency || 'custom';
+      
+      const patientData: CreatePatientData = {
+        name: data.name,
+        whatsapp: data.whatsapp,
+        therapy_type: data.therapy_type,
+        frequency: frequency,
+        session_mode: data.session_mode,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        nickname: data.nickname || undefined,
+        birth_date: data.birth_date || undefined,
+        address: data.address || undefined,
+        frequency_preset_id: recurrenceRule?.presetId || undefined,
+      };
+
+      createPatient(patientData, {
+        onSuccess: (newPatient: any) => {
+          // Se há regra de recorrência, criar o agendamento recorrente
+          if (recurrenceRule && newPatient) {
+            const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+            
+            createSchedule({
+              patient_id: newPatient.id,
+              rrule_json: recurrenceRule,
+              duration_minutes: 50,
+              session_type: data.therapy_type,
+              session_value: sessionValue,
+            });
+          }
           
-          createSchedule({
-            patient_id: newPatient.id,
-            rrule_json: recurrenceRule,
-            duration_minutes: 50,
-            session_type: data.therapy_type,
-            session_value: sessionValue,
-          });
-        }
-        
-        form.reset();
-        setRecurrenceRule(undefined);
-        setOpen(false);
-      },
-    });
+          form.reset();
+          setRecurrenceRule(undefined);
+          setOpen(false);
+        },
+      });
+    }
   };
 
   return (
@@ -123,7 +147,7 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Novo Paciente
+            {isEdit ? 'Editar Paciente' : 'Novo Paciente'}
           </DialogTitle>
         </DialogHeader>
 
@@ -302,13 +326,15 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
               )}
             />
 
-            {/* Agendamento Recorrente Integrado */}
-            <RecurrenceBuilder
-              value={recurrenceRule}
-              onChange={setRecurrenceRule}
-              sessionType={form.watch("therapy_type")}
-              sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
-            />
+            {/* Agendamento Recorrente Integrado - apenas no modo criação */}
+            {!isEdit && (
+              <RecurrenceBuilder
+                value={recurrenceRule}
+                onChange={setRecurrenceRule}
+                sessionType={form.watch("therapy_type")}
+                sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+              />
+            )}
 
             <div className="flex gap-4 justify-end pt-4">
               <Button
@@ -320,10 +346,15 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={isCreating}
+                disabled={isCreating || isUpdating}
                 className="bg-gradient-primary hover:opacity-90"
               >
-                {isCreating ? "Salvando..." : "Salvar Paciente"}
+                {isCreating || isUpdating 
+                  ? "Salvando..." 
+                  : isEdit 
+                    ? "Salvar Alterações" 
+                    : "Salvar Paciente"
+                }
               </Button>
             </div>
           </form>

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, Edit3 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -126,17 +126,23 @@ const Patients = () => {
                             <span>{patient.session_mode === 'online' ? 'Online' : 'Presencial'}</span>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            patient.status === 'active' 
-                              ? 'bg-success/10 text-success' 
-                              : patient.status === 'paused'
-                              ? 'bg-warning/10 text-warning'
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {getStatusLabel(patient.status)}
-                          </span>
-                        </div>
+                         <div className="flex flex-col items-end gap-2">
+                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                             patient.status === 'active' 
+                               ? 'bg-success/10 text-success' 
+                               : patient.status === 'paused'
+                               ? 'bg-warning/10 text-warning'
+                               : 'bg-muted text-muted-foreground'
+                           }`}>
+                             {getStatusLabel(patient.status)}
+                           </span>
+                           <NewPatientDialog patient={patient} isEdit={true}>
+                             <Button size="sm" variant="outline" className="h-8">
+                               <Edit3 className="h-3 w-3 mr-1" />
+                               Editar
+                             </Button>
+                           </NewPatientDialog>
+                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
