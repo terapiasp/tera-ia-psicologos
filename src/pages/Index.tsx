@@ -24,12 +24,7 @@ const Index = () => {
   const currentMonth = new Date();
   const { sessions: monthSessions } = useSessions(startOfMonth(currentMonth), endOfMonth(currentMonth));
   
-  // Dados para visualização semanal - buscar um período mais amplo para suportar navegação
-  const weekStartForData = new Date();
-  weekStartForData.setDate(weekStartForData.getDate() - 14); // 2 semanas antes
-  const weekEndForData = new Date();
-  weekEndForData.setDate(weekEndForData.getDate() + 21); // 3 semanas depois
-  const { sessions: weekSessions } = useSessions(weekStartForData, weekEndForData);
+  // WeeklyView agora gerencia seus próprios dados via cache
 
   // Transformar sessions para o formato do AgendaCard
   const todaySessions = todaySessionsRaw.map(session => ({
