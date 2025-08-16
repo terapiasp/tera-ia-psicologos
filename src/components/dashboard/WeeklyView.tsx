@@ -6,8 +6,6 @@ import { useState, useEffect } from "react";
 import { format, addDays, startOfWeek, isSameDay, isToday, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Session } from "@/hooks/useSessions";
-import { useSessionsRange } from "@/hooks/useSessionsRange";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface WeekDay {
   date: Date;
@@ -18,17 +16,13 @@ interface WeekDay {
 
 interface WeeklyViewProps {
   onDateClick?: (date: Date) => void;
+  sessionsData?: Session[];
 }
 
-export function WeeklyView({ onDateClick }: WeeklyViewProps) {
-  console.log('WeeklyView: Rendering');
+export function WeeklyView({ onDateClick, sessionsData = [] }: WeeklyViewProps) {
   const [currentStartDate, setCurrentStartDate] = useState<Date>(() => {
     return startOfWeek(new Date(), { weekStartsOn: 1 });
   });
-
-  // Buscar sessões da semana atual dinamicamente
-  const weekEndDate = endOfWeek(currentStartDate, { weekStartsOn: 1 });
-  const { sessions: sessionsData, isLoading } = useSessionsRange(currentStartDate, weekEndDate);
 
   const generateWeekData = (startDate: Date): WeekDay[] => {
     const weekData: WeekDay[] = [];
@@ -105,55 +99,42 @@ export function WeeklyView({ onDateClick }: WeeklyViewProps) {
 
         <ScrollArea className="w-full">
           <div className="flex gap-2 px-1">
-            {isLoading ? (
-              // Loading skeletons
-              Array.from({ length: 7 }).map((_, index) => (
-                <div key={index} className="flex-1 min-w-[80px] p-3 rounded-lg border">
-                  <div className="text-center space-y-1">
-                    <Skeleton className="h-3 w-8 mx-auto" />
-                    <Skeleton className="h-6 w-6 mx-auto" />
-                    <Skeleton className="h-4 w-12 mx-auto" />
-                  </div>
-                </div>
-              ))
-            ) : (
-              weekData.map((day, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleDayClick(day.date)}
-                  className={`
-                    flex-1 min-w-[80px] p-3 rounded-lg border cursor-pointer transition-all
-                    hover:shadow-md hover:border-primary/20
-                    ${day.isToday 
-                      ? 'bg-primary/10 border-primary/30' 
-                      : 'bg-card border-border hover:bg-accent/50'
-                    }
-                  `}
-                >
-                  <div className="text-center space-y-1">
-                    <p className={`text-xs font-medium ${
-                      day.isToday ? 'text-primary' : 'text-muted-foreground'
+            {weekData.map((day, index) => (
+              <div
+                key={index}
+                onClick={() => handleDayClick(day.date)}
+                className={`
+                  flex-1 min-w-[80px] p-3 rounded-lg border cursor-pointer transition-all
+                  hover:shadow-md hover:border-primary/20
+                  ${day.isToday 
+                    ? 'bg-primary/10 border-primary/30' 
+                    : 'bg-card border-border hover:bg-accent/50'
+                  }
+                `}
+              >
+                <div className="text-center space-y-1">
+                  <p className={`text-xs font-medium ${
+                    day.isToday ? 'text-primary' : 'text-muted-foreground'
+                  }`}>
+                    {day.dayName}
+                  </p>
+                  <p className={`text-lg font-bold ${
+                    day.isToday ? 'text-primary' : 'text-foreground'
+                  }`}>
+                    {format(day.date, 'd')}
+                  </p>
+                  {day.sessionCount > 0 && (
+                    <div className={`text-xs px-2 py-1 rounded-full ${
+                      day.isToday 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-accent text-accent-foreground'
                     }`}>
-                      {day.dayName}
-                    </p>
-                    <p className={`text-lg font-bold ${
-                      day.isToday ? 'text-primary' : 'text-foreground'
-                    }`}>
-                      {format(day.date, 'd')}
-                    </p>
-                    {day.sessionCount > 0 && (
-                      <div className={`text-xs px-2 py-1 rounded-full ${
-                        day.isToday 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-accent text-accent-foreground'
-                      }`}>
-                        {day.sessionCount} sessão{day.sessionCount !== 1 ? 'ões' : ''}
-                      </div>
-                    )}
-                  </div>
+                      {day.sessionCount} sessão{day.sessionCount !== 1 ? 'ões' : ''}
+                    </div>
+                  )}
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
         </ScrollArea>
       </CardContent>
