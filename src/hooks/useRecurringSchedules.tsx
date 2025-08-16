@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { addMonths, format, parse, startOfDay, addDays, addWeeks, setHours, setMinutes, isBefore, parseISO } from 'date-fns';
+import { addMonths, parseISO, startOfDay, addDays, addWeeks, setHours, setMinutes, isBefore } from 'date-fns';
+import { useMemo } from 'react';
 
 export interface RecurrenceRule {
   frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
@@ -18,7 +19,7 @@ export interface RecurringSchedule {
   patient_id: string;
   rrule_json: any; // JSON field from Supabase
   duration_minutes: number;
-  session_type: string;
+  session_type: string; // Agora será usado como modality
   session_value?: number;
   is_active: boolean;
   created_at: string;
@@ -29,7 +30,7 @@ export interface CreateRecurringScheduleData {
   patient_id: string;
   rrule_json: RecurrenceRule;
   duration_minutes: number;
-  session_type: string;
+  session_type: string; // Agora será usado como modality
   session_value?: number;
 }
 
@@ -84,7 +85,7 @@ export const useRecurringSchedules = () => {
         rrule_json: newSchedule.rrule_json as unknown as RecurrenceRule
       });
       
-      // Invalidar todas as queries de sessions para atualizar o dashboard
+      // Invalidar TODAS as queries de sessions - isso é crítico para atualizar o dashboard
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       
       toast({
@@ -159,9 +160,11 @@ export const useRecurringSchedules = () => {
       schedule_id: schedule.id,
       scheduled_at: sessionDate.toISOString(),
       duration_minutes: schedule.duration_minutes,
-      type: schedule.session_type, // Usar o tipo da modalidade
-      value: schedule.session_value,
+      type: 'therapy', // Sempre therapy agora
+      modality: schedule.session_type, // session_type vira modalidade
+      value: schedule.session_value ? Number(schedule.session_value) : undefined, // Garantir que seja número
       status: 'scheduled',
+      paid: false,
       origin: 'recurring'
     }));
 
@@ -173,9 +176,11 @@ export const useRecurringSchedules = () => {
 
       if (error) {
         console.error('Erro ao materializar sessões:', error);
-        throw error; // Propagar o erro para poder fazer o handling adequado
+        throw error;
       } else {
         console.log('Sessões inseridas com sucesso');
+        // Invalidar queries para forçar atualização
+        queryClient.invalidateQueries({ queryKey: ['sessions'] });
       }
     } catch (error) {
       console.error('Erro ao inserir sessões:', error);

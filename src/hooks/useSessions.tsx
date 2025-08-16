@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -12,6 +13,7 @@ export interface Session {
   scheduled_at: string;
   duration_minutes: number;
   type: string;
+  modality?: string; // Nova propriedade para modalidade
   status: string;
   value?: number;
   paid: boolean;
@@ -28,7 +30,7 @@ export interface CreateSessionData {
   patient_id: string;
   scheduled_at: string;
   duration_minutes?: number;
-  type: string;
+  modality: string; // Mudou de type para modality
   value?: number;
   notes?: string;
 }
@@ -79,7 +81,13 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         throw error;
       }
       
-      return data as Session[] || [];
+      // Garantir que value seja sempre número quando presente
+      const normalizedData = (data || []).map(session => ({
+        ...session,
+        value: session.value ? Number(session.value) : undefined
+      }));
+      
+      return normalizedData as Session[];
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 2, // 2 minutos de cache
@@ -93,11 +101,17 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
       const { data, error } = await supabase
         .from('sessions')
         .insert({
-          ...sessionData,
           user_id: user.id,
-          status: 'scheduled',
+          patient_id: sessionData.patient_id,
+          scheduled_at: sessionData.scheduled_at,
           duration_minutes: sessionData.duration_minutes || 50,
-          paid: false
+          type: 'therapy', // Sempre therapy
+          modality: sessionData.modality, // Armazenar modalidade separadamente
+          value: sessionData.value,
+          notes: sessionData.notes,
+          status: 'scheduled',
+          paid: false,
+          origin: 'manual'
         })
         .select()
         .single();

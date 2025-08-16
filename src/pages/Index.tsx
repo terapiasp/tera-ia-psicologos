@@ -1,3 +1,4 @@
+
 import { CalendarDays, DollarSign, TrendingUp, Users } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -35,7 +36,7 @@ const Index = () => {
     id: session.id,
     patient: session.patients?.name || "Paciente não encontrado",
     time: format(new Date(session.scheduled_at), "HH:mm"),
-    type: getSessionTypeLabel(session.type),
+    type: getModalityLabel(session.modality || 'individual'), // Usar modality
     status: mapSessionStatus(session.status),
     location: "Online", // TODO: pegar do paciente ou session
   }));
@@ -44,7 +45,7 @@ const Index = () => {
     id: session.id,
     patient: session.patients?.name || "Paciente não encontrado",
     time: format(new Date(session.scheduled_at), "HH:mm"),
-    type: getSessionTypeLabel(session.type),
+    type: getModalityLabel(session.modality || 'individual'), // Usar modality
     status: mapSessionStatus(session.status),
     location: "Online",
   }));
@@ -55,14 +56,14 @@ const Index = () => {
   const confirmedToday = todaySessions.filter(s => s.status === 'confirmed').length;
   const pendingToday = todaySessions.filter(s => s.status === 'pending').length;
   
-  // Receita prevista (todas as sessões com valor) e recebida (apenas pagas)
+  // Cálculo de receita simplificado - soma TODAS as sessões com valor no mês
   const monthlyPredicted = monthSessions
-    .filter(s => s.value)
-    .reduce((sum, s) => sum + (s.value || 0), 0);
+    .filter(s => s.value !== null && s.value !== undefined)
+    .reduce((sum, s) => sum + Number(s.value), 0);
   
   const monthlyReceived = monthSessions
-    .filter(s => s.paid && s.value)
-    .reduce((sum, s) => sum + (s.value || 0), 0);
+    .filter(s => s.paid && s.value !== null && s.value !== undefined)
+    .reduce((sum, s) => sum + Number(s.value), 0);
   
   const attendanceRate = monthSessions.length > 0 
     ? Math.round((monthSessions.filter(s => s.status === 'completed').length / monthSessions.length) * 100)
@@ -91,16 +92,19 @@ const Index = () => {
     }
   }
 
-  function getSessionTypeLabel(type: string) {
-    const types: Record<string, string> = {
+  function getModalityLabel(modality: string) {
+    const modalities: Record<string, string> = {
       'individual': 'Individual',
       'couple': 'Casal',
       'family': 'Família',
       'group': 'Grupo',
       'evaluation': 'Avaliação',
-      'return': 'Retorno'
+      'return': 'Retorno',
+      'individual_adult': 'Individual Adulto',
+      'individual_child': 'Individual Infantil',
+      'individual_teen': 'Individual Adolescente'
     };
-    return types[type] || type;
+    return modalities[modality] || modality;
   }
 
   function mapSessionStatus(status: string): 'confirmed' | 'pending' | 'completed' {

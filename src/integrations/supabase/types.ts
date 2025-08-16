@@ -317,6 +317,7 @@ export type Database = {
           created_at: string
           duration_minutes: number
           id: string
+          modality: string | null
           notes: string | null
           origin: string
           paid: boolean
@@ -333,6 +334,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           id?: string
+          modality?: string | null
           notes?: string | null
           origin?: string
           paid?: boolean
@@ -349,6 +351,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           id?: string
+          modality?: string | null
           notes?: string | null
           origin?: string
           paid?: boolean

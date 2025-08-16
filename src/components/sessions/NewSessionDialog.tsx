@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +37,7 @@ const sessionSchema = z.object({
   date: z.string().min(1, "Selecione uma data"),
   time: z.string().min(1, "Selecione um horário"),
   duration_minutes: z.number().min(15, "Duração mínima de 15 minutos").default(50),
-  type: z.string().min(1, "Selecione o tipo de sessão"),
+  modality: z.string().min(1, "Selecione a modalidade"), // Mudou de type para modality
   value: z.number().min(0, "Valor deve ser positivo").optional(),
   notes: z.string().optional(),
 });
@@ -59,7 +60,7 @@ export function NewSessionDialog({ children }: NewSessionDialogProps) {
       date: "",
       time: "",
       duration_minutes: 50,
-      type: "individual",
+      modality: "individual", // Mudou de type para modality
       value: undefined,
       notes: "",
     },
@@ -73,7 +74,7 @@ export function NewSessionDialog({ children }: NewSessionDialogProps) {
       patient_id: data.patient_id,
       scheduled_at: scheduledAt,
       duration_minutes: data.duration_minutes,
-      type: data.type,
+      modality: data.modality, // Agora é modalidade
       value: data.value,
       notes: data.notes || undefined,
     };
@@ -180,14 +181,14 @@ export function NewSessionDialog({ children }: NewSessionDialogProps) {
 
               <FormField
                 control={form.control}
-                name="type"
+                name="modality"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo *</FormLabel>
+                    <FormLabel>Modalidade *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
+                          <SelectValue placeholder="Selecione a modalidade" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
