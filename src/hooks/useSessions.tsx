@@ -63,12 +63,14 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         .from('sessions')
         .select(`
           *,
-          patients (
+          patients!inner (
             name,
-            nickname
+            nickname,
+            is_archived
           )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('patients.is_archived', false);
 
       if (dateFilters.startISO && dateFilters.endISO) {
         query = query

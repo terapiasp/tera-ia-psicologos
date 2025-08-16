@@ -98,6 +98,7 @@ export type Database = {
       patients: {
         Row: {
           address: string | null
+          archived_at: string | null
           birth_date: string | null
           created_at: string
           custom_frequency: string | null
@@ -105,6 +106,7 @@ export type Database = {
           frequency: string
           frequency_preset_id: string | null
           id: string
+          is_archived: boolean
           name: string
           nickname: string | null
           phone: string | null
@@ -118,6 +120,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          archived_at?: string | null
           birth_date?: string | null
           created_at?: string
           custom_frequency?: string | null
@@ -125,6 +128,7 @@ export type Database = {
           frequency?: string
           frequency_preset_id?: string | null
           id?: string
+          is_archived?: boolean
           name: string
           nickname?: string | null
           phone?: string | null
@@ -138,6 +142,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          archived_at?: string | null
           birth_date?: string | null
           created_at?: string
           custom_frequency?: string | null
@@ -145,6 +150,7 @@ export type Database = {
           frequency?: string
           frequency_preset_id?: string | null
           id?: string
+          is_archived?: boolean
           name?: string
           nickname?: string | null
           phone?: string | null

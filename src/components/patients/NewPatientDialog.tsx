@@ -58,7 +58,7 @@ interface NewPatientDialogProps {
 export function NewPatientDialog({ children, patient, isEdit = false }: NewPatientDialogProps) {
   const [open, setOpen] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
-  const { createPatient, updatePatient, isCreating, isUpdating } = usePatients();
+  const { createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
 
@@ -384,6 +384,19 @@ export function NewPatientDialog({ children, patient, isEdit = false }: NewPatie
               >
                 Cancelar
               </Button>
+              {isEdit && patient && !patient.is_archived && (
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={() => {
+                    archivePatient(patient.id);
+                    setOpen(false);
+                  }}
+                  disabled={isArchiving}
+                >
+                  {isArchiving ? "Arquivando..." : "Arquivar"}
+                </Button>
+              )}
               <Button
                 type="submit"
                 disabled={isCreating || isUpdating}

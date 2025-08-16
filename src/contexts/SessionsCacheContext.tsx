@@ -59,12 +59,14 @@ export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ ch
         .from('sessions')
         .select(`
           *,
-          patients (
+          patients!inner (
             name,
-            nickname
+            nickname,
+            is_archived
           )
         `)
         .eq('user_id', user.id)
+        .eq('patients.is_archived', false)
         .gte('scheduled_at', startDate.toISOString())
         .lte('scheduled_at', endDate.toISOString())
         .order('scheduled_at', { ascending: true });

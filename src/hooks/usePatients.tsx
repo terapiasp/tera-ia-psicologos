@@ -19,6 +19,8 @@ export interface Patient {
   status: string;
   address?: string;
   service_modality_id?: string;
+  is_archived: boolean;
+  archived_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -43,7 +45,7 @@ export const usePatients = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: patients = [], isLoading, error } = useQuery({
+  const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
       if (!user?.id) throw new Error('Usuário não autenticado');
@@ -59,6 +61,9 @@ export const usePatients = () => {
     },
     enabled: !!user?.id,
   });
+
+  const patients = allPatients.filter(patient => !patient.is_archived);
+  const archivedPatients = allPatients.filter(patient => patient.is_archived);
 
   const createPatientMutation = useMutation({
     mutationFn: async (patientData: CreatePatientData) => {
@@ -124,13 +129,118 @@ export const usePatients = () => {
     },
   });
 
+  const archivePatientMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('patients')
+        .update({ is_archived: true })
+        .eq('id', patientId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      toast({
+        title: "Paciente arquivado",
+        description: "Paciente movido para arquivos com sucesso!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao arquivar paciente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unarchivePatientMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('patients')
+        .update({ is_archived: false })
+        .eq('id', patientId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      toast({
+        title: "Paciente reativado",
+        description: "Paciente retirado dos arquivos com sucesso!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao reativar paciente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deletePatientMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
+      // Delete related data first
+      await Promise.all([
+        supabase.from('sessions').delete().eq('patient_id', patientId).eq('user_id', user.id),
+        supabase.from('recurring_schedules').delete().eq('patient_id', patientId).eq('user_id', user.id),
+        supabase.from('patient_notes').delete().eq('patient_id', patientId).eq('user_id', user.id),
+      ]);
+
+      // Delete patient
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', patientId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      toast({
+        title: "Paciente deletado",
+        description: "Todos os dados do paciente foram removidos permanentemente.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao deletar paciente",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     patients,
+    archivedPatients,
     isLoading,
     error,
     createPatient: createPatientMutation.mutate,
     updatePatient: updatePatientMutation.mutate,
+    archivePatient: archivePatientMutation.mutate,
+    unarchivePatient: unarchivePatientMutation.mutate,
+    deletePatient: deletePatientMutation.mutate,
     isCreating: createPatientMutation.isPending,
     isUpdating: updatePatientMutation.isPending,
+    isArchiving: archivePatientMutation.isPending,
+    isUnarchiving: unarchivePatientMutation.isPending,
+    isDeleting: deletePatientMutation.isPending,
   };
 };
