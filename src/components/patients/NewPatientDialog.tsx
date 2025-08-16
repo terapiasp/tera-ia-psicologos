@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,8 +40,6 @@ const patientSchema = z.object({
   whatsapp: z.string().min(10, "WhatsApp deve ter pelo menos 10 dígitos"),
   birth_date: z.string().optional(),
   therapy_type: z.string().min(1, "Selecione o tipo de terapia"),
-  frequency: z.string().min(1, "Selecione a frequência"),
-  custom_frequency: z.string().optional(),
   session_mode: z.string().min(1, "Selecione o modo da sessão"),
   address: z.string().optional(),
   session_value: z.string().optional(),
@@ -68,8 +67,6 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
       whatsapp: "",
       birth_date: "",
       therapy_type: "",
-      frequency: "",
-      custom_frequency: "",
       session_mode: "online",
       address: "",
       session_value: "80",
@@ -77,17 +74,19 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
   });
 
   const onSubmit = (data: PatientFormData) => {
+    // A frequência agora vem do agendamento recorrente
+    const frequency = recurrenceRule?.frequency || 'custom';
+    
     const patientData: CreatePatientData = {
       name: data.name,
       whatsapp: data.whatsapp,
       therapy_type: data.therapy_type,
-      frequency: data.frequency,
+      frequency: frequency,
       session_mode: data.session_mode,
       email: data.email || undefined,
       phone: data.phone || undefined,
       nickname: data.nickname || undefined,
       birth_date: data.birth_date || undefined,
-      custom_frequency: data.custom_frequency || undefined,
       address: data.address || undefined,
     };
 
@@ -218,73 +217,31 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="therapy_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Terapia *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="individual_adult">Individual Adulto</SelectItem>
-                        <SelectItem value="individual_child">Individual Infantil</SelectItem>
-                        <SelectItem value="individual_teen">Individual Adolescente</SelectItem>
-                        <SelectItem value="couple">Terapia de Casal</SelectItem>
-                        <SelectItem value="family">Terapia Familiar</SelectItem>
-                        <SelectItem value="group">Terapia em Grupo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frequência *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a frequência" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="weekly">Semanal</SelectItem>
-                        <SelectItem value="biweekly">Quinzenal</SelectItem>
-                        <SelectItem value="monthly">Mensal</SelectItem>
-                        <SelectItem value="custom">Personalizada</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {form.watch("frequency") === "custom" && (
-              <FormField
-                control={form.control}
-                name="custom_frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frequência Personalizada</FormLabel>
+            <FormField
+              control={form.control}
+              name="therapy_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Terapia *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input placeholder="Ex: A cada 3 semanas" {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                    <SelectContent>
+                      <SelectItem value="individual_adult">Individual Adulto</SelectItem>
+                      <SelectItem value="individual_child">Individual Infantil</SelectItem>
+                      <SelectItem value="individual_teen">Individual Adolescente</SelectItem>
+                      <SelectItem value="couple">Terapia de Casal</SelectItem>
+                      <SelectItem value="family">Terapia Familiar</SelectItem>
+                      <SelectItem value="group">Terapia em Grupo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -343,7 +300,7 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
               )}
             />
 
-            {/* Recorrência */}
+            {/* Agendamento Recorrente Integrado */}
             <RecurrenceBuilder
               value={recurrenceRule}
               onChange={setRecurrenceRule}

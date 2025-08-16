@@ -1,15 +1,14 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Calendar, Clock } from 'lucide-react';
+import { X, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { RecurrenceRule } from '@/hooks/useRecurringSchedules';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface RecurrenceBuilderProps {
   value?: RecurrenceRule;
@@ -32,16 +31,17 @@ const FREQUENCY_OPTIONS = [
   { value: 'weekly', label: 'Semanal' },
   { value: 'biweekly', label: 'Quinzenal' },
   { value: 'monthly', label: 'Mensal' },
-  { value: 'custom', label: 'Personalizado' },
 ];
 
-export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual', sessionValue }: RecurrenceBuilderProps) => {
+export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual', sessionValue = 80 }: RecurrenceBuilderProps) => {
   const [isEnabled, setIsEnabled] = useState(!!value);
+  const [validationError, setValidationError] = useState<string>('');
 
   const handleToggle = () => {
     if (isEnabled) {
       setIsEnabled(false);
       onChange(undefined);
+      setValidationError('');
     } else {
       setIsEnabled(true);
       // Criar regra padrão
@@ -58,15 +58,58 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
 
   const updateRule = (updates: Partial<RecurrenceRule>) => {
     if (!value) return;
-    onChange({ ...value, ...updates });
+    
+    const newRule = { ...value, ...updates };
+    
+    // Validar regras inteligentes
+    const error = validateRule(newRule);
+    setValidationError(error);
+    
+    if (!error) {
+      onChange(newRule);
+    }
+  };
+
+  const validateRule = (rule: RecurrenceRule): string => {
+    if (!rule.daysOfWeek || rule.daysOfWeek.length === 0) {
+      return 'Selecione pelo menos um dia da semana';
+    }
+
+    // Regra inteligente: para semanal, apenas 1 day por semana
+    if (rule.frequency === 'weekly' && rule.daysOfWeek.length > 1) {
+      return 'Para frequência semanal, selecione apenas um dia da semana';
+    }
+
+    // Regra inteligente: para quinzenal, máximo 1 dia por semana
+    if (rule.frequency === 'biweekly' && rule.daysOfWeek.length > 1) {
+      return 'Para frequência quinzenal, selecione apenas um dia da semana';
+    }
+
+    // Para mensal, pode ter vários dias mas vamos limitar a lógica
+    if (rule.frequency === 'monthly' && rule.daysOfWeek.length > 2) {
+      return 'Para frequência mensal, selecione no máximo 2 dias';
+    }
+
+    return '';
   };
 
   const toggleDayOfWeek = (day: number) => {
     if (!value) return;
+    
     const currentDays = value.daysOfWeek || [];
-    const newDays = currentDays.includes(day)
-      ? currentDays.filter(d => d !== day)
-      : [...currentDays, day].sort();
+    let newDays: number[];
+    
+    if (currentDays.includes(day)) {
+      newDays = currentDays.filter(d => d !== day);
+    } else {
+      // Para semanal e quinzenal, substituir o dia atual
+      if (value.frequency === 'weekly' || value.frequency === 'biweekly') {
+        newDays = [day];
+      } else {
+        newDays = [...currentDays, day].sort();
+      }
+    }
+    
     updateRule({ daysOfWeek: newDays });
   };
 
@@ -82,11 +125,24 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
       case 'biweekly':
         return `A cada duas semanas ${days ? `(${days})` : ''} às ${time}`;
       case 'monthly':
-        return `Todo mês no dia ${format(new Date(value.startDate), 'd')} às ${time}`;
-      case 'custom':
-        return `A cada ${value.interval} dia${value.interval > 1 ? 's' : ''} ${days ? `(${days})` : ''} às ${time}`;
+        return `Todo mês ${days ? `(${days})` : ''} às ${time}`;
       default:
         return '';
+    }
+  };
+
+  const calculateMonthlyRevenue = () => {
+    if (!value || !sessionValue) return 0;
+    
+    switch (value.frequency) {
+      case 'weekly':
+        return sessionValue * 4; // 4 semanas por mês
+      case 'biweekly':
+        return sessionValue * 2; // 2 sessões por mês
+      case 'monthly':
+        return sessionValue * (value.daysOfWeek?.length || 1); // Dias selecionados no mês
+      default:
+        return 0;
     }
   };
 
@@ -94,7 +150,7 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Agendamento Recorrente</Label>
+          <Label className="text-sm font-medium">Frequência e Agendamento</Label>
           <Button
             type="button"
             variant="outline"
@@ -103,11 +159,11 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
             className="text-xs"
           >
             <Calendar className="w-3 h-3 mr-1" />
-            Configurar Recorrência
+            Configurar Frequência
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Configure um agendamento recorrente para sessões regulares do paciente
+          Configure a frequência das sessões e agendamento automático
         </p>
       </div>
     );
@@ -119,7 +175,7 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Agendamento Recorrente
+            Frequência e Agendamento
           </CardTitle>
           <Button
             type="button"
@@ -131,7 +187,7 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
             <X className="w-3 h-3" />
           </Button>
         </div>
-        {value && (
+        {value && !validationError && (
           <Badge variant="secondary" className="text-xs w-fit">
             {getFrequencyDescription()}
           </Badge>
@@ -140,8 +196,14 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
       <CardContent className="space-y-4">
         {/* Frequência */}
         <div className="space-y-2">
-          <Label className="text-xs">Frequência</Label>
-          <Select value={value?.frequency} onValueChange={(freq) => updateRule({ frequency: freq as any })}>
+          <Label className="text-xs">Frequência *</Label>
+          <Select 
+            value={value?.frequency} 
+            onValueChange={(freq) => updateRule({ 
+              frequency: freq as any,
+              daysOfWeek: freq === 'weekly' || freq === 'biweekly' ? [1] : value?.daysOfWeek || [1]
+            })}
+          >
             <SelectTrigger className="h-8">
               <SelectValue placeholder="Selecione a frequência" />
             </SelectTrigger>
@@ -155,25 +217,15 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
           </Select>
         </div>
 
-        {/* Intervalo customizado */}
-        {value?.frequency === 'custom' && (
+        {/* Dias da Semana */}
+        {value?.frequency && (
           <div className="space-y-2">
-            <Label className="text-xs">Intervalo (dias)</Label>
-            <Input
-              type="number"
-              min="1"
-              max="365"
-              value={value.interval}
-              onChange={(e) => updateRule({ interval: parseInt(e.target.value) || 1 })}
-              className="h-8"
-            />
-          </div>
-        )}
-
-        {/* Dias da semana (para semanal, quinzenal e custom) */}
-        {(value?.frequency === 'weekly' || value?.frequency === 'biweekly' || value?.frequency === 'custom') && (
-          <div className="space-y-2">
-            <Label className="text-xs">Dias da Semana</Label>
+            <Label className="text-xs">
+              Dias da Semana
+              {value.frequency === 'weekly' && <span className="text-muted-foreground"> (máximo 1)</span>}
+              {value.frequency === 'biweekly' && <span className="text-muted-foreground"> (máximo 1)</span>}
+              {value.frequency === 'monthly' && <span className="text-muted-foreground"> (máximo 2)</span>}
+            </Label>
             <div className="flex flex-wrap gap-1">
               {DAYS_OF_WEEK.map(day => (
                 <button
@@ -195,7 +247,15 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
           </div>
         )}
 
-        {/* Data de início */}
+        {/* Erro de validação */}
+        {validationError && (
+          <div className="flex items-center gap-2 text-xs text-destructive">
+            <AlertCircle className="w-3 h-3" />
+            {validationError}
+          </div>
+        )}
+
+        {/* Data e Hora */}
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-2">
             <Label className="text-xs">Data de Início</Label>
@@ -220,17 +280,15 @@ export const RecurrenceBuilder = ({ value, onChange, sessionType = 'individual',
           </div>
         </div>
 
-        {/* Preview */}
-        {value && (
-          <div className="pt-2 border-t border-border/50">
+        {/* Preview e Receita */}
+        {value && !validationError && (
+          <div className="pt-2 border-t border-border/50 space-y-2">
             <p className="text-xs text-muted-foreground">
               {getFrequencyDescription()}
             </p>
-            {sessionValue && (
-              <p className="text-xs text-primary font-medium mt-1">
-                Receita estimada mensal: R$ {(sessionValue * 4).toFixed(0)}/mês
-              </p>
-            )}
+            <p className="text-xs text-primary font-medium">
+              Receita estimada mensal: R$ {calculateMonthlyRevenue().toFixed(0)}
+            </p>
           </div>
         )}
       </CardContent>
