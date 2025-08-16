@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      frequency_presets: {
+        Row: {
+          created_at: string
+          estimated_sessions_per_month: number
+          id: string
+          is_active: boolean
+          name: string
+          recurrence_pattern: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_sessions_per_month?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          recurrence_pattern: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estimated_sessions_per_month?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          recurrence_pattern?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_notes: {
         Row: {
           content: string
@@ -70,6 +103,7 @@ export type Database = {
           custom_frequency: string | null
           email: string | null
           frequency: string
+          frequency_preset_id: string | null
           id: string
           name: string
           nickname: string | null
@@ -89,6 +123,7 @@ export type Database = {
           custom_frequency?: string | null
           email?: string | null
           frequency?: string
+          frequency_preset_id?: string | null
           id?: string
           name: string
           nickname?: string | null
@@ -108,6 +143,7 @@ export type Database = {
           custom_frequency?: string | null
           email?: string | null
           frequency?: string
+          frequency_preset_id?: string | null
           id?: string
           name?: string
           nickname?: string | null

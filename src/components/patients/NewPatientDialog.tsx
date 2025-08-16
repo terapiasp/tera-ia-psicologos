@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus } from "lucide-react";
-import { useRecurringSchedules, RecurrenceRule } from "@/hooks/useRecurringSchedules";
+import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
+import { RecurrenceRule } from "@/types/frequency";
 import { RecurrenceBuilder } from "./RecurrenceBuilder";
 import {
   Dialog,
@@ -88,6 +89,7 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
       nickname: data.nickname || undefined,
       birth_date: data.birth_date || undefined,
       address: data.address || undefined,
+      frequency_preset_id: recurrenceRule?.presetId || undefined,
     };
 
     createPatient(patientData, {
