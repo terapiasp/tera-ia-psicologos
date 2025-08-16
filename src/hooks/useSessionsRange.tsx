@@ -4,6 +4,7 @@ import { Session } from './useSessions';
 import { startOfDay, endOfDay } from 'date-fns';
 
 export const useSessionsRange = (startDate?: Date, endDate?: Date) => {
+  console.log('useSessionsRange: Called with', { startDate, endDate });
   const { getSessionsForRange, isMonthLoading } = useSessionsCache();
   const [sessions, setSessions] = useState<Session[]>([]);
 

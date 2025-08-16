@@ -21,6 +21,7 @@ interface WeeklyViewProps {
 }
 
 export function WeeklyView({ onDateClick }: WeeklyViewProps) {
+  console.log('WeeklyView: Rendering');
   const [currentStartDate, setCurrentStartDate] = useState<Date>(() => {
     return startOfWeek(new Date(), { weekStartsOn: 1 });
   });

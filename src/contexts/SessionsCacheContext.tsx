@@ -30,6 +30,7 @@ interface SessionsCacheProviderProps {
 }
 
 export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ children }) => {
+  console.log('SessionsCacheProvider: Rendering');
   const { user } = useAuth();
   const [cache, setCache] = useState<SessionsCache>({});
   const [loadingMonths, setLoadingMonths] = useState<Set<string>>(new Set());
