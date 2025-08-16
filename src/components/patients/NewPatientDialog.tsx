@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,7 +58,17 @@ export function NewPatientDialog({ children, patient, isEdit = false }: NewPatie
   const [open, setOpen] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
   const { createPatient, updatePatient, isCreating, isUpdating } = usePatients();
-  const { createSchedule } = useRecurringSchedules();
+  const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
+
+  // Carregar agenda existente do paciente quando for edição
+  useEffect(() => {
+    if (isEdit && patient && schedules.length > 0) {
+      const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+      if (existingSchedule) {
+        setRecurrenceRule(existingSchedule.rrule_json);
+      }
+    }
+  }, [isEdit, patient, schedules]);
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -93,6 +103,33 @@ export function NewPatientDialog({ children, patient, isEdit = false }: NewPatie
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: () => {
+          // Atualizar agenda se há regra de recorrência
+          if (recurrenceRule) {
+            const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+            const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+            
+            if (existingSchedule) {
+              // Atualizar agenda existente
+              updateSchedule({
+                id: existingSchedule.id,
+                updates: {
+                  rrule_json: recurrenceRule,
+                  session_type: data.therapy_type,
+                  session_value: sessionValue,
+                }
+              });
+            } else {
+              // Criar nova agenda
+              createSchedule({
+                patient_id: patient.id,
+                rrule_json: recurrenceRule,
+                duration_minutes: 50,
+                session_type: data.therapy_type,
+                session_value: sessionValue,
+              });
+            }
+          }
+          
           form.reset();
           setOpen(false);
         },
@@ -326,15 +363,13 @@ export function NewPatientDialog({ children, patient, isEdit = false }: NewPatie
               )}
             />
 
-            {/* Agendamento Recorrente Integrado - apenas no modo criação */}
-            {!isEdit && (
-              <RecurrenceBuilder
-                value={recurrenceRule}
-                onChange={setRecurrenceRule}
-                sessionType={form.watch("therapy_type")}
-                sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
-              />
-            )}
+            {/* Agendamento Recorrente Integrado */}
+            <RecurrenceBuilder
+              value={recurrenceRule}
+              onChange={setRecurrenceRule}
+              sessionType={form.watch("therapy_type")}
+              sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+            />
 
             <div className="flex gap-4 justify-end pt-4">
               <Button
