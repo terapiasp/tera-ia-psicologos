@@ -18,7 +18,7 @@ export interface RecurringSchedule {
   patient_id: string;
   rrule_json: any; // JSON field from Supabase
   duration_minutes: number;
-  session_type: 'individual' | 'couple' | 'group' | 'online';
+  session_type: string;
   session_value?: number;
   is_active: boolean;
   created_at: string;
@@ -29,7 +29,7 @@ export interface CreateRecurringScheduleData {
   patient_id: string;
   rrule_json: RecurrenceRule;
   duration_minutes: number;
-  session_type: 'individual' | 'couple' | 'group' | 'online';
+  session_type: string;
   session_value?: number;
 }
 
@@ -52,8 +52,7 @@ export const useRecurringSchedules = () => {
       if (error) throw error;
       return data.map(item => ({
         ...item,
-        rrule_json: item.rrule_json as unknown as RecurrenceRule,
-        session_type: item.session_type as 'individual' | 'couple' | 'group' | 'online'
+        rrule_json: item.rrule_json as unknown as RecurrenceRule
       })) as RecurringSchedule[];
     },
     enabled: !!user?.id,
@@ -82,8 +81,7 @@ export const useRecurringSchedules = () => {
       // Materializar sessões para os próximos 12 meses
       await materializeSessionsForSchedule({
         ...newSchedule,
-        rrule_json: newSchedule.rrule_json as unknown as RecurrenceRule,
-        session_type: newSchedule.session_type as 'individual' | 'couple' | 'group' | 'online'
+        rrule_json: newSchedule.rrule_json as unknown as RecurrenceRule
       });
       
       // Invalidar todas as queries de sessions para atualizar o dashboard
@@ -127,8 +125,7 @@ export const useRecurringSchedules = () => {
       // Regenerar sessões futuras
       regenerateFutureSessionsForSchedule({
         ...updatedSchedule,
-        rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule,
-        session_type: updatedSchedule.session_type as 'individual' | 'couple' | 'group' | 'online'
+        rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule
       });
       toast({
         title: "Recorrência atualizada",
@@ -148,8 +145,12 @@ export const useRecurringSchedules = () => {
   const materializeSessionsForSchedule = async (schedule: RecurringSchedule) => {
     if (!user?.id) return;
 
+    console.log('Materializando sessões para schedule:', schedule.id);
+
     const rule = schedule.rrule_json;
     const sessions = generateSessionOccurrences(rule, 12); // 12 meses à frente
+    
+    console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
 
     // Inserir sessões no banco de dados
     const sessionsToInsert = sessions.map(sessionDate => ({
@@ -158,20 +159,23 @@ export const useRecurringSchedules = () => {
       schedule_id: schedule.id,
       scheduled_at: sessionDate.toISOString(),
       duration_minutes: schedule.duration_minutes,
-      type: 'individual', // Usar valor padrão válido para o constraint
+      type: schedule.session_type, // Usar o tipo da modalidade
       value: schedule.session_value,
       status: 'scheduled',
       origin: 'recurring'
     }));
 
     try {
-      const { error } = await supabase
+      console.log('Inserindo', sessionsToInsert.length, 'sessões no banco');
+      const { data, error } = await supabase
         .from('sessions')
         .insert(sessionsToInsert);
 
       if (error) {
         console.error('Erro ao materializar sessões:', error);
         throw error; // Propagar o erro para poder fazer o handling adequado
+      } else {
+        console.log('Sessões inseridas com sucesso');
       }
     } catch (error) {
       console.error('Erro ao inserir sessões:', error);
