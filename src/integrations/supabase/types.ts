@@ -193,6 +193,83 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_exceptions: {
+        Row: {
+          created_at: string
+          exception_date: string
+          exception_type: string
+          id: string
+          new_datetime: string | null
+          schedule_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exception_date: string
+          exception_type: string
+          id?: string
+          new_datetime?: string | null
+          schedule_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exception_date?: string
+          exception_type?: string
+          id?: string
+          new_datetime?: string | null
+          schedule_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_exceptions_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_schedules: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          patient_id: string
+          rrule_json: Json
+          session_type: string
+          session_value: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          patient_id: string
+          rrule_json: Json
+          session_type?: string
+          session_value?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          patient_id?: string
+          rrule_json?: Json
+          session_type?: string
+          session_value?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_modalities: {
         Row: {
           commission_percentage: number | null
@@ -241,8 +318,10 @@ export type Database = {
           duration_minutes: number
           id: string
           notes: string | null
+          origin: string
           paid: boolean
           patient_id: string
+          schedule_id: string | null
           scheduled_at: string
           status: string
           type: string
@@ -255,8 +334,10 @@ export type Database = {
           duration_minutes?: number
           id?: string
           notes?: string | null
+          origin?: string
           paid?: boolean
           patient_id: string
+          schedule_id?: string | null
           scheduled_at: string
           status?: string
           type?: string
@@ -269,8 +350,10 @@ export type Database = {
           duration_minutes?: number
           id?: string
           notes?: string | null
+          origin?: string
           paid?: boolean
           patient_id?: string
+          schedule_id?: string | null
           scheduled_at?: string
           status?: string
           type?: string
@@ -284,6 +367,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_schedules"
             referencedColumns: ["id"]
           },
         ]

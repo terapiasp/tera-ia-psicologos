@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus } from "lucide-react";
+import { useRecurringSchedules, RecurrenceRule } from "@/hooks/useRecurringSchedules";
+import { RecurrenceBuilder } from "./RecurrenceBuilder";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,7 @@ const patientSchema = z.object({
   custom_frequency: z.string().optional(),
   session_mode: z.string().min(1, "Selecione o modo da sessão"),
   address: z.string().optional(),
+  session_value: z.string().optional(),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -51,7 +54,9 @@ interface NewPatientDialogProps {
 
 export function NewPatientDialog({ children }: NewPatientDialogProps) {
   const [open, setOpen] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
   const { createPatient, isCreating } = usePatients();
+  const { createSchedule } = useRecurringSchedules();
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -67,6 +72,7 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
       custom_frequency: "",
       session_mode: "online",
       address: "",
+      session_value: "80",
     },
   });
 
@@ -86,8 +92,22 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
     };
 
     createPatient(patientData, {
-      onSuccess: () => {
+      onSuccess: (newPatient: any) => {
+        // Se há regra de recorrência, criar o agendamento recorrente
+        if (recurrenceRule && newPatient) {
+          const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+          
+          createSchedule({
+            patient_id: newPatient.id,
+            rrule_json: recurrenceRule,
+            duration_minutes: 50,
+            session_type: data.therapy_type,
+            session_value: sessionValue,
+          });
+        }
+        
         form.reset();
+        setRecurrenceRule(undefined);
         setOpen(false);
       },
     });
@@ -301,6 +321,34 @@ export function NewPatientDialog({ children }: NewPatientDialogProps) {
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            <FormField
+              control={form.control}
+              name="session_value"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor da Sessão (R$)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="80.00"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Recorrência */}
+            <RecurrenceBuilder
+              value={recurrenceRule}
+              onChange={setRecurrenceRule}
+              sessionType={form.watch("therapy_type")}
+              sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
             />
 
             <div className="flex gap-4 justify-end pt-4">
