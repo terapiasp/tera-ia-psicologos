@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks } from 'date-fns';
+import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,13 +120,13 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     <div className="p-2">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-1 mb-2 sticky top-0 bg-background z-10 border-b pb-2">
-          <div className="flex items-center justify-center gap-1 py-1">
+        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background z-10 border-b pb-2">
+          <div className="flex items-center justify-center gap-1 py-2">
             <Button
               variant="outline"
               size="sm"
               onClick={goToPreviousWeek}
-              className="h-6 w-6 p-0"
+              className="h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               <ChevronLeft className="h-3 w-3" />
             </Button>
@@ -135,7 +135,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
               variant="ghost"
               size="sm"
               onClick={goToCurrentWeek}
-              className="h-6 px-2 text-xs"
+              className="h-7 px-3 text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               <Calendar className="h-3 w-3 mr-1" />
               Hoje
@@ -145,17 +145,17 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
               variant="outline"
               size="sm"
               onClick={goToNextWeek}
-              className="h-6 w-6 p-0"
+              className="h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground transition-colors"
             >
               <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
           {weekDays.map((day) => (
-            <div key={day.toISOString()} className="text-center py-1">
-              <div className="text-xs font-medium">
+            <div key={day.toISOString()} className="text-center py-2">
+              <div className="text-sm font-semibold text-foreground">
                 {format(day, 'EEE', { locale: ptBR })}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-sm text-muted-foreground font-medium">
                 {format(day, 'dd/MM')}
               </div>
             </div>
@@ -163,11 +163,11 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
         </div>
 
         {/* Grid principal */}
-        <div className="grid grid-cols-8 gap-1 text-xs">
+        <div className="grid grid-cols-8 gap-1 text-sm">
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-xs text-muted-foreground font-mono py-1 px-1 text-right border-r border-border/30">
+              <div className="text-sm text-muted-foreground font-mono py-3 px-2 text-right border-r border-border/40 bg-muted/30">
                 {format(time, 'HH:mm')}
               </div>
               
@@ -190,14 +190,14 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
 
         <DragOverlay>
           {activeSession && (
-            <Card className="opacity-90 rotate-3 shadow-lg">
-              <CardContent className="p-2">
-                <div className="text-sm font-medium">
+            <Card className="opacity-95 rotate-1 shadow-medium bg-gradient-soft border-primary/20">
+              <CardContent className="p-3">
+                <div className="text-sm font-semibold text-foreground">
                   {activeSession.patients?.nickname || activeSession.patients?.name}
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {activeSession.modality}
-                </Badge>
+                <div className="text-xs text-muted-foreground font-medium mt-1">
+                  {format(new Date(activeSession.scheduled_at), 'HH:mm')} - {format(addMinutes(new Date(activeSession.scheduled_at), 50), 'HH:mm')}
+                </div>
               </CardContent>
             </Card>
           )}

@@ -1,10 +1,8 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Session } from '@/hooks/useSessions';
-import { Clock, Users } from 'lucide-react';
 import { format, addMinutes } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
+import { Session } from '@/hooks/useSessions';
 
 interface SessionCardProps {
   session: Session;
@@ -25,45 +23,54 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
+  const sessionTime = new Date(session.scheduled_at);
+  const endTime = addMinutes(sessionTime, 50);
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'no_show':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+    switch (status?.toLowerCase()) {
+      case 'confirmada':
+        return 'bg-primary text-primary-foreground border-primary/20';
+      case 'realizada':
+        return 'bg-success text-success-foreground border-success/20';
+      case 'cancelada':
+        return 'bg-destructive text-destructive-foreground border-destructive/20';
+      case 'faltou':
+        return 'bg-warning text-warning-foreground border-warning/20';
       default:
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
-  const isRecurring = !!session.schedule_id;
+  if (isDragging) {
+    return null;
+  }
 
   return (
-    <div
+    <Card
       ref={setNodeRef}
       style={style}
       {...listeners}
       {...attributes}
       className={`
-        cursor-grab active:cursor-grabbing
-        transition-all duration-200 text-xs
-        rounded px-1.5 py-1 border
-        ${isDragging ? 'opacity-50 scale-95' : 'hover:shadow-sm'}
         ${getStatusColor(session.status)}
-        ${isRecurring ? 'border-l-2 border-l-accent' : ''}
+        shadow-soft hover:shadow-medium transition-all duration-200 cursor-grab active:cursor-grabbing
+        hover:scale-[1.02] border-2
+        ${session.schedule_id ? 'ring-1 ring-primary/30' : ''}
       `}
     >
-      <div className="space-y-0.5">
-        <div className="font-medium truncate text-xs leading-tight">
+      <CardContent className="p-3">
+        <div className="text-sm font-semibold leading-tight mb-1">
           {session.patients?.nickname || session.patients?.name}
         </div>
-        
-        <div className="text-xs opacity-90">
-          {format(new Date(session.scheduled_at), 'HH:mm')} - {format(addMinutes(new Date(session.scheduled_at), 50), 'HH:mm')}
+        <div className="text-xs font-medium opacity-90">
+          {format(sessionTime, 'HH:mm')} - {format(endTime, 'HH:mm')}
         </div>
-      </div>
-    </div>
+        {session.schedule_id && (
+          <div className="text-xs opacity-75 mt-1">
+            Recorrente
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
