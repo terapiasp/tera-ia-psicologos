@@ -28,15 +28,13 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart }) => 
   const { updateSeriesFromOccurrence, moveSingleOccurrence } = useRecurringSchedules();
   const { moveSession } = useSessions();
 
-  // Gerar horários de 7h às 21h em slots de 30 min
+  // Gerar horários de 7h às 21h de hora em hora
   const timeSlots = useMemo(() => {
     const slots: Date[] = [];
     const baseDate = startOfDay(new Date());
     
     for (let hour = 7; hour <= 21; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        slots.push(setMinutes(setHours(baseDate, hour), minute));
-      }
+      slots.push(setHours(baseDate, hour));
     }
     return slots;
   }, []);
@@ -99,8 +97,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart }) => 
     return sessions.filter(session => {
       const sessionDate = new Date(session.scheduled_at);
       return isSameDay(sessionDate, day) && 
-             sessionDate.getHours() === time.getHours() && 
-             sessionDate.getMinutes() === time.getMinutes();
+             sessionDate.getHours() === time.getHours();
     });
   };
 

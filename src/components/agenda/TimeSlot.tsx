@@ -22,7 +22,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({ date, time, sessions }) => {
     <div
       ref={setNodeRef}
       className={`
-        min-h-[24px] border-b border-r border-border/20 px-1 py-0.5
+        min-h-[48px] border-b border-r border-border/20 px-1 py-1
         transition-colors duration-200
         ${isOver ? 'bg-primary/10 border-primary/40' : 'bg-background'}
         ${sessions.length === 0 ? 'hover:bg-muted/30' : ''}

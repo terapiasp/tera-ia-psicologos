@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Session } from '@/hooks/useSessions';
 import { Clock, Users } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 
 interface SessionCardProps {
   session: Session;
@@ -28,13 +28,13 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-success/10 text-success border-success/20';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'cancelled':
-        return 'bg-destructive/10 text-destructive border-destructive/20';
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'no_show':
-        return 'bg-warning/10 text-warning border-warning/20';
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return 'bg-primary/10 text-primary border-primary/20';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
   };
 
@@ -60,26 +60,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
           {session.patients?.nickname || session.patients?.name}
         </div>
         
-        <div className="flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1 opacity-80">
-            <Clock className="h-2.5 w-2.5" />
-            <span className="text-xs">
-              {format(new Date(session.scheduled_at), 'HH:mm')}
-            </span>
-          </div>
-          
-          {session.modality && (
-            <span className="text-xs opacity-80 truncate">
-              {session.modality}
-            </span>
-          )}
+        <div className="text-xs opacity-90">
+          {format(new Date(session.scheduled_at), 'HH:mm')} - {format(addMinutes(new Date(session.scheduled_at), 50), 'HH:mm')}
         </div>
-
-        {session.value && (
-          <div className="text-xs font-medium opacity-90">
-            R$ {session.value.toFixed(2)}
-          </div>
-        )}
       </div>
     </div>
   );
