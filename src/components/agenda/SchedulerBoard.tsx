@@ -167,8 +167,8 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-base font-semibold text-foreground py-4 px-4 text-center border-r-2 border-primary/20 bg-gradient-soft flex items-center justify-center min-w-[80px]">
-                <div className="bg-card rounded-lg px-3 py-2 shadow-soft border border-border/50">
+              <div className="text-base font-semibold text-foreground h-[38px] px-4 text-center border-r-2 border-primary/20 bg-gradient-soft flex items-center justify-center min-w-[80px]">
+                <div className="bg-card rounded-lg px-3 py-1 shadow-soft border border-border/50">
                   {format(time, 'HH:mm')}
                 </div>
               </div>
