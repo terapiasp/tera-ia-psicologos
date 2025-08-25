@@ -58,18 +58,18 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
         ${session.schedule_id ? 'ring-1 ring-primary/30' : ''}
       `}
     >
-      <CardContent className="p-3">
-        <div className="text-sm font-semibold leading-tight mb-1">
-          {session.patients?.nickname || session.patients?.name}
+      <CardContent className="p-2 py-1.5">
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="font-semibold truncate flex-1">
+            {session.patients?.nickname || session.patients?.name}
+            {session.schedule_id && (
+              <span className="opacity-75 ml-1">•</span>
+            )}
+          </span>
+          <span className="font-medium opacity-90 whitespace-nowrap">
+            {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
+          </span>
         </div>
-        <div className="text-xs font-medium opacity-90">
-          {format(sessionTime, 'HH:mm')} - {format(endTime, 'HH:mm')}
-        </div>
-        {session.schedule_id && (
-          <div className="text-xs opacity-75 mt-1">
-            Recorrente
-          </div>
-        )}
       </CardContent>
     </Card>
   );
