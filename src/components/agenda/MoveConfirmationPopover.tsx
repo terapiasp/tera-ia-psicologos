@@ -107,10 +107,9 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
   const getWhatsAppUrl = (phone: string | null | undefined) => {
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!normalizedPhone) return '';
-    const patientName = sessionPatient?.nickname || sessionPatient?.name || 'Paciente';
-    const sessionDateTime = format(sessionDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    const message = encodeURIComponent(`Olá ${patientName}! Sobre sua sessão de ${sessionDateTime}.`);
-    return `https://wa.me/${normalizedPhone}?text=${message}`;
+    
+    // Não incluir mensagem pré-definida para evitar problemas de codificação
+    return `https://wa.me/${normalizedPhone}`;
   };
 
   const getEmailUrl = (email: string | null | undefined) => {
