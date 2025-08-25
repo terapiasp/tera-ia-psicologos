@@ -104,6 +104,10 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     });
   };
 
+  const hasSessionsForTime = (time: Date) => {
+    return weekDays.some(day => getSessionsForSlot(day, time).length > 0);
+  };
+
   const goToPreviousWeek = () => {
     onWeekChange(subWeeks(weekStart, 1));
   };
@@ -167,7 +171,11 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-base font-semibold text-foreground h-[38px] px-4 text-center border-r-2 border-primary/20 bg-gradient-soft flex items-center justify-center min-w-[80px]">
+              <div className={`text-base font-semibold text-foreground h-[38px] px-4 text-center border-r-2 border-primary/20 flex items-center justify-center min-w-[80px] transition-colors duration-200 ${
+                hasSessionsForTime(time) 
+                  ? 'bg-warning/10' 
+                  : 'bg-success/10'
+              }`}>
                 <div className="bg-card rounded-lg px-3 py-1 shadow-soft border border-border/50">
                   {format(time, 'HH:mm')}
                 </div>
