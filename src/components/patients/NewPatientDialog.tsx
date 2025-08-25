@@ -53,10 +53,16 @@ interface NewPatientDialogProps {
   children: React.ReactNode;
   patient?: any; // Patient to edit, if provided
   isEdit?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function NewPatientDialog({ children, patient, isEdit = false }: NewPatientDialogProps) {
-  const [open, setOpen] = useState(false);
+export function NewPatientDialog({ children, patient, isEdit = false, open: controlledOpen, onOpenChange: controlledOnOpenChange }: NewPatientDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
   const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
   const { createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();

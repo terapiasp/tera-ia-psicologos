@@ -7,9 +7,10 @@ interface TimeSlotProps {
   date: Date;
   time: Date;
   sessions: Session[];
+  onSessionClick?: (session: Session) => void;
 }
 
-export const TimeSlot: React.FC<TimeSlotProps> = ({ date, time, sessions }) => {
+export const TimeSlot: React.FC<TimeSlotProps> = ({ date, time, sessions, onSessionClick }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: `${date.toISOString()}-${time.toISOString()}`,
     data: {
@@ -31,7 +32,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({ date, time, sessions }) => {
       `}
     >
       {sessions.map((session) => (
-        <SessionCard key={session.id} session={session} />
+        <SessionCard key={session.id} session={session} onSessionClick={onSessionClick} />
       ))}
     </div>
   );

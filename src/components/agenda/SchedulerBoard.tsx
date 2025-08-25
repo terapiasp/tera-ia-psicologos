@@ -22,6 +22,7 @@ interface SchedulerBoardProps {
 export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWeekChange }) => {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [actionContext, setActionContext] = useState<'view' | 'move'>('view');
   const [moveData, setMoveData] = useState<{
     session: Session;
     targetDateTime: Date;
@@ -69,7 +70,14 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     const targetDateTime = new Date(dropData.date);
     targetDateTime.setHours(dropData.time.getHours(), dropData.time.getMinutes());
 
+    setActionContext('move');
     setMoveData({ session, targetDateTime });
+    setShowMoveDialog(true);
+  };
+
+  const handleSessionClick = (session: Session) => {
+    setActionContext('view');
+    setMoveData({ session, targetDateTime: new Date(session.scheduled_at) });
     setShowMoveDialog(true);
   };
 
@@ -193,6 +201,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
                     date={day}
                     time={time}
                     sessions={slotSessions}
+                    onSessionClick={handleSessionClick}
                   />
                 );
               })}
@@ -219,6 +228,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
       <MoveConfirmationPopover
         open={showMoveDialog}
         onOpenChange={setShowMoveDialog}
+        mode={actionContext}
         session={moveData?.session || null}
         patient={moveData?.session ? patients.find(p => p.id === moveData.session.patient_id) : null}
         onConfirm={handleMoveConfirm}

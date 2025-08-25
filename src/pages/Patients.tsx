@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,35 @@ import { useToast } from '@/components/ui/use-toast';
 const Patients = () => {
   const { patients, archivedPatients, isLoading, error, archivePatient, unarchivePatient, deletePatient, isArchiving, isUnarchiving, isDeleting } = usePatients();
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPatientForDialog, setSelectedPatientForDialog] = useState<Patient | null>(null);
   const { toast } = useToast();
+
+  // Handle URL params for opening patient dialog
+  useEffect(() => {
+    const pid = searchParams.get('pid');
+    const shouldOpen = searchParams.get('open') === '1';
+    
+    if (pid && shouldOpen && (patients.length > 0 || archivedPatients.length > 0)) {
+      const patient = [...patients, ...archivedPatients].find(p => p.id === pid);
+      if (patient) {
+        setSelectedPatientForDialog(patient);
+        setDialogOpen(true);
+      }
+    }
+  }, [searchParams, patients, archivedPatients]);
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setSelectedPatientForDialog(null);
+    // Clear URL params
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('pid');
+    newParams.delete('open');
+    newParams.delete('section');
+    setSearchParams(newParams);
+  };
 
   const getTherapyTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -166,11 +195,16 @@ const Patients = () => {
                                 <CardDescription>"{patient.nickname}"</CardDescription>
                               )}
                             </div>
-                            <NewPatientDialog patient={patient} isEdit>
-                              <Button variant="ghost" size="icon">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </NewPatientDialog>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => {
+                                setSelectedPatientForDialog(patient);
+                                setDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                           </div>
                         </CardHeader>
                         <CardContent>
@@ -345,6 +379,18 @@ const Patients = () => {
             </Tabs>
           </main>
         </div>
+
+        {/* Controlled Patient Dialog */}
+        {selectedPatientForDialog && (
+          <NewPatientDialog 
+            patient={selectedPatientForDialog} 
+            isEdit={true}
+            open={dialogOpen}
+            onOpenChange={handleDialogClose}
+          >
+            <div />
+          </NewPatientDialog>
+        )}
       </div>
     </SessionsCacheProvider>
   );

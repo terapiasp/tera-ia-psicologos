@@ -6,9 +6,10 @@ import { Session } from '@/hooks/useSessions';
 
 interface SessionCardProps {
   session: Session;
+  onSessionClick?: (session: Session) => void;
 }
 
-export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
+export const SessionCard: React.FC<SessionCardProps> = ({ session, onSessionClick }) => {
   const {
     attributes,
     listeners,
@@ -45,12 +46,20 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
     return null;
   }
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSessionClick) {
+      onSessionClick(session);
+    }
+  };
+
   return (
     <Card
       ref={setNodeRef}
       style={style}
       {...listeners}
       {...attributes}
+      onClick={handleClick}
       className={`
         ${getStatusColor(session.status)}
         shadow-soft hover:shadow-medium transition-all duration-200 cursor-grab active:cursor-grabbing

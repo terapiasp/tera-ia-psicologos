@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -14,11 +15,12 @@ import { Session } from '@/hooks/useSessions';
 import { Patient } from '@/hooks/usePatients';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin } from 'lucide-react';
+import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin, Eye, Settings, MessageCircle, Mail } from 'lucide-react';
 
 interface MoveConfirmationPopoverProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode: 'view' | 'move';
   session: Session | null;
   patient?: Patient | null;
   onConfirm: (moveType: 'single' | 'series') => void;
@@ -28,6 +30,7 @@ interface MoveConfirmationPopoverProps {
 export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = ({
   open,
   onOpenChange,
+  mode,
   session,
   patient: patientData,
   onConfirm,
@@ -80,13 +83,48 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
     return therapyTypeMap[therapyType || ''] || therapyType || 'Não informado';
   };
 
+  const normalizePhoneNumber = (phone: string | null | undefined) => {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length >= 10 && digits.length <= 11 && !digits.startsWith('55')) {
+      return '55' + digits;
+    }
+    return digits;
+  };
+
+  const getWhatsAppUrl = (phone: string | null | undefined) => {
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!normalizedPhone) return '';
+    const patientName = sessionPatient?.nickname || sessionPatient?.name || 'Paciente';
+    const sessionDateTime = format(sessionDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    const message = encodeURIComponent(`Olá ${patientName}! Sobre sua sessão de ${sessionDateTime}.`);
+    return `https://wa.me/${normalizedPhone}?text=${message}`;
+  };
+
+  const getEmailUrl = (email: string | null | undefined) => {
+    if (!email) return '';
+    const patientName = sessionPatient?.nickname || sessionPatient?.name || 'Paciente';
+    const sessionDateTime = format(sessionDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    const subject = encodeURIComponent(`Sobre sua sessão de ${sessionDateTime}`);
+    const body = encodeURIComponent(`Olá ${patientName},\n\nEspero que esteja bem.\n\nEm relação à sua sessão agendada para ${sessionDateTime}.\n\nAtenciosamente,`);
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            {sessionPatient?.nickname || sessionPatient?.name || 'Sessão'}
+          <DialogTitle>
+            <Link 
+              to={`/patients?pid=${session.patient_id}&open=1`}
+              className="flex items-center gap-2 hover:bg-muted/50 p-2 rounded-lg transition-colors group"
+              onClick={() => onOpenChange(false)}
+            >
+              <User className="h-5 w-5 text-primary group-hover:text-primary/80" />
+              <span className="group-hover:text-foreground/80">
+                {sessionPatient?.nickname || sessionPatient?.name || 'Sessão'}
+              </span>
+            </Link>
           </DialogTitle>
           <DialogDescription>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -137,6 +175,54 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
             </div>
           </div>
 
+          {/* Botões de Contato */}
+          {(patientData?.whatsapp || patientData?.email) && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Entrar em contato
+                </p>
+                <div className="flex gap-2">
+                  {patientData?.whatsapp && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="flex-1 hover:bg-foreground/10 hover:text-foreground transition-colors"
+                    >
+                      <a 
+                        href={getWhatsAppUrl(patientData.whatsapp)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                  {patientData?.email && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="flex-1 hover:bg-foreground/10 hover:text-foreground transition-colors"
+                    >
+                      <a 
+                        href={getEmailUrl(patientData.email)} 
+                        className="flex items-center gap-2"
+                      >
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           <Separator />
 
           <div className="space-y-3">
@@ -145,30 +231,72 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
             </p>
             
             <div className="space-y-2">
-              <Button
-                variant="outline"
-                onClick={() => onConfirm('single')}
-                className="w-full justify-start h-auto py-3 hover:bg-muted/50 hover:text-foreground transition-colors"
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                <div className="text-left">
-                  <div className="font-medium">Mover apenas esta sessão</div>
-                  <div className="text-xs text-muted-foreground">Alterar horário desta ocorrência específica</div>
-                </div>
-              </Button>
-              
-              {isRecurring && (
-                <Button
-                  variant="outline"
-                  onClick={() => onConfirm('series')}
-                  className="w-full justify-start h-auto py-3 hover:bg-muted/50 hover:text-foreground transition-colors"
-                >
-                  <Repeat className="h-4 w-4 mr-2" />
-                  <div className="text-left">
-                    <div className="font-medium">Mover todas as sessões futuras</div>
-                    <div className="text-xs text-muted-foreground">Alterar horário de toda a série a partir desta data</div>
-                  </div>
-                </Button>
+              {mode === 'move' ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => onConfirm('single')}
+                    className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <div className="text-left">
+                      <div className="font-medium">Mover apenas esta sessão</div>
+                      <div className="text-xs text-muted-foreground hover:text-background/70">Alterar horário desta ocorrência específica</div>
+                    </div>
+                  </Button>
+                  
+                  {isRecurring && (
+                    <Button
+                      variant="outline"
+                      onClick={() => onConfirm('series')}
+                      className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                    >
+                      <Repeat className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div className="font-medium">Mover todas as sessões futuras</div>
+                        <div className="text-xs text-muted-foreground hover:text-background/70">Alterar horário de toda a série a partir desta data</div>
+                      </div>
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                  >
+                    <Link 
+                      to={`/patients?pid=${session.patient_id}&open=1`}
+                      onClick={() => onOpenChange(false)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div className="font-medium">Ver dados detalhados</div>
+                        <div className="text-xs text-muted-foreground hover:text-background/70">Abrir ficha completa do paciente</div>
+                      </div>
+                    </Link>
+                  </Button>
+
+                  {isRecurring && (
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                    >
+                      <Link 
+                        to={`/patients?pid=${session.patient_id}&open=1&section=recurrence`}
+                        onClick={() => onOpenChange(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        <div className="text-left">
+                          <div className="font-medium">Ajustar recorrência</div>
+                          <div className="text-xs text-muted-foreground hover:text-background/70">Modificar agendamento recorrente</div>
+                        </div>
+                      </Link>
+                    </Button>
+                  )}
+                </>
               )}
 
               {onDelete && (
@@ -192,7 +320,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full"
+            className="w-full hover:bg-foreground/80 hover:text-background transition-colors"
           >
             Cancelar
           </Button>
