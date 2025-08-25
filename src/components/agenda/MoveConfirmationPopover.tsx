@@ -189,7 +189,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                       variant="outline"
                       size="sm"
                       asChild
-                      className="flex-1 hover:bg-foreground/10 hover:text-foreground transition-colors"
+                      className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white border-[#25D366] hover:border-[#128C7E] transition-colors"
                     >
                       <a 
                         href={getWhatsAppUrl(patientData.whatsapp)} 
@@ -236,12 +236,12 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                   <Button
                     variant="outline"
                     onClick={() => onConfirm('single')}
-                    className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                    className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
                     <MapPin className="h-4 w-4 mr-2" />
                     <div className="text-left">
                       <div className="font-medium">Mover apenas esta sessão</div>
-                      <div className="text-xs text-muted-foreground hover:text-background/70">Alterar horário desta ocorrência específica</div>
+                      <div className="text-xs text-muted-foreground">Alterar horário desta ocorrência específica</div>
                     </div>
                   </Button>
                   
@@ -249,12 +249,12 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     <Button
                       variant="outline"
                       onClick={() => onConfirm('series')}
-                      className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                      className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
                     >
                       <Repeat className="h-4 w-4 mr-2" />
                       <div className="text-left">
                         <div className="font-medium">Mover todas as sessões futuras</div>
-                        <div className="text-xs text-muted-foreground hover:text-background/70">Alterar horário de toda a série a partir desta data</div>
+                        <div className="text-xs text-muted-foreground">Alterar horário de toda a série a partir desta data</div>
                       </div>
                     </Button>
                   )}
@@ -264,7 +264,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                   <Button
                     variant="outline"
                     asChild
-                    className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                    className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
                     <Link 
                       to={`/patients?pid=${session.patient_id}&open=1`}
@@ -273,7 +273,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                       <Eye className="h-4 w-4 mr-2" />
                       <div className="text-left">
                         <div className="font-medium">Ver dados detalhados</div>
-                        <div className="text-xs text-muted-foreground hover:text-background/70">Abrir ficha completa do paciente</div>
+                        <div className="text-xs text-muted-foreground">Abrir ficha completa do paciente</div>
                       </div>
                     </Link>
                   </Button>
@@ -282,7 +282,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     <Button
                       variant="outline"
                       asChild
-                      className="w-full justify-start h-auto py-3 hover:bg-foreground/80 hover:text-background transition-colors"
+                      className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
                     >
                       <Link 
                         to={`/patients?pid=${session.patient_id}&open=1&section=recurrence`}
@@ -291,7 +291,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                         <Settings className="h-4 w-4 mr-2" />
                         <div className="text-left">
                           <div className="font-medium">Ajustar recorrência</div>
-                          <div className="text-xs text-muted-foreground hover:text-background/70">Modificar agendamento recorrente</div>
+                          <div className="text-xs text-muted-foreground">Modificar agendamento recorrente</div>
                         </div>
                       </Link>
                     </Button>
@@ -303,7 +303,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                 <Button
                   variant="outline"
                   onClick={onDelete}
-                  className="w-full justify-start h-auto py-3 text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20 transition-colors"
+                  className="w-full justify-start h-auto py-3 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 transition-colors"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   <div className="text-left">
@@ -320,7 +320,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full hover:bg-foreground/80 hover:text-background transition-colors"
+            className="w-full hover:bg-muted hover:text-foreground transition-colors"
           >
             Cancelar
           </Button>
