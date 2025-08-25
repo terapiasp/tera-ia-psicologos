@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useSessions } from '@/hooks/useSessions';
 import { useRecurringSchedules } from '@/hooks/useRecurringSchedules';
+import { usePatients } from '@/hooks/usePatients';
 import { SessionCard } from './SessionCard';
 import { TimeSlot } from './TimeSlot';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
@@ -30,6 +31,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const { sessions } = useSessions(weekStart, weekEnd);
   const { updateSeriesFromOccurrence, moveSingleOccurrence } = useRecurringSchedules();
   const { moveSession } = useSessions();
+  const { patients } = usePatients();
 
   // Gerar horários de 6h às 22h de hora em hora
   const timeSlots = useMemo(() => {
@@ -218,7 +220,14 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
         open={showMoveDialog}
         onOpenChange={setShowMoveDialog}
         session={moveData?.session || null}
+        patient={moveData?.session ? patients.find(p => p.id === moveData.session.patient_id) : null}
         onConfirm={handleMoveConfirm}
+        onDelete={() => {
+          // TODO: Implementar função de delete
+          console.log('Delete session:', moveData?.session?.id);
+          setShowMoveDialog(false);
+          setMoveData(null);
+        }}
       />
     </div>
   );
