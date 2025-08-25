@@ -68,6 +68,18 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
     return frequencyMap[frequency || ''] || 'Não informado';
   };
 
+  const getTherapyTypeDisplay = (therapyType: string | null | undefined) => {
+    const therapyTypeMap: Record<string, string> = {
+      'individual_adult': 'Adulto Individual',
+      'individual_teen': 'Adolescente Individual',
+      'individual_child': 'Infantil Individual',
+      'couple_therapy': 'Terapia de Casal',
+      'family_therapy': 'Terapia Familiar',
+      'group_therapy': 'Terapia em Grupo',
+    };
+    return therapyTypeMap[therapyType || ''] || therapyType || 'Não informado';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
@@ -92,7 +104,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                 <User className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Tipo de Terapia</p>
-                  <p className="text-sm font-medium">{patientData?.therapy_type || 'Não informado'}</p>
+                  <p className="text-sm font-medium">{getTherapyTypeDisplay(patientData?.therapy_type)}</p>
                 </div>
               </div>
               
