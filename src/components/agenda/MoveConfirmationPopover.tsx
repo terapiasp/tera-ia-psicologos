@@ -189,7 +189,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                       variant="outline"
                       size="sm"
                       asChild
-                      className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white border-[#25D366] hover:border-[#128C7E] transition-colors"
+                      className="flex-1 bg-[#128C7E] hover:bg-[#128C7E] text-white border-[#128C7E] hover:border-[#128C7E] transition-colors"
                     >
                       <a 
                         href={getWhatsAppUrl(patientData.whatsapp)} 
@@ -207,7 +207,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                       variant="outline"
                       size="sm"
                       asChild
-                      className="flex-1 hover:bg-foreground/10 hover:text-foreground transition-colors"
+                      className="flex-1 hover:bg-[#DDC0E4] transition-colors"
                     >
                       <a 
                         href={getEmailUrl(patientData.email)} 
@@ -236,7 +236,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                   <Button
                     variant="outline"
                     onClick={() => onConfirm('single')}
-                    className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="w-full justify-start h-auto py-3 hover:bg-[#DDC0E4] transition-colors"
                   >
                     <MapPin className="h-4 w-4 mr-2" />
                     <div className="text-left">
@@ -249,7 +249,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     <Button
                       variant="outline"
                       onClick={() => onConfirm('series')}
-                      className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
+                      className="w-full justify-start h-auto py-3 hover:bg-[#DDC0E4] transition-colors"
                     >
                       <Repeat className="h-4 w-4 mr-2" />
                       <div className="text-left">
@@ -264,7 +264,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                   <Button
                     variant="outline"
                     asChild
-                    className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="w-full justify-start h-auto py-3 hover:bg-[#DDC0E4] transition-colors"
                   >
                     <Link 
                       to={`/patients?pid=${session.patient_id}&open=1`}
@@ -282,7 +282,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     <Button
                       variant="outline"
                       asChild
-                      className="w-full justify-start h-auto py-3 hover:bg-primary/10 hover:text-primary transition-colors"
+                      className="w-full justify-start h-auto py-3 hover:bg-[#DDC0E4] transition-colors"
                     >
                       <Link 
                         to={`/patients?pid=${session.patient_id}&open=1&section=recurrence`}
@@ -320,7 +320,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full hover:bg-muted hover:text-foreground transition-colors"
+            className="w-full hover:bg-[#DDC0E4] transition-colors"
           >
             Cancelar
           </Button>
