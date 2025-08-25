@@ -85,11 +85,23 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
 
   const normalizePhoneNumber = (phone: string | null | undefined) => {
     if (!phone) return '';
+    // Remove todos os caracteres não numéricos
     const digits = phone.replace(/\D/g, '');
-    if (digits.length >= 10 && digits.length <= 11 && !digits.startsWith('55')) {
-      return '55' + digits;
+    
+    // Se tem 10 ou 11 dígitos e não começa com 55, adiciona o código do Brasil
+    if (digits.length === 10 || digits.length === 11) {
+      if (!digits.startsWith('55')) {
+        return '55' + digits;
+      }
     }
-    return digits;
+    
+    // Se já tem 12-13 dígitos e começa com 55, retorna como está
+    if (digits.length >= 12 && digits.startsWith('55')) {
+      return digits;
+    }
+    
+    // Para outros casos, assume que precisa do código do Brasil
+    return digits.length >= 10 ? '55' + digits : digits;
   };
 
   const getWhatsAppUrl = (phone: string | null | undefined) => {
