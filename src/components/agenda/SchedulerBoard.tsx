@@ -31,12 +31,12 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const { updateSeriesFromOccurrence, moveSingleOccurrence } = useRecurringSchedules();
   const { moveSession } = useSessions();
 
-  // Gerar horários de 7h às 21h de hora em hora
+  // Gerar horários de 6h às 22h de hora em hora
   const timeSlots = useMemo(() => {
     const slots: Date[] = [];
     const baseDate = startOfDay(new Date());
     
-    for (let hour = 7; hour <= 21; hour++) {
+    for (let hour = 6; hour <= 22; hour++) {
       slots.push(setHours(baseDate, hour));
     }
     return slots;
