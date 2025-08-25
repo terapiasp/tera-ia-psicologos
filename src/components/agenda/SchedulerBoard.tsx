@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay } from 'date-fns';
+import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useSessions } from '@/hooks/useSessions';
 import { useRecurringSchedules } from '@/hooks/useRecurringSchedules';
 import { SessionCard } from './SessionCard';
@@ -13,9 +15,10 @@ import { Session } from '@/hooks/useSessions';
 
 interface SchedulerBoardProps {
   weekStart: Date;
+  onWeekChange: (week: Date) => void;
 }
 
-export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart }) => {
+export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWeekChange }) => {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [moveData, setMoveData] = useState<{
@@ -101,12 +104,52 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart }) => 
     });
   };
 
+  const goToPreviousWeek = () => {
+    onWeekChange(subWeeks(weekStart, 1));
+  };
+
+  const goToNextWeek = () => {
+    onWeekChange(addWeeks(weekStart, 1));
+  };
+
+  const goToCurrentWeek = () => {
+    onWeekChange(new Date());
+  };
+
   return (
     <div className="p-2">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
         <div className="grid grid-cols-8 gap-1 mb-2 sticky top-0 bg-background z-10 border-b pb-2">
-          <div className="text-xs font-medium text-muted-foreground py-1"></div>
+          <div className="flex items-center justify-center gap-1 py-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPreviousWeek}
+              className="h-6 w-6 p-0"
+            >
+              <ChevronLeft className="h-3 w-3" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToCurrentWeek}
+              className="h-6 px-2 text-xs"
+            >
+              <Calendar className="h-3 w-3 mr-1" />
+              Hoje
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNextWeek}
+              className="h-6 w-6 p-0"
+            >
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-1">
               <div className="text-xs font-medium">

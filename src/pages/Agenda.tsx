@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SchedulerBoard } from "@/components/agenda/SchedulerBoard";
-import { WeekNavigator } from "@/components/agenda/WeekNavigator";
 import { startOfWeek } from 'date-fns';
 
 const Agenda = () => {
@@ -17,11 +16,10 @@ const Agenda = () => {
         <Sidebar />
         <main className="flex-1 md:ml-64 transition-all duration-300">
           <div className="p-2">
-            <WeekNavigator 
-              currentWeek={currentWeek}
+            <SchedulerBoard 
+              weekStart={currentWeek} 
               onWeekChange={setCurrentWeek}
             />
-            <SchedulerBoard weekStart={currentWeek} />
           </div>
         </main>
       </div>
