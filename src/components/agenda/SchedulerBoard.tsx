@@ -167,8 +167,10 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-sm text-muted-foreground font-mono py-3 px-2 text-right border-r border-border/40 bg-muted/30">
-                {format(time, 'HH:mm')}
+              <div className="text-base font-semibold text-foreground py-4 px-4 text-center border-r-2 border-primary/20 bg-gradient-soft flex items-center justify-center min-w-[80px]">
+                <div className="bg-card rounded-lg px-3 py-2 shadow-soft border border-border/50">
+                  {format(time, 'HH:mm')}
+                </div>
               </div>
               
               {/* Slots para cada dia */}
