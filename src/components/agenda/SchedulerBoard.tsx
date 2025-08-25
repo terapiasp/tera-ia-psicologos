@@ -5,14 +5,12 @@ import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Calendar, Menu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useSessions } from '@/hooks/useSessions';
 import { useRecurringSchedules } from '@/hooks/useRecurringSchedules';
 import { usePatients } from '@/hooks/usePatients';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { SessionCard } from './SessionCard';
 import { TimeSlot } from './TimeSlot';
-import { MobileAgendaView } from './MobileAgendaView';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 import { Session } from '@/hooks/useSessions';
 
@@ -29,7 +27,6 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     targetDateTime: Date;
   } | null>(null);
 
-  const isMobile = useIsMobile();
   const weekEnd = addDays(weekStart, 6);
   const { sessions } = useSessions(weekStart, weekEnd);
   const { updateSeriesFromOccurrence, moveSingleOccurrence } = useRecurringSchedules();
@@ -124,31 +121,6 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const goToCurrentWeek = () => {
     onWeekChange(new Date());
   };
-
-  // Se for mobile, renderizar visualização mobile
-  if (isMobile) {
-    return (
-      <MobileAgendaView
-        weekStart={weekStart}
-        onWeekChange={onWeekChange}
-        sessions={sessions}
-        patients={patients}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        activeSession={activeSession}
-        showMoveDialog={showMoveDialog}
-        setShowMoveDialog={setShowMoveDialog}
-        moveData={moveData}
-        onMoveConfirm={handleMoveConfirm}
-        onDelete={() => {
-          if (!moveData?.session?.id) return;
-          deleteSession(moveData.session.id);
-          setShowMoveDialog(false);
-          setMoveData(null);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="p-2">
