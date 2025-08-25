@@ -70,7 +70,23 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     const targetDateTime = new Date(dropData.date);
     targetDateTime.setHours(dropData.time.getHours(), dropData.time.getMinutes());
 
-    setActionContext('move');
+    // Verificar se o evento realmente mudou de posição
+    const originalDateTime = new Date(session.scheduled_at);
+    const isSameDateTime = 
+      originalDateTime.getFullYear() === targetDateTime.getFullYear() &&
+      originalDateTime.getMonth() === targetDateTime.getMonth() &&
+      originalDateTime.getDate() === targetDateTime.getDate() &&
+      originalDateTime.getHours() === targetDateTime.getHours() &&
+      originalDateTime.getMinutes() === targetDateTime.getMinutes();
+
+    if (isSameDateTime) {
+      // Não foi movido, apenas clicado - tratar como clique
+      setActionContext('view');
+    } else {
+      // Foi realmente movido
+      setActionContext('move');
+    }
+    
     setMoveData({ session, targetDateTime });
     setShowMoveDialog(true);
   };
