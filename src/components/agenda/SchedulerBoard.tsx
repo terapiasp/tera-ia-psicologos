@@ -105,14 +105,14 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart }) => 
   };
 
   return (
-    <div className="p-6">
+    <div className="p-2">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-2 mb-4">
-          <div className="text-sm font-medium text-muted-foreground">Horário</div>
+        <div className="grid grid-cols-8 gap-1 mb-2 sticky top-0 bg-background z-10 border-b pb-2">
+          <div className="text-xs font-medium text-muted-foreground py-1"></div>
           {weekDays.map((day) => (
-            <div key={day.toISOString()} className="text-center">
-              <div className="text-sm font-medium">
+            <div key={day.toISOString()} className="text-center py-1">
+              <div className="text-xs font-medium">
                 {format(day, 'EEE', { locale: ptBR })}
               </div>
               <div className="text-xs text-muted-foreground">
@@ -123,11 +123,11 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart }) => 
         </div>
 
         {/* Grid principal */}
-        <div className="grid grid-cols-8 gap-2">
+        <div className="grid grid-cols-8 gap-1 text-xs">
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-xs text-muted-foreground font-mono p-2 text-right">
+              <div className="text-xs text-muted-foreground font-mono py-1 px-1 text-right border-r border-border/30">
                 {format(time, 'HH:mm')}
               </div>
               

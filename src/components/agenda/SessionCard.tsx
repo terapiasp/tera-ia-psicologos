@@ -38,44 +38,49 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
     }
   };
 
+  const isRecurring = !!session.schedule_id;
+
   return (
-    <Card
+    <div
       ref={setNodeRef}
       style={style}
       {...listeners}
       {...attributes}
       className={`
         cursor-grab active:cursor-grabbing
-        transition-all duration-200
-        hover:shadow-md
-        ${isDragging ? 'opacity-50' : ''}
+        transition-all duration-200 text-xs
+        rounded px-1.5 py-1 border
+        ${isDragging ? 'opacity-50 scale-95' : 'hover:shadow-sm'}
         ${getStatusColor(session.status)}
+        ${isRecurring ? 'border-l-2 border-l-accent' : ''}
       `}
     >
-      <CardContent className="p-2">
-        <div className="space-y-1">
-          <div className="text-sm font-medium truncate">
-            {session.patients?.nickname || session.patients?.name}
-          </div>
-          
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            {format(new Date(session.scheduled_at), 'HH:mm')}
+      <div className="space-y-0.5">
+        <div className="font-medium truncate text-xs leading-tight">
+          {session.patients?.nickname || session.patients?.name}
+        </div>
+        
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1 opacity-80">
+            <Clock className="h-2.5 w-2.5" />
+            <span className="text-xs">
+              {format(new Date(session.scheduled_at), 'HH:mm')}
+            </span>
           </div>
           
           {session.modality && (
-            <Badge variant="secondary" className="text-xs">
+            <span className="text-xs opacity-80 truncate">
               {session.modality}
-            </Badge>
-          )}
-
-          {session.value && (
-            <div className="text-xs font-medium">
-              R$ {session.value.toFixed(2)}
-            </div>
+            </span>
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        {session.value && (
+          <div className="text-xs font-medium opacity-90">
+            R$ {session.value.toFixed(2)}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
