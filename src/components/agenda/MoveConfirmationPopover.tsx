@@ -192,7 +192,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full hover:bg-accent/80 hover:text-accent-foreground transition-colors"
+            className="w-full"
           >
             Cancelar
           </Button>
