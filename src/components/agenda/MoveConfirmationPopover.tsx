@@ -148,7 +148,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
               <Button
                 variant="outline"
                 onClick={() => onConfirm('single')}
-                className="w-full justify-start h-auto py-3"
+                className="w-full justify-start h-auto py-3 hover:bg-muted/50 hover:text-foreground transition-colors"
               >
                 <MapPin className="h-4 w-4 mr-2" />
                 <div className="text-left">
@@ -161,7 +161,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                 <Button
                   variant="outline"
                   onClick={() => onConfirm('series')}
-                  className="w-full justify-start h-auto py-3"
+                  className="w-full justify-start h-auto py-3 hover:bg-muted/50 hover:text-foreground transition-colors"
                 >
                   <Repeat className="h-4 w-4 mr-2" />
                   <div className="text-left">
@@ -175,7 +175,7 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                 <Button
                   variant="outline"
                   onClick={onDelete}
-                  className="w-full justify-start h-auto py-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="w-full justify-start h-auto py-3 text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20 transition-colors"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   <div className="text-left">
