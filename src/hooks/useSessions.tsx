@@ -10,6 +10,7 @@ export interface Session {
   id: string;
   user_id: string;
   patient_id: string;
+  schedule_id?: string; // ID da recorrência, se aplicável
   scheduled_at: string;
   duration_minutes: number;
   type: string;
@@ -173,14 +174,47 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
     },
   });
 
+  const moveSessionMutation = useMutation({
+    mutationFn: async ({ sessionId, targetDateTime }: { sessionId: string; targetDateTime: Date }) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase
+        .from('sessions')
+        .update({ scheduled_at: targetDateTime.toISOString() })
+        .eq('id', sessionId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      toast({
+        title: "Sessão movida",
+        description: "Sessão reposicionada com sucesso!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao mover sessão",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     sessions,
     isLoading,
     error,
     createSession: createSessionMutation.mutate,
     updateSession: updateSessionMutation.mutate,
+    moveSession: moveSessionMutation.mutate,
     isCreating: createSessionMutation.isPending,
     isUpdating: updateSessionMutation.isPending,
+    isMoving: moveSessionMutation.isPending,
   };
 };
 

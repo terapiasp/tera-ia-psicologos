@@ -195,18 +195,19 @@ export const useRecurringSchedules = () => {
   };
 
   // Função para regenerar sessões futuras quando uma regra é alterada
-  const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule) => {
+  const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule, options?: { cutoff?: Date }) => {
     if (!user?.id) return;
 
     console.log('Regenerando sessões futuras para schedule:', schedule.id);
 
     // Deletar sessões futuras existentes desta recorrência
-    const now = new Date();
+    const cutoffDate = options?.cutoff || new Date();
     const { error: deleteError } = await supabase
       .from('sessions')
       .delete()
       .eq('schedule_id', schedule.id)
-      .gte('scheduled_at', now.toISOString());
+      .eq('origin', 'recurring')
+      .gte('scheduled_at', cutoffDate.toISOString());
 
     if (deleteError) {
       console.error('Erro ao deletar sessões futuras:', deleteError);
@@ -283,6 +284,105 @@ export const useRecurringSchedules = () => {
     }
   };
 
+  // Método para atualizar série a partir de uma ocorrência
+  const updateSeriesFromOccurrence = async (scheduleId: string, occurrenceDateTime: Date, targetDateTime: Date) => {
+    if (!user?.id) throw new Error('Usuário não autenticado');
+
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (!schedule) throw new Error('Schedule não encontrado');
+
+    const rule = schedule.rrule_json;
+    const targetDay = targetDateTime.getDay();
+    const targetHours = targetDateTime.getHours();
+    const targetMinutes = targetDateTime.getMinutes();
+
+    let newRule: RecurrenceRule;
+
+    switch (rule.frequency) {
+      case 'weekly':
+      case 'biweekly':
+        newRule = {
+          ...rule,
+          daysOfWeek: [targetDay],
+          startTime: `${targetHours.toString().padStart(2, '0')}:${targetMinutes.toString().padStart(2, '0')}`,
+          startDate: targetDateTime.toISOString().split('T')[0]
+        };
+        break;
+      case 'monthly':
+        newRule = {
+          ...rule,
+          startTime: `${targetHours.toString().padStart(2, '0')}:${targetMinutes.toString().padStart(2, '0')}`,
+          startDate: targetDateTime.toISOString().split('T')[0]
+        };
+        break;
+      default:
+        // Custom/outros: fallback para weekly
+        newRule = {
+          ...rule,
+          frequency: 'weekly',
+          daysOfWeek: [targetDay],
+          startTime: `${targetHours.toString().padStart(2, '0')}:${targetMinutes.toString().padStart(2, '0')}`,
+          startDate: targetDateTime.toISOString().split('T')[0]
+        };
+        toast({
+          title: "Recorrência convertida",
+          description: "Recorrência personalizada foi convertida para semanal",
+        });
+    }
+
+    const { data, error } = await supabase
+      .from('recurring_schedules')
+      .update({ rrule_json: newRule as any })
+      .eq('id', scheduleId)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await regenerateFutureSessionsForSchedule({
+      ...data,
+      rrule_json: data.rrule_json as unknown as RecurrenceRule
+    }, { cutoff: occurrenceDateTime });
+
+    queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
+    queryClient.invalidateQueries({ queryKey: ['sessions'] });
+
+    return data;
+  };
+
+  // Método para mover apenas uma ocorrência
+  const moveSingleOccurrence = async (sessionId: string, scheduleId: string, occurrenceDate: Date, targetDateTime: Date) => {
+    if (!user?.id) throw new Error('Usuário não autenticado');
+
+    // Atualizar a sessão
+    const { error: sessionError } = await supabase
+      .from('sessions')
+      .update({ 
+        scheduled_at: targetDateTime.toISOString(),
+        origin: 'manual' // Marcar como movida manualmente
+      })
+      .eq('id', sessionId)
+      .eq('user_id', user.id);
+
+    if (sessionError) throw sessionError;
+
+    // Registrar exceção
+    const { error: exceptionError } = await supabase
+      .from('recurring_exceptions')
+      .insert({
+        user_id: user.id,
+        schedule_id: scheduleId,
+        exception_date: occurrenceDate.toISOString().split('T')[0],
+        exception_type: 'move',
+        new_datetime: targetDateTime.toISOString()
+      });
+
+    if (exceptionError) throw exceptionError;
+
+    queryClient.invalidateQueries({ queryKey: ['sessions'] });
+  };
+
   return {
     schedules,
     isLoading,
@@ -292,5 +392,7 @@ export const useRecurringSchedules = () => {
     isUpdating: updateScheduleMutation.isPending,
     materializeSessionsForSchedule,
     regenerateFutureSessionsForSchedule,
+    updateSeriesFromOccurrence,
+    moveSingleOccurrence,
   };
 };
