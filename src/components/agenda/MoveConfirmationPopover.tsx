@@ -199,18 +199,16 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     <Button
                       variant="outline"
                       size="sm"
-                      asChild
+                      onClick={() => {
+                        const whatsappUrl = getWhatsAppUrl(patientData.whatsapp);
+                        if (whatsappUrl) {
+                          window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                        }
+                      }}
                       className="flex-1 bg-[#128C7E] hover:bg-[#128C7E] text-white border-[#128C7E] hover:border-[#128C7E] transition-colors"
                     >
-                      <a 
-                        href={getWhatsAppUrl(patientData.whatsapp)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        WhatsApp
-                      </a>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      WhatsApp
                     </Button>
                   )}
                   {patientData?.email && (
