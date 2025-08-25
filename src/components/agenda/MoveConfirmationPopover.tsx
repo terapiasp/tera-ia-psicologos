@@ -89,10 +89,10 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
           <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/30">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <User className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Modalidade</p>
-                  <p className="text-sm font-medium">{getModalityDisplay(session.modality || patientData?.session_mode)}</p>
+                  <p className="text-xs text-muted-foreground">Tipo de Terapia</p>
+                  <p className="text-sm font-medium">{patientData?.therapy_type || 'Não informado'}</p>
                 </div>
               </div>
               
