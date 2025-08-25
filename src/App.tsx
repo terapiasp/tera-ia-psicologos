@@ -14,7 +14,6 @@ import Agenda from "./pages/Agenda";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
-import RedirectWhatsApp from "./pages/RedirectWhatsApp";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +57,6 @@ const App = () => (
             } />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="/go/whatsapp" element={<ProtectedRoute><RedirectWhatsApp /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

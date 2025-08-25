@@ -16,7 +16,6 @@ import { Patient } from '@/hooks/usePatients';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin, Eye, Settings, MessageCircle, Mail } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 interface MoveConfirmationPopoverProps {
   open: boolean;
@@ -42,8 +41,6 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
   const isRecurring = !!session.schedule_id;
   const sessionDate = new Date(session.scheduled_at);
   const sessionPatient = session.patients;
-
-  const { toast } = useToast();
 
   const formatCurrency = (value: number | null | undefined) => {
     if (!value) return 'Não informado';
@@ -110,20 +107,12 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
   const getWhatsAppUrl = (phone: string | null | undefined) => {
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!normalizedPhone) return '';
-    
-    // Não incluir mensagem pré-definida para evitar problemas de codificação
-    return `https://wa.me/${normalizedPhone}`;
+    const patientName = sessionPatient?.nickname || sessionPatient?.name || 'Paciente';
+    const sessionDateTime = format(sessionDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    const message = encodeURIComponent(`Olá ${patientName}! Sobre sua sessão de ${sessionDateTime}.`);
+    return `https://wa.me/${normalizedPhone}?text=${message}`;
   };
 
-  const openWhatsApp = (phone: string | null | undefined) => {
-    const normalized = normalizePhoneNumber(phone);
-    if (!normalized) return;
-    const internal = `/go/whatsapp?phone=${normalized}`;
-    const win = window.open(internal, '_blank', 'noopener,noreferrer');
-    if (!win) {
-      window.location.href = internal;
-    }
-  };
   const getEmailUrl = (email: string | null | undefined) => {
     if (!email) return '';
     const patientName = sessionPatient?.nickname || sessionPatient?.name || 'Paciente';
@@ -211,11 +200,18 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => openWhatsApp(patientData.whatsapp)}
+                      asChild
                       className="flex-1 bg-[#128C7E] hover:bg-[#128C7E] text-white border-[#128C7E] hover:border-[#128C7E] transition-colors"
                     >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      WhatsApp
+                      <a 
+                        href={getWhatsAppUrl(patientData.whatsapp)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        WhatsApp
+                      </a>
                     </Button>
                   )}
                   {patientData?.email && (
