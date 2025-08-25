@@ -59,8 +59,11 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
   const getFrequencyDisplay = (frequency: string | null | undefined) => {
     const frequencyMap: Record<string, string> = {
       'semanal': 'Semanal',
+      'weekly': 'Semanal',
       'quinzenal': 'Quinzenal',
-      'mensal': 'Mensal'
+      'biweekly': 'Quinzenal',
+      'mensal': 'Mensal',
+      'monthly': 'Mensal',
     };
     return frequencyMap[frequency || ''] || 'Não informado';
   };

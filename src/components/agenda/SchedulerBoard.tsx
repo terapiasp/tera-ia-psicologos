@@ -30,7 +30,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const weekEnd = addDays(weekStart, 6);
   const { sessions } = useSessions(weekStart, weekEnd);
   const { updateSeriesFromOccurrence, moveSingleOccurrence } = useRecurringSchedules();
-  const { moveSession } = useSessions();
+  const { moveSession, deleteSession } = useSessions();
   const { patients } = usePatients();
 
   // Gerar horários de 6h às 22h de hora em hora
@@ -223,8 +223,8 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
         patient={moveData?.session ? patients.find(p => p.id === moveData.session.patient_id) : null}
         onConfirm={handleMoveConfirm}
         onDelete={() => {
-          // TODO: Implementar função de delete
-          console.log('Delete session:', moveData?.session?.id);
+          if (!moveData?.session?.id) return;
+          deleteSession(moveData.session.id);
           setShowMoveDialog(false);
           setMoveData(null);
         }}

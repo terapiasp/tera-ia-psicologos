@@ -205,6 +205,35 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
     },
   });
 
+  const deleteSessionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
+      const { error } = await supabase
+        .from('sessions')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return { id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      toast({
+        title: 'Sessão excluída',
+        description: 'A sessão foi removida com sucesso.'
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao excluir sessão',
+        variant: 'destructive',
+      });
+    },
+  });
+  
   return {
     sessions,
     isLoading,
@@ -212,9 +241,11 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
     createSession: createSessionMutation.mutate,
     updateSession: updateSessionMutation.mutate,
     moveSession: moveSessionMutation.mutate,
+    deleteSession: deleteSessionMutation.mutate,
     isCreating: createSessionMutation.isPending,
     isUpdating: updateSessionMutation.isPending,
     isMoving: moveSessionMutation.isPending,
+    isDeleting: deleteSessionMutation.isPending,
   };
 };
 
