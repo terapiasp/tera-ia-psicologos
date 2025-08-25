@@ -120,24 +120,39 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
     if (!normalized) return;
 
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const urlMobile = `https://wa.me/${normalized}`;
-    const urlWeb = `https://web.whatsapp.com/send?phone=${normalized}`;
-    const primary = isMobile ? urlMobile : urlWeb;
-    const secondary = isMobile ? urlWeb : urlMobile;
+    const candidates = isMobile
+      ? [
+          `whatsapp://send?phone=${normalized}`,
+          `https://wa.me/${normalized}`,
+          `https://api.whatsapp.com/send?phone=${normalized}`,
+        ]
+      : [
+          `https://web.whatsapp.com/send?phone=${normalized}`,
+          `https://wa.me/${normalized}`,
+          `https://api.whatsapp.com/send?phone=${normalized}`,
+        ];
 
+    // Abre uma aba em branco e redireciona (workaround para ambientes que bloqueiam domínios externos)
+    const blank = window.open('', '_blank', 'noopener,noreferrer');
+    if (blank) {
+      try { (blank as any).opener = null; } catch {}
+      blank.location.href = candidates[0];
+      return;
+    }
+
+    // Fallback direto
     const tryOpen = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
+    for (const url of candidates) {
+      const win = tryOpen(url);
+      if (win) return;
+    }
 
-    let win = tryOpen(primary);
-    if (!win) {
-      win = tryOpen(secondary);
-    }
-    if (!win) {
-      try { (window as Window).location.href = primary; } catch {}
-      try {
-        navigator.clipboard.writeText(primary);
-        toast({ title: 'Link do WhatsApp copiado', description: 'Cole no navegador para abrir a conversa.' });
-      } catch {}
-    }
+    // Último recurso: navegar nesta aba e copiar link
+    try { window.top!.location.href = candidates[0]; } catch {}
+    try {
+      navigator.clipboard.writeText(candidates[0]);
+      toast({ title: 'Link do WhatsApp copiado', description: 'Cole no navegador para abrir a conversa.' });
+    } catch {}
   };
   const getEmailUrl = (email: string | null | undefined) => {
     if (!email) return '';
