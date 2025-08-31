@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface WeekNavigatorProps {
@@ -13,8 +13,9 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   currentWeek,
   onWeekChange,
 }) => {
-  const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 }); // Segunda-feira
-  const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 1 });
+  // Use currentWeek diretamente pois já é o início da semana (segunda-feira)
+  const weekStart = currentWeek;
+  const weekEnd = addDays(weekStart, 6); // Domingo da mesma semana
 
   const goToPreviousWeek = () => {
     onWeekChange(subWeeks(currentWeek, 1));
@@ -25,7 +26,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   };
 
   const goToCurrentWeek = () => {
-    onWeekChange(new Date());
+    onWeekChange(startOfWeek(new Date(), { weekStartsOn: 1 }));
   };
 
   return (
