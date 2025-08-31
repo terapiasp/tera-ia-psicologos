@@ -37,10 +37,13 @@ const Agenda = () => {
           <div className="p-4 space-y-4">
             {/* Cabeçalho com navegação e toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <WeekNavigator 
-                currentWeek={currentWeek}
-                onWeekChange={setCurrentWeek}
-              />
+              {viewMode === 'week' && (
+                <WeekNavigator 
+                  currentWeek={currentWeek}
+                  onWeekChange={setCurrentWeek}
+                />
+              )}
+              {viewMode === 'timeline' && <div />}
               <ViewModeToggle 
                 value={viewMode}
                 onValueChange={setViewMode}
