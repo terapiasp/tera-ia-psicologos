@@ -22,9 +22,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
   weekEnd.setDate(weekStart.getDate() + 6);
   weekEnd.setHours(23, 59, 59, 999);
 
-  const { sessions, isLoading } = useSessions(weekStart, weekEnd);
+  const { sessions, isLoading, deleteSession } = useSessions(weekStart, weekEnd);
   const { patients } = usePatients();
-  const { deleteSession } = useSessions();
 
   // Agrupar sessões por dia
   const sessionsByDay = useMemo(() => {
