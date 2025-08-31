@@ -54,7 +54,7 @@ const Agenda = () => {
                 onWeekChange={setCurrentWeek}
               />
             ) : (
-              <TimelineView weekStart={currentWeek} />
+              <TimelineView />
             )}
           </div>
         </main>

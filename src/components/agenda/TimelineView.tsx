@@ -1,28 +1,24 @@
 import React, { useState, useMemo } from 'react';
-import { format, startOfDay, endOfDay, isSameDay, addMinutes } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePatients } from '@/hooks/usePatients';
-import { useSessions } from '@/hooks/useSessions';
+import { useInfiniteSessions } from '@/hooks/useInfiniteSessions';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 import { Session } from '@/hooks/useSessions';
-import { CalendarDays, Clock, User } from 'lucide-react';
+import { CalendarDays, Clock, User, Loader2 } from 'lucide-react';
 
 interface TimelineViewProps {
-  weekStart: Date;
+  // Não precisa mais do weekStart - timeline é infinita
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
+export const TimelineView: React.FC<TimelineViewProps> = () => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  const { sessions, isLoading, deleteSession } = useSessions(weekStart, weekEnd);
+  const { sessions, isLoading, isLoadingMore, hasMore, lastElementRef, deleteSession } = useInfiniteSessions();
   const { patients } = usePatients();
 
   // Agrupar sessões por dia
@@ -118,7 +114,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
     );
   }
 
-  if (daysWithSessions.length === 0) {
+  if (daysWithSessions.length === 0 && !isLoadingMore) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
         <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
@@ -126,7 +122,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
           Nenhuma sessão encontrada
         </h3>
         <p className="text-muted-foreground">
-          Não há sessões agendadas para esta semana.
+          Não há sessões agendadas no período atual.
         </p>
       </div>
     );
@@ -134,8 +130,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
 
   return (
     <div className="space-y-6 p-4">
-      {daysWithSessions.map(({ date, sessions: daySessions }) => (
-        <div key={date.toISOString()} className="space-y-3">
+      {daysWithSessions.map(({ date, sessions: daySessions }, dayIndex) => (
+        <div 
+          key={date.toISOString()} 
+          className="space-y-3"
+          ref={dayIndex === daysWithSessions.length - 1 ? lastElementRef : null}
+        >
           {/* Cabeçalho do dia */}
           <div className="flex items-center gap-3 pb-2 border-b border-border">
             <div className="flex items-center gap-2">
@@ -223,6 +223,23 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
           </div>
         </div>
       ))}
+
+      {/* Loading indicator para carregamento incremental */}
+      {isLoadingMore && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Carregando mais sessões...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Indicador de fim */}
+      {!hasMore && daysWithSessions.length > 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Não há mais sessões para carregar</p>
+        </div>
+      )}
 
       {/* Dialog de detalhes da sessão */}
       <MoveConfirmationPopover
