@@ -1,74 +1,38 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { format, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Clock, Banknote, Calendar, RefreshCw, ChevronUp, CalendarDays, User, Loader2 } from 'lucide-react';
-import { MoveConfirmationPopover } from './MoveConfirmationPopover';
-import { useInfiniteSessions } from '@/hooks/useInfiniteSessions';
 import { usePatients } from '@/hooks/usePatients';
+import { useInfiniteSessions } from '@/hooks/useInfiniteSessions';
+import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 import { Session } from '@/hooks/useSessions';
+import { CalendarDays, Clock, User, Loader2 } from 'lucide-react';
 
 interface TimelineViewProps {
-  statusFilter?: string;
-  patientFilter?: string;
+  // Não precisa mais do weekStart - timeline é infinita
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ 
-  statusFilter = 'all',
-  patientFilter = 'all'
-}) => {
+export const TimelineView: React.FC<TimelineViewProps> = () => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
   
-  const { 
-    sessions, 
-    isLoading, 
-    isLoadingMore, 
-    isLoadingPrevious,
-    hasMore, 
-    lastElementRef, 
-    loadPrevious,
-    deleteSession,
-    error,
-    retryFetch
-  } = useInfiniteSessions();
+  const { sessions, isLoading, isLoadingMore, hasMore, lastElementRef, deleteSession } = useInfiniteSessions();
   const { patients } = usePatients();
-  
-  const containerRef = useRef<HTMLDivElement>(null);
-  const topObserverRef = useRef<HTMLDivElement>(null);
 
-  // Filtrar sessões antes de agrupar
-  const filteredSessions = useMemo(() => {
-    return sessions.filter(session => {
-      // Filtro por status
-      if (statusFilter !== 'all' && session.status !== statusFilter) {
-        return false;
-      }
-      
-      // Filtro por paciente
-      if (patientFilter !== 'all' && session.patient_id !== patientFilter) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [sessions, statusFilter, patientFilter]);
-
-  // Agrupar sessões filtradas por dia e ordenar por horário
+  // Agrupar sessões por dia
   const sessionsByDay = useMemo(() => {
-    const grouped = filteredSessions.reduce((acc, session) => {
-      const dayKey = format(new Date(session.scheduled_at), 'yyyy-MM-dd');
-      if (!acc[dayKey]) {
-        acc[dayKey] = [];
+    const grouped: { [key: string]: Session[] } = {};
+    
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.scheduled_at);
+      const dayKey = format(sessionDate, 'yyyy-MM-dd');
+      if (!grouped[dayKey]) {
+        grouped[dayKey] = [];
       }
-      acc[dayKey].push(session);
-      return acc;
-    }, {} as Record<string, Session[]>);
+      grouped[dayKey].push(session);
+    });
 
     // Ordenar sessões de cada dia por horário
     Object.keys(grouped).forEach(day => {
@@ -78,62 +42,27 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     });
 
     return grouped;
-  }, [filteredSessions]);
+  }, [sessions]);
 
-  // Converter para array ordenado por data
+  // Dias da semana com sessões ordenados
   const daysWithSessions = useMemo(() => {
-    return Object.entries(sessionsByDay)
-      .map(([date, sessions]) => ({
-        date: new Date(date),
-        sessions
-      }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    return Object.keys(sessionsByDay)
+      .sort()
+      .map(dayKey => {
+        // Usar a primeira sessão do dia para obter a data correta
+        const firstSession = sessionsByDay[dayKey][0];
+        const sessionDate = new Date(firstSession.scheduled_at);
+        return {
+          date: new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate()),
+          sessions: sessionsByDay[dayKey]
+        };
+      });
   }, [sessionsByDay]);
-
-  // Observer para carregar sessões anteriores
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadingPrevious) {
-          loadPrevious();
-        }
-      },
-      { rootMargin: '100px' }
-    );
-
-    if (topObserverRef.current) {
-      observer.observe(topObserverRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [loadPrevious, isLoadingPrevious]);
-
-  // Observer para scroll to top button
-  useEffect(() => {
-    const handleScroll = () => {
-      if (containerRef.current) {
-        const scrollTop = containerRef.current.scrollTop;
-        setShowScrollToTop(scrollTop > 500);
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
 
   const handleSessionClick = (session: Session) => {
     setSelectedSession(session);
     setShowSessionDialog(true);
   };
-
-  const scrollToTop = useCallback(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -141,8 +70,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       case 'confirmed':
       case 'scheduled':
         return 'bg-success/10 border-success/20 text-success-foreground';
-      case 'completed':
-        return 'bg-primary/10 border-primary/20 text-primary-foreground';
       case 'pendente':
       case 'pending':
         return 'bg-warning/10 border-warning/20 text-warning-foreground';
@@ -160,8 +87,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       case 'confirmed':
       case 'scheduled':
         return 'Agendado';
-      case 'completed':
-        return 'Concluído';
       case 'pendente':
       case 'pending':
         return 'Pendente';
@@ -173,161 +98,147 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
   };
 
-  return (
-    <div ref={containerRef} className="relative h-[calc(100vh-200px)] overflow-y-auto space-y-4 p-4">
-      {/* Observer para carregar sessões anteriores */}
-      <div ref={topObserverRef} className="h-4">
-        {isLoadingPrevious && (
-          <div className="text-center py-4">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-              <span>Carregando sessões anteriores...</span>
+  if (isLoading) {
+    return (
+      <div className="space-y-6 p-4">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="space-y-3">
+            <Skeleton className="h-6 w-32" />
+            <div className="space-y-2">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
             </div>
           </div>
-        )}
+        ))}
       </div>
+    );
+  }
 
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>{error}</span>
-            <Button variant="outline" size="sm" onClick={retryFetch}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Tentar novamente
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+  if (daysWithSessions.length === 0 && !isLoadingMore) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          Nenhuma sessão encontrada
+        </h3>
+        <p className="text-muted-foreground">
+          Não há sessões agendadas no período atual.
+        </p>
+      </div>
+    );
+  }
 
-      {isLoading ? (
-        // Skeleton enquanto carrega
-        <div className="space-y-6">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="space-y-3">
-              <Skeleton className="h-6 w-48" />
-              <div className="space-y-2">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
+  return (
+    <div className="space-y-6 p-4">
+      {daysWithSessions.map(({ date, sessions: daySessions }, dayIndex) => (
+        <div 
+          key={date.toISOString()} 
+          className="space-y-3"
+          ref={dayIndex === daysWithSessions.length - 1 ? lastElementRef : null}
+        >
+          {/* Cabeçalho do dia */}
+          <div className="flex items-center gap-3 pb-2 border-b border-border">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-primary" />
+              <h3 className="text-lg font-semibold text-foreground">
+                {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+              </h3>
             </div>
-          ))}
-        </div>
-      ) : daysWithSessions.length === 0 && !isLoadingMore ? (
-        <div className="text-center py-12">
-          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground text-lg">
-            {statusFilter !== 'all' || patientFilter !== 'all' 
-              ? 'Nenhuma sessão encontrada com os filtros aplicados'
-              : 'Nenhuma sessão encontrada'
-            }
-          </p>
-          {(statusFilter !== 'all' || patientFilter !== 'all') && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Tente ajustar os filtros para ver mais resultados
-            </p>
-          )}
-        </div>
-      ) : (
-        <>
-          {daysWithSessions.map((dayData, dayIndex) => (
-            <div key={dayData.date.toISOString()} className="space-y-3">
-              {/* Cabeçalho do dia */}
-              <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-2 border-b border-border/20">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  {format(dayData.date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {dayData.sessions.length} sessões
-                  </Badge>
-                </h3>
-              </div>
+            <Badge variant="secondary" className="ml-auto">
+              {daySessions.length} {daySessions.length === 1 ? 'sessão' : 'sessões'}
+            </Badge>
+          </div>
 
-              {/* Sessões do dia */}
-              <div className="space-y-3">
-                {dayData.sessions.map((session, sessionIndex) => {
-                  const patient = patients.find(p => p.id === session.patient_id);
-                  const sessionTime = new Date(session.scheduled_at);
-                  const endTime = new Date(sessionTime.getTime() + (session.duration_minutes || 50) * 60000);
+          {/* Lista de sessões do dia */}
+          <div className="space-y-2 pl-5 relative">
+            {/* Linha vertical do timeline */}
+            <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-border" />
+            
+            {daySessions.map((session, index) => {
+              const sessionDate = new Date(session.scheduled_at);
+              const endTime = addMinutes(sessionDate, session.duration_minutes || 50);
+              const patient = patients.find(p => p.id === session.patient_id);
+
+              return (
+                <div key={session.id} className="relative">
+                  {/* Ponto no timeline */}
+                  <div className="absolute -left-[7px] top-4 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                   
-                  // Aplicar ref no último elemento para infinite scroll
-                  const isLastSession = dayIndex === daysWithSessions.length - 1 && 
-                                       sessionIndex === dayData.sessions.length - 1;
-                  
-                  return (
-                    <Card 
-                      key={session.id}
-                      ref={isLastSession ? lastElementRef : undefined}
-                      className="hover:shadow-md transition-all duration-200 cursor-pointer border-l-4"
-                      style={{ borderLeftColor: `hsl(var(--${getStatusColor(session.status).replace('border-', '').replace('/20', '')}))` }}
-                      onClick={() => handleSessionClick(session)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold text-foreground text-lg">
-                                {patient?.nickname || patient?.name || 'Paciente não encontrado'}
-                              </h4>
-                              <Badge variant="outline" className={getStatusColor(session.status)}>
-                                {getStatusLabel(session.status)}
+                  {/* Card da sessão */}
+                  <Card 
+                    className={`ml-4 cursor-pointer transition-all hover:shadow-medium hover:scale-[1.02] ${getStatusColor(session.status)} ${
+                      session.schedule_id ? 'border-l-4 border-l-accent' : ''
+                    }`}
+                    onClick={() => handleSessionClick(session)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-semibold text-foreground">
+                              {patient?.nickname || patient?.name || 'Paciente não encontrado'}
+                            </span>
+                            {session.schedule_id && (
+                              <Badge variant="outline" className="text-xs">
+                                Recorrente
                               </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>
+                                {format(sessionDate, 'HH:mm')} - {format(endTime, 'HH:mm')}
+                              </span>
                             </div>
                             
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                  {format(sessionTime, 'HH:mm')} - {format(endTime, 'HH:mm')}
-                                </span>
-                                <span className="text-xs">
-                                  ({session.duration_minutes || 50}min)
-                                </span>
-                              </div>
-                              
-                              {session.value && (
-                                <div className="flex items-center gap-1">
-                                  <Banknote className="h-4 w-4" />
-                                  <span>R$ {Number(session.value).toFixed(2)}</span>
-                                  {session.paid && (
-                                    <Badge variant="secondary" className="text-xs ml-1">
-                                      Pago
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
-                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {session.duration_minutes || 50} min
+                            </span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
 
-          {/* Loading indicator */}
-          {isLoadingMore && (
-            <div className="text-center py-8">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                <span>Carregando mais sessões...</span>
-              </div>
-            </div>
-          )}
-        </>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge 
+                            variant={session.status === 'confirmado' || session.status === 'confirmed' || session.status === 'scheduled' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {getStatusLabel(session.status)}
+                          </Badge>
+                          
+                          {session.value && (
+                            <span className="text-sm font-medium text-foreground">
+                              R$ {session.value.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Loading indicator para carregamento incremental */}
+      {isLoadingMore && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Carregando mais sessões...</span>
+          </div>
+        </div>
       )}
 
-      {/* Scroll to top button */}
-      {showScrollToTop && (
-        <Button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 shadow-lg"
-          size="icon"
-        >
-          <ChevronUp className="h-5 w-5" />
-        </Button>
+      {/* Indicador de fim */}
+      {!hasMore && daysWithSessions.length > 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Não há mais sessões para carregar</p>
+        </div>
       )}
 
       {/* Dialog de detalhes da sessão */}
