@@ -62,13 +62,13 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
 
   const weekOfMonth = getWeekOfMonth(weekStart);
   
-  // Estilos de border únicos para cada semana
+  // Estilos de border únicos para cada semana - todas com border-double
   const weekBorderStyles = {
-    1: 'border-4 border-blue-500/70 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50/30 to-transparent',
-    2: 'border-4 border-emerald-500/70 shadow-lg shadow-emerald-500/20 bg-gradient-to-br from-emerald-50/30 to-transparent border-dashed',
-    3: 'border-4 border-purple-500/70 shadow-lg shadow-purple-500/20 bg-gradient-to-br from-purple-50/30 to-transparent border-dotted',
-    4: 'border-4 border-amber-500/70 shadow-lg shadow-amber-500/20 bg-gradient-to-br from-amber-50/30 to-transparent border-double',
-    5: 'border-4 border-rose-500/70 shadow-lg shadow-rose-500/20 bg-gradient-to-br from-rose-50/30 to-transparent'
+    1: 'border-4 border-blue-600/70 shadow-lg shadow-blue-600/25 bg-gradient-to-br from-blue-50/30 to-transparent border-double',
+    2: 'border-4 border-emerald-600/70 shadow-lg shadow-emerald-600/25 bg-gradient-to-br from-emerald-50/30 to-transparent border-double',
+    3: 'border-4 border-purple-600/70 shadow-lg shadow-purple-600/25 bg-gradient-to-br from-purple-50/30 to-transparent border-double',
+    4: 'border-4 border-amber-600/70 shadow-lg shadow-amber-600/25 bg-gradient-to-br from-amber-50/30 to-transparent border-double',
+    5: 'border-4 border-red-600/70 shadow-lg shadow-red-600/25 bg-gradient-to-br from-red-50/30 to-transparent border-double'
   };
 
   const currentBorderStyle = weekBorderStyles[weekOfMonth as keyof typeof weekBorderStyles];
