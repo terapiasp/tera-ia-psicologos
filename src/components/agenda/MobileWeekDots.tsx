@@ -45,41 +45,15 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
   };
 
   const getDotStyle = (sessionCount: number, sessions: Session[]) => {
-    if (sessionCount === 0) return 'bg-muted border border-border';
+    if (sessionCount === 0) return 'bg-muted/50 border border-border';
     
-    // Se há apenas uma sessão, usar cor baseada no status
-    if (sessionCount === 1) {
-      const session = sessions[0];
-      return getSessionStatusColor(session.status);
-    }
-    
-    // Se há múltiplas sessões, usar cor baseada na semana do mês
+    // Usar cor baseada na semana do mês para qualquer sessão
     if (sessions.length > 0) {
       const sessionDate = new Date(sessions[0].scheduled_at);
       return getWeekGemColor(sessionDate);
     }
     
     return 'bg-primary border border-primary shadow-soft';
-  };
-
-  const getSessionStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'confirmada':
-      case 'confirmed':
-      case 'scheduled':
-        return 'bg-primary border border-primary shadow-soft';
-      case 'realizada':
-      case 'completed':
-        return 'bg-success border border-success shadow-soft';
-      case 'cancelada':
-      case 'cancelled':
-        return 'bg-destructive border border-destructive shadow-soft';
-      case 'faltou':
-      case 'no_show':
-        return 'bg-warning border border-warning shadow-soft';
-      default:
-        return 'bg-muted border border-border';
-    }
   };
 
   // Calcular a semana do mês para cores das pedras preciosas
@@ -96,11 +70,11 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
   const getWeekGemColor = (date: Date) => {
     const weekOfMonth = getWeekOfMonth(date);
     const gemColors = {
-      1: 'bg-blue-600 border border-blue-600 shadow-soft scale-110', // Safira
-      2: 'bg-emerald-600 border border-emerald-600 shadow-soft scale-110', // Esmeralda  
-      3: 'bg-purple-600 border border-purple-600 shadow-soft scale-110', // Ametista
-      4: 'bg-amber-600 border border-amber-600 shadow-soft scale-110', // Âmbar
-      5: 'bg-red-600 border border-red-600 shadow-soft scale-110' // Ruby
+      1: 'bg-blue-600 border border-blue-600 shadow-soft', // Safira
+      2: 'bg-emerald-600 border border-emerald-600 shadow-soft', // Esmeralda  
+      3: 'bg-purple-600 border border-purple-600 shadow-soft', // Ametista
+      4: 'bg-amber-600 border border-amber-600 shadow-soft', // Âmbar
+      5: 'bg-red-600 border border-red-600 shadow-soft' // Ruby
     };
     return gemColors[weekOfMonth as keyof typeof gemColors] || gemColors[1];
   };
@@ -115,16 +89,21 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
     return patient?.nickname || patient?.name || 'Paciente';
   };
 
+  // Verificar se há sessões em determinado horário em qualquer dia da semana
+  const hasSessionsForTime = (time: Date) => {
+    return weekDays.some(day => getSessionsForSlot(day, time).length > 0);
+  };
+
   return (
     <div className="w-full max-w-full p-2">
       <div className="w-full">
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-1 mb-3 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2">
-          <div className="text-[10px] font-medium text-muted-foreground text-center py-1 min-w-0">
-            Hr
+        <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-1 mb-3 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2">
+          <div className="text-[10px] font-medium text-muted-foreground text-center py-1">
+            Hora
           </div>
           {weekDays.map((day) => (
-            <div key={day.toISOString()} className="text-center min-w-0">
+            <div key={day.toISOString()} className="text-center">
               <div className="text-xs font-semibold text-foreground">
                 {getDayAbbreviation(day)}
               </div>
@@ -136,12 +115,21 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
         </div>
 
         {/* Grid principal com dots */}
-        <div className="grid grid-cols-8 gap-1">
+        <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-1">
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-[10px] font-medium text-muted-foreground text-center py-1 flex items-center justify-center min-w-0">
-                {format(time, 'HH')}
+              <div className="flex items-center justify-center py-1">
+                <Badge 
+                  variant={hasSessionsForTime(time) ? "destructive" : "secondary"}
+                  className={`text-[10px] font-medium px-2 py-1 ${
+                    hasSessionsForTime(time) 
+                      ? 'bg-primary/10 text-primary border-primary/20' 
+                      : 'bg-success/10 text-success border-success/20'
+                  }`}
+                >
+                  {format(time, 'HH')}h
+                </Badge>
               </div>
               
               {/* Dots para cada dia */}
