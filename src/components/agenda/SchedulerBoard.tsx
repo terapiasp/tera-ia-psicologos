@@ -170,58 +170,59 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   };
 
   return (
-    <div className="p-2 md:p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in border border-border/20 md:border-4 md:border-double bg-card">
+    <div className={`p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in ${currentBorderStyle}`}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        {/* Container com scroll horizontal para mobile */}
-        <div className="overflow-x-auto">
-          <div className="min-w-[896px] md:min-w-0">
-            {/* Header com dias da semana */}
-            <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b pb-2 rounded-lg">
-              {/* Coluna de horários fixa */}
-              <div className="sticky left-0 bg-background/95 backdrop-blur-sm z-30 py-2 border-r border-border/30">
-                <div className="text-xs font-medium text-muted-foreground text-center">Horário</div>
+        {/* Header com dias da semana */}
+        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg">
+          <div className="py-2" /> {/* Espaço vazio onde antes ficavam os botões de navegação */}
+          {weekDays.map((day) => (
+            <div key={day.toISOString()} className="text-center py-2">
+              <div className="text-sm font-semibold text-foreground">
+                {format(day, 'EEE', { locale: ptBR })}
               </div>
-              {weekDays.map((day) => (
-                <div key={day.toISOString()} className="text-center py-2 min-w-[80px]">
-                  <div className="text-sm font-semibold text-foreground">
-                    {format(day, 'EEE', { locale: ptBR })}
-                  </div>
-                  <div className="text-xs text-muted-foreground font-medium">
-                    {format(day, 'dd/MM')}
-                  </div>
+              <div className="text-sm text-muted-foreground font-medium">
+                {format(day, 'dd/MM')}
+              </div>
+              {day === weekStart && (
+                <div className="text-xs font-medium mt-1 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse">
+                  Semana {weekOfMonth}
                 </div>
-              ))}
+              )}
             </div>
+          ))}
+        </div>
 
-            {/* Grid principal */}
-            <div className="grid grid-cols-8 gap-1 text-sm">
-              {timeSlots.map((time) => (
-                <React.Fragment key={time.toISOString()}>
-                  {/* Coluna de horários fixa */}
-                  <div className="sticky left-0 bg-background/95 backdrop-blur-sm z-10 h-[38px] px-2 text-center border-r border-border/30 flex items-center justify-center min-w-[80px]">
-                    <div className="text-xs font-medium text-foreground bg-muted/50 rounded px-2 py-1">
-                      {format(time, 'HH:mm')}
-                    </div>
-                  </div>
-                  
-                  {/* Slots para cada dia */}
-                  {weekDays.map((day) => {
-                    const slotSessions = getSessionsForSlot(day, time);
-                    
-                    return (
-                      <TimeSlot
-                        key={`${day.toISOString()}-${time.toISOString()}`}
-                        date={day}
-                        time={time}
-                        sessions={slotSessions}
-                        onSessionClick={handleSessionClick}
-                      />
-                    );
-                  })}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
+        {/* Grid principal */}
+        <div className="grid grid-cols-8 gap-1 text-sm">
+          {timeSlots.map((time) => (
+            <React.Fragment key={time.toISOString()}>
+              {/* Coluna de horários */}
+              <div className={`text-base font-semibold text-foreground h-[38px] px-4 text-center border-r-2 border-primary/20 flex items-center justify-center min-w-[80px] transition-colors duration-200 ${
+                hasSessionsForTime(time) 
+                  ? 'bg-primary/10' 
+                  : 'bg-success/10'
+              }`}>
+                <div className="bg-card rounded-lg px-3 py-1 shadow-soft border border-border/50">
+                  {format(time, 'HH:mm')}
+                </div>
+              </div>
+              
+              {/* Slots para cada dia */}
+              {weekDays.map((day) => {
+                const slotSessions = getSessionsForSlot(day, time);
+                
+                return (
+                  <TimeSlot
+                    key={`${day.toISOString()}-${time.toISOString()}`}
+                    date={day}
+                    time={time}
+                    sessions={slotSessions}
+                    onSessionClick={handleSessionClick}
+                  />
+                );
+              })}
+            </React.Fragment>
+          ))}
         </div>
 
         <DragOverlay>
