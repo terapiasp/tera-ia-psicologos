@@ -4,7 +4,6 @@ import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSessionsRange } from '@/hooks/useSessionsRange';
 import { usePatients } from '@/hooks/usePatients';
 import { useSessions } from '@/hooks/useSessions';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
@@ -23,7 +22,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
   weekEnd.setDate(weekStart.getDate() + 6);
   weekEnd.setHours(23, 59, 59, 999);
 
-  const { sessions, isLoading } = useSessionsRange(weekStart, weekEnd);
+  const { sessions, isLoading } = useSessions(weekStart, weekEnd);
   const { patients } = usePatients();
   const { deleteSession } = useSessions();
 
