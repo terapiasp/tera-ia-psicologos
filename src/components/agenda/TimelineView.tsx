@@ -210,9 +210,6 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
                     {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                   </h3>
                 </div>
-                <Badge variant="secondary" className="ml-auto">
-                  {daySessions.length} {daySessions.length === 1 ? 'sessão' : 'sessões'}
-                </Badge>
               </div>
         
               {/* Lista de sessões do dia */}
