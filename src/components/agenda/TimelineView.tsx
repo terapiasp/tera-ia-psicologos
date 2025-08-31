@@ -189,8 +189,8 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
             {isNewMonth && (
               <div className="flex items-center gap-4 py-6 my-8">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-3 rounded-full border border-primary/20 shadow-soft">
-                  <span className="text-lg font-bold text-primary capitalize">
+                <div className="bg-muted/50 px-6 py-3 rounded-full border border-border shadow-soft">
+                  <span className="text-lg font-bold text-foreground capitalize">
                     {format(date, 'MMMM yyyy', { locale: ptBR })}
                   </span>
                 </div>
