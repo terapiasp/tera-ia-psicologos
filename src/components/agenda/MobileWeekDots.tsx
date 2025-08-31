@@ -6,6 +6,8 @@ import { Patient } from '@/hooks/usePatients';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User } from 'lucide-react';
+import { SessionEventCard } from './SessionEventCard';
+import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 
 interface MobileWeekDotsProps {
   weekStart: Date;
@@ -19,6 +21,7 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
   patients 
 }) => {
   const [selectedSlot, setSelectedSlot] = useState<{ day: Date; time: Date; sessions: Session[] } | null>(null);
+  const [selectedSession, setSelectedSession] = useState<{ session: Session; mode: 'view' | 'move' } | null>(null);
 
   // Gerar horários de 6h às 22h de hora em hora
   const timeSlots = useMemo(() => {
@@ -172,39 +175,15 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
                           </div>
                         ) : (
                           slotSessions.map((session) => (
-                            <div
+                            <SessionEventCard
                               key={session.id}
-                              className="p-3 rounded-lg border bg-card shadow-soft"
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                <User className="h-4 w-4 text-primary" />
-                                <span className="font-medium text-card-foreground">
-                                  {getPatientName(session)}
-                                </span>
-                              </div>
-                              
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                <Clock className="h-3 w-3" />
-                                <span>
-                                  {format(new Date(session.scheduled_at), 'HH:mm')} - 
-                                  {format(new Date(new Date(session.scheduled_at).getTime() + 50 * 60000), 'HH:mm')}
-                                </span>
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="text-xs">
-                                  {session.status === 'scheduled' ? 'Agendado' : 
-                                   session.status === 'completed' ? 'Concluído' : 
-                                   session.status === 'cancelled' ? 'Cancelado' : session.status}
-                                </Badge>
-                                
-                                {session.modality && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {session.modality}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
+                              session={session}
+                              patient={patients.find(p => p.id === session.patient_id)}
+                              onSessionClick={(session) => {
+                                setSelectedSlot(null);
+                                setSelectedSession({ session, mode: 'view' });
+                              }}
+                            />
                           ))
                         )}
                       </div>
@@ -216,6 +195,27 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Move Confirmation Popover */}
+      {selectedSession && (
+        <MoveConfirmationPopover
+          open={!!selectedSession}
+          onOpenChange={(open) => !open && setSelectedSession(null)}
+          mode={selectedSession.mode}
+          session={selectedSession.session}
+          patient={patients.find(p => p.id === selectedSession.session.patient_id)}
+          onConfirm={(moveType) => {
+            // TODO: Implementar lógica de mover sessão
+            console.log('Move session:', moveType, selectedSession.session);
+            setSelectedSession(null);
+          }}
+          onDelete={() => {
+            // TODO: Implementar lógica de deletar sessão
+            console.log('Delete session:', selectedSession.session);
+            setSelectedSession(null);
+          }}
+        />
+      )}
     </div>
   );
 };
