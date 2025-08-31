@@ -5,6 +5,7 @@ import { SchedulerBoard } from "@/components/agenda/SchedulerBoard";
 import { TimelineView } from "@/components/agenda/TimelineView";
 import { WeekNavigator } from "@/components/agenda/WeekNavigator";
 import { ViewModeToggle } from "@/components/agenda/ViewModeToggle";
+import { WeekendToggle } from "@/components/agenda/WeekendToggle";
 import { startOfWeek } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -23,10 +24,20 @@ const Agenda = () => {
     return isMobile ? 'timeline' : 'week';
   });
 
-  // Salvar preferência no localStorage
+  // Estado para mostrar/esconder fins de semana
+  const [showWeekends, setShowWeekends] = useState(() => {
+    const saved = localStorage.getItem('agenda-show-weekends');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Salvar preferências no localStorage
   useEffect(() => {
     localStorage.setItem('agenda-view-mode', viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem('agenda-show-weekends', JSON.stringify(showWeekends));
+  }, [showWeekends]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,7 +46,7 @@ const Agenda = () => {
         <Sidebar />
         <main className="flex-1 md:ml-64 transition-all duration-300">
           <div className="p-4 space-y-4">
-            {/* Cabeçalho com navegação e toggle */}
+            {/* Cabeçalho com navegação e toggles */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               {viewMode === 'week' && (
                 <WeekNavigator 
@@ -44,10 +55,18 @@ const Agenda = () => {
                 />
               )}
               {viewMode === 'timeline' && <div />}
-              <ViewModeToggle 
-                value={viewMode}
-                onValueChange={setViewMode}
-              />
+              <div className="flex items-center gap-4">
+                {viewMode === 'week' && (
+                  <WeekendToggle 
+                    showWeekends={showWeekends}
+                    onToggle={setShowWeekends}
+                  />
+                )}
+                <ViewModeToggle 
+                  value={viewMode}
+                  onValueChange={setViewMode}
+                />
+              </div>
             </div>
 
             {/* Conteúdo da agenda baseado no modo */}
@@ -55,6 +74,7 @@ const Agenda = () => {
               <SchedulerBoard 
                 weekStart={currentWeek} 
                 onWeekChange={setCurrentWeek}
+                showWeekends={showWeekends}
               />
             ) : (
               <TimelineView />

@@ -19,9 +19,10 @@ import { Session } from '@/hooks/useSessions';
 interface SchedulerBoardProps {
   weekStart: Date;
   onWeekChange: (week: Date) => void;
+  showWeekends?: boolean;
 }
 
-export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWeekChange }) => {
+export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWeekChange, showWeekends = true }) => {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [actionContext, setActionContext] = useState<'view' | 'move'>('view');
@@ -50,8 +51,13 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
 
   // Gerar dias da semana
   const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  }, [weekStart]);
+    const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    if (!showWeekends) {
+      // Filtrar sábado (6) e domingo (0)
+      return allDays.filter(day => day.getDay() !== 0 && day.getDay() !== 6);
+    }
+    return allDays;
+  }, [weekStart, showWeekends]);
 
   // Calcular a semana do mês para border animado
   const getWeekOfMonth = (date: Date) => {
@@ -179,7 +185,8 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
         <MobileWeekDots 
           weekStart={weekStart} 
           sessions={sessions} 
-          patients={patients} 
+          patients={patients}
+          showWeekends={showWeekends}
         />
       </div>
     );
@@ -189,7 +196,8 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     <div className={`p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in ${currentBorderStyle}`}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg">
+        <div className={`grid gap-1 mb-1 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg`}
+             style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)` }}>
           <div className="py-2" /> {/* Espaço vazio onde antes ficavam os botões de navegação */}
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-2">
@@ -209,7 +217,8 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
         </div>
 
         {/* Grid principal */}
-        <div className="grid grid-cols-8 gap-1 text-sm">
+        <div className={`grid gap-1 text-sm`}
+             style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)` }}>
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}

@@ -13,12 +13,14 @@ interface MobileWeekDotsProps {
   weekStart: Date;
   sessions: Session[];
   patients: Patient[];
+  showWeekends?: boolean;
 }
 
 export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({ 
   weekStart, 
   sessions, 
-  patients 
+  patients,
+  showWeekends = true
 }) => {
   const [selectedSlot, setSelectedSlot] = useState<{ day: Date; time: Date; sessions: Session[] } | null>(null);
   const [selectedSession, setSelectedSession] = useState<{ session: Session; mode: 'view' | 'move' } | null>(null);
@@ -36,8 +38,13 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
 
   // Gerar dias da semana
   const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  }, [weekStart]);
+    const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    if (!showWeekends) {
+      // Filtrar sábado (6) e domingo (0)
+      return allDays.filter(day => day.getDay() !== 0 && day.getDay() !== 6);
+    }
+    return allDays;
+  }, [weekStart, showWeekends]);
 
   const getSessionsForSlot = (day: Date, time: Date) => {
     return sessions.filter(session => {
@@ -101,7 +108,8 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
     <div className="w-full max-w-full p-2">
       <div className="w-full">
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-1 mb-3 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2">
+        <div className={`grid gap-1 mb-3 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2`}
+             style={{ gridTemplateColumns: `60px repeat(${weekDays.length}, 1fr)` }}>
           <div className="text-[10px] font-medium text-muted-foreground text-center py-1">
             Hora
           </div>
@@ -118,7 +126,8 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
         </div>
 
         {/* Grid principal com dots */}
-        <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-1">
+        <div className={`grid gap-1`}
+             style={{ gridTemplateColumns: `60px repeat(${weekDays.length}, 1fr)` }}>
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
