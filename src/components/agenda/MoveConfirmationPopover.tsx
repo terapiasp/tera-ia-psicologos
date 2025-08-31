@@ -15,7 +15,7 @@ import { Session } from '@/hooks/useSessions';
 import { Patient } from '@/hooks/usePatients';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin, Eye, Settings, MessageCircle, Mail } from 'lucide-react';
+import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin, Eye, Settings, Phone, Mail } from 'lucide-react';
 
 interface MoveConfirmationPopoverProps {
   open: boolean;
@@ -187,48 +187,26 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
             </div>
           </div>
 
-          {/* Botões de Contato */}
+          {/* Informações de Contato */}
           {(patientData?.whatsapp || patientData?.email) && (
             <>
               <Separator />
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Entrar em contato
+                  Contato
                 </p>
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   {patientData?.whatsapp && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="flex-1 bg-[#128C7E] hover:bg-[#128C7E] text-white border-[#128C7E] hover:border-[#128C7E] transition-colors"
-                    >
-                      <a 
-                        href={getWhatsAppUrl(patientData.whatsapp)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        WhatsApp
-                      </a>
-                    </Button>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{patientData.whatsapp}</span>
+                    </div>
                   )}
                   {patientData?.email && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="flex-1 hover:bg-[#DDC0E4] hover:text-foreground transition-colors"
-                    >
-                      <a 
-                        href={getEmailUrl(patientData.email)} 
-                        className="flex items-center gap-2"
-                      >
-                        <Mail className="h-4 w-4" />
-                        Email
-                      </a>
-                    </Button>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{patientData.email}</span>
+                    </div>
                   )}
                 </div>
               </div>
