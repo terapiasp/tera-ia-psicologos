@@ -23,10 +23,10 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({ date, time, sessions, onSess
     <div
       ref={setNodeRef}
       className={`
-        h-[38px] p-1 rounded-md transition-all duration-200
+        h-[38px] p-1 rounded-md transition-all duration-200 touch-manipulation min-w-[80px]
         ${isOver 
-          ? 'bg-primary/10 border-2 border-primary/30 shadow-soft' 
-          : 'bg-card hover:bg-muted/40 border border-border/30'
+          ? 'bg-primary/10 border border-primary/30' 
+          : 'bg-card hover:bg-muted/40 border border-border/20'
         }
         flex flex-col justify-center
       `}
