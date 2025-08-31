@@ -9,9 +9,11 @@ import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useSessions } from '@/hooks/useSessions';
 import { useRecurringSchedules } from '@/hooks/useRecurringSchedules';
 import { usePatients } from '@/hooks/usePatients';
+import { useIsCompact } from '@/hooks/useIsCompact';
 import { SessionCard } from './SessionCard';
 import { TimeSlot } from './TimeSlot';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
+import { MobileWeekDots } from './MobileWeekDots';
 import { Session } from '@/hooks/useSessions';
 
 interface SchedulerBoardProps {
@@ -28,6 +30,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     targetDateTime: Date;
   } | null>(null);
 
+  const isCompact = useIsCompact();
   const weekEnd = addDays(weekStart, 6);
   const { sessions } = useSessions(weekStart, weekEnd);
   const { updateSeriesFromOccurrence, moveSingleOccurrence } = useRecurringSchedules();
@@ -168,6 +171,19 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const goToCurrentWeek = () => {
     onWeekChange(new Date());
   };
+
+  // Renderizar versão compacta para mobile/tablet
+  if (isCompact) {
+    return (
+      <div className="p-2">
+        <MobileWeekDots 
+          weekStart={weekStart} 
+          sessions={sessions} 
+          patients={patients} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in ${currentBorderStyle}`}>
