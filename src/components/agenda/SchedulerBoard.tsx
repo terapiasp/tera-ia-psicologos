@@ -62,13 +62,13 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
 
   const weekOfMonth = getWeekOfMonth(weekStart);
   
-  // Classes de background baseadas na semana do mês
+  // Classes de background baseadas na semana do mês - tons acizentados sutis
   const weekBackgroundClasses = {
-    1: 'bg-blue-50/30 dark:bg-blue-950/20',
-    2: 'bg-emerald-50/30 dark:bg-emerald-950/20', 
-    3: 'bg-purple-50/30 dark:bg-purple-950/20',
-    4: 'bg-amber-50/30 dark:bg-amber-950/20',
-    5: 'bg-rose-50/30 dark:bg-rose-950/20'
+    1: 'bg-slate-50/50 dark:bg-slate-900/30',
+    2: 'bg-gray-50/50 dark:bg-gray-900/30', 
+    3: 'bg-zinc-50/50 dark:bg-zinc-900/30',
+    4: 'bg-stone-50/50 dark:bg-stone-900/30',
+    5: 'bg-neutral-50/50 dark:bg-neutral-900/30'
   };
 
   const currentWeekBg = weekBackgroundClasses[weekOfMonth as keyof typeof weekBackgroundClasses];
@@ -170,7 +170,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   };
 
   return (
-    <div className={`p-2 rounded-lg transition-all duration-300 ${currentWeekBg}`}>
+    <div className={`p-2 rounded-lg border transition-all duration-300 ${currentWeekBg}`}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
         <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b pb-2 rounded-lg">
