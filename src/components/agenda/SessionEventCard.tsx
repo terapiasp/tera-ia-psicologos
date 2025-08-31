@@ -120,14 +120,10 @@ export const SessionEventCard: React.FC<SessionEventCardProps> = ({
         </div>
 
         {/* Informações da sessão */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="text-sm">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Tipo de Terapia</p>
             <p className="font-medium">{getTherapyTypeDisplay(patient?.therapy_type)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Modalidade</p>
-            <p className="font-medium">{getModalityDisplay(session.modality)}</p>
           </div>
         </div>
 
