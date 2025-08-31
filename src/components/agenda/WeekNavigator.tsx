@@ -45,7 +45,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             variant="ghost"
             size="sm"
             onClick={goToCurrentWeek}
-            className="h-8 px-3 text-xs font-medium hover:bg-muted"
+            className="h-8 px-3 text-xs font-medium hover:bg-gradient-to-r hover:from-orange-500/20 hover:to-red-500/20 hover:text-orange-600 hover:border-orange-300/50 transition-all duration-200"
           >
             Hoje
           </Button>
