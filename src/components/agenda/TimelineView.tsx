@@ -113,7 +113,7 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
     const weekOfMonth = getWeekOfMonth(date);
     const gemColors = {
       1: 'bg-blue-600 border-blue-600/30 shadow-blue-600/25', // Safira
-      2: 'bg-rose-600 border-rose-600/30 shadow-rose-600/25', // Quartzo Rosa  
+      2: 'bg-emerald-600 border-emerald-600/30 shadow-emerald-600/25', // Esmeralda  
       3: 'bg-purple-600 border-purple-600/30 shadow-purple-600/25', // Ametista
       4: 'bg-amber-600 border-amber-600/30 shadow-amber-600/25', // Âmbar
       5: 'bg-red-600 border-red-600/30 shadow-red-600/25' // Ruby
@@ -126,7 +126,7 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
     const weekOfMonth = getWeekOfMonth(date);
     const accentColors = {
       1: 'border-l-blue-600/70', // Safira
-      2: 'border-l-rose-600/70', // Quartzo Rosa  
+      2: 'border-l-emerald-600/70', // Esmeralda  
       3: 'border-l-purple-600/70', // Ametista
       4: 'border-l-amber-600/70', // Âmbar
       5: 'border-l-red-600/70' // Ruby
@@ -139,7 +139,7 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
     const weekOfMonth = getWeekOfMonth(date);
     const hoverEffects = {
       1: 'hover:shadow-lg hover:shadow-blue-600/20 hover:border-blue-600/50', // Safira
-      2: 'hover:shadow-lg hover:shadow-rose-600/20 hover:border-rose-600/50', // Quartzo Rosa  
+      2: 'hover:shadow-lg hover:shadow-emerald-600/20 hover:border-emerald-600/50', // Esmeralda  
       3: 'hover:shadow-lg hover:shadow-purple-600/20 hover:border-purple-600/50', // Ametista
       4: 'hover:shadow-lg hover:shadow-amber-600/20 hover:border-amber-600/50', // Âmbar
       5: 'hover:shadow-lg hover:shadow-red-600/20 hover:border-red-600/50' // Ruby
