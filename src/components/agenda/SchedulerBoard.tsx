@@ -151,35 +151,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
         <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background z-10 border-b pb-2">
-          <div className="flex items-center justify-center gap-1 py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousWeek}
-              className="h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              <ChevronLeft className="h-3 w-3" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToCurrentWeek}
-              className="h-7 px-3 text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              <Calendar className="h-3 w-3 mr-1" />
-              Hoje
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextWeek}
-              className="h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              <ChevronRight className="h-3 w-3" />
-            </Button>
-          </div>
+          <div className="py-2" /> {/* Espaço vazio onde antes ficavam os botões de navegação */}
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-2">
               <div className="text-sm font-semibold text-foreground">
