@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { format, addDays, setHours, startOfDay, isSameDay } from 'date-fns';
+import { format, addDays, setHours, startOfDay, isSameDay, startOfWeek, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Session } from '@/hooks/useSessions';
 import { Patient } from '@/hooks/usePatients';
@@ -44,11 +44,70 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
     });
   };
 
-  const getDotStyle = (sessionCount: number) => {
+  const getDotStyle = (sessionCount: number, sessions: Session[]) => {
     if (sessionCount === 0) return 'bg-muted border border-border';
-    if (sessionCount === 1) return 'bg-primary border border-primary shadow-soft';
-    if (sessionCount === 2) return 'bg-secondary border border-secondary shadow-soft';
-    return 'bg-accent border border-accent shadow-soft scale-110';
+    
+    // Se há apenas uma sessão, usar cor baseada no status
+    if (sessionCount === 1) {
+      const session = sessions[0];
+      return getSessionStatusColor(session.status);
+    }
+    
+    // Se há múltiplas sessões, usar cor baseada na semana do mês
+    if (sessions.length > 0) {
+      const sessionDate = new Date(sessions[0].scheduled_at);
+      return getWeekGemColor(sessionDate);
+    }
+    
+    return 'bg-primary border border-primary shadow-soft';
+  };
+
+  const getSessionStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'confirmada':
+      case 'confirmed':
+      case 'scheduled':
+        return 'bg-primary border border-primary shadow-soft';
+      case 'realizada':
+      case 'completed':
+        return 'bg-success border border-success shadow-soft';
+      case 'cancelada':
+      case 'cancelled':
+        return 'bg-destructive border border-destructive shadow-soft';
+      case 'faltou':
+      case 'no_show':
+        return 'bg-warning border border-warning shadow-soft';
+      default:
+        return 'bg-muted border border-border';
+    }
+  };
+
+  // Calcular a semana do mês para cores das pedras preciosas
+  const getWeekOfMonth = (date: Date) => {
+    const firstDayOfMonth = startOfMonth(date);
+    const firstWeekStart = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
+    const currentWeekStart = startOfWeek(date, { weekStartsOn: 1 });
+    
+    const diffInWeeks = Math.floor((currentWeekStart.getTime() - firstWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return Math.max(1, Math.min(5, diffInWeeks + 1));
+  };
+
+  // Cores das pedras preciosas para cada semana
+  const getWeekGemColor = (date: Date) => {
+    const weekOfMonth = getWeekOfMonth(date);
+    const gemColors = {
+      1: 'bg-blue-600 border border-blue-600 shadow-soft scale-110', // Safira
+      2: 'bg-emerald-600 border border-emerald-600 shadow-soft scale-110', // Esmeralda  
+      3: 'bg-purple-600 border border-purple-600 shadow-soft scale-110', // Ametista
+      4: 'bg-amber-600 border border-amber-600 shadow-soft scale-110', // Âmbar
+      5: 'bg-red-600 border border-red-600 shadow-soft scale-110' // Ruby
+    };
+    return gemColors[weekOfMonth as keyof typeof gemColors] || gemColors[1];
+  };
+
+  const getDayAbbreviation = (day: Date) => {
+    const dayNames = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']; // Dom, Seg, Ter, Qua, Qui, Sex, Sab
+    return dayNames[day.getDay()];
   };
 
   const getPatientName = (session: Session) => {
@@ -57,19 +116,19 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[320px] p-3">
+    <div className="w-full max-w-full p-2">
+      <div className="w-full">
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-2 mb-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2">
-          <div className="text-xs font-medium text-muted-foreground text-center py-1">
-            Hora
+        <div className="grid grid-cols-8 gap-1 mb-3 sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2">
+          <div className="text-[10px] font-medium text-muted-foreground text-center py-1 min-w-0">
+            Hr
           </div>
           {weekDays.map((day) => (
-            <div key={day.toISOString()} className="text-center">
+            <div key={day.toISOString()} className="text-center min-w-0">
               <div className="text-xs font-semibold text-foreground">
-                {format(day, 'EEE', { locale: ptBR })}
+                {getDayAbbreviation(day)}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-[10px] text-muted-foreground">
                 {format(day, 'dd')}
               </div>
             </div>
@@ -77,12 +136,12 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
         </div>
 
         {/* Grid principal com dots */}
-        <div className="grid grid-cols-8 gap-2">
+        <div className="grid grid-cols-8 gap-1">
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className="text-xs font-medium text-muted-foreground text-center py-2 flex items-center justify-center">
-                {format(time, 'HH:mm')}
+              <div className="text-[10px] font-medium text-muted-foreground text-center py-1 flex items-center justify-center min-w-0">
+                {format(time, 'HH')}
               </div>
               
               {/* Dots para cada dia */}
@@ -95,14 +154,14 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
                     <SheetTrigger asChild>
                       <button
                         className={`
-                          w-6 h-6 rounded-full transition-all duration-200 flex items-center justify-center
-                          ${getDotStyle(sessionCount)}
+                          w-5 h-5 rounded-full transition-all duration-200 flex items-center justify-center
+                          ${getDotStyle(sessionCount, slotSessions)}
                           hover:scale-125 active:scale-105
                         `}
                         onClick={() => setSelectedSlot({ day, time, sessions: slotSessions })}
                       >
                         {sessionCount > 0 && (
-                          <span className="text-[8px] font-bold text-white">
+                          <span className="text-[7px] font-bold text-white">
                             {sessionCount > 3 ? '3+' : sessionCount}
                           </span>
                         )}
