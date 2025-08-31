@@ -23,12 +23,12 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({ date, time, sessions, onSess
     <div
       ref={setNodeRef}
       className={`
-        h-[38px] p-1 rounded-md transition-all duration-200 touch-manipulation min-w-[80px]
+        h-12 sm:h-[38px] p-1 rounded-md transition-all duration-200 touch-manipulation min-w-[112px]
         ${isOver 
           ? 'bg-primary/10 border border-primary/30' 
           : 'bg-card hover:bg-muted/40 border border-border/20'
         }
-        flex flex-col justify-center
+        flex flex-col justify-start items-stretch gap-1 overflow-hidden
       `}
     >
       {sessions.map((session) => (

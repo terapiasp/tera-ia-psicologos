@@ -38,7 +38,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onSessionClic
       case 'faltou':
         return 'bg-warning text-warning-foreground border-warning/20';
       default:
-        return 'bg-muted text-muted-foreground border-border';
+        return 'bg-rose-50 text-rose-900 border-rose-200';
     }
   };
 
@@ -62,14 +62,26 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onSessionClic
       onClick={handleClick}
       className={`
         ${getStatusColor(session.status)}
-        shadow-soft hover:shadow-medium transition-all duration-200 cursor-grab active:cursor-grabbing
-        hover:scale-[1.02] border-2
-        ${session.schedule_id ? 'ring-1 ring-primary/30' : ''}
+        shadow-soft sm:hover:shadow-medium transition-all duration-200 cursor-grab active:cursor-grabbing
+        sm:hover:scale-[1.02] border border-current/20
+        ${session.schedule_id ? 'border-l-4 border-l-primary' : ''}
+        w-full
       `}
     >
-      <CardContent className="p-2 py-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold truncate flex-1 text-sm text-foreground">
+      <CardContent className="p-1.5 sm:p-2">
+        {/* Layout mobile: duas linhas */}
+        <div className="block sm:hidden">
+          <div className="text-xs font-semibold truncate leading-tight">
+            {session.patients?.nickname || session.patients?.name}
+          </div>
+          <div className="text-xs opacity-80 leading-tight">
+            {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
+          </div>
+        </div>
+        
+        {/* Layout desktop: uma linha */}
+        <div className="hidden sm:flex items-center justify-between gap-2">
+          <span className="font-semibold truncate flex-1 text-sm">
             {session.patients?.nickname || session.patients?.name}
             {session.schedule_id && (
               <span className="opacity-75 ml-1">•</span>

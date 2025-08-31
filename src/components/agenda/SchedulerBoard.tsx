@@ -174,7 +174,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Container com scroll horizontal para mobile */}
         <div className="overflow-x-auto">
-          <div className="min-w-[640px] md:min-w-0">
+          <div className="min-w-[896px] md:min-w-0">
             {/* Header com dias da semana */}
             <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b pb-2 rounded-lg">
               {/* Coluna de horários fixa */}
