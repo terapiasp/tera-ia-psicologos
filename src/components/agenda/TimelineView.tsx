@@ -134,6 +134,19 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
     return accentColors[weekOfMonth as keyof typeof accentColors] || accentColors[1];
   };
 
+  // Efeito hover/neon baseado na semana
+  const getWeekHoverEffect = (date: Date) => {
+    const weekOfMonth = getWeekOfMonth(date);
+    const hoverEffects = {
+      1: 'hover:shadow-lg hover:shadow-blue-600/20 hover:border-blue-600/50', // Safira
+      2: 'hover:shadow-lg hover:shadow-emerald-600/20 hover:border-emerald-600/50', // Esmeralda  
+      3: 'hover:shadow-lg hover:shadow-purple-600/20 hover:border-purple-600/50', // Ametista
+      4: 'hover:shadow-lg hover:shadow-amber-600/20 hover:border-amber-600/50', // Âmbar
+      5: 'hover:shadow-lg hover:shadow-red-600/20 hover:border-red-600/50' // Ruby
+    };
+    return hoverEffects[weekOfMonth as keyof typeof hoverEffects] || hoverEffects[1];
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6 p-4">
@@ -166,94 +179,113 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
 
   return (
     <div className="space-y-6 p-4">
-      {daysWithSessions.map(({ date, sessions: daySessions }, dayIndex) => (
-        <div 
-          key={date.toISOString()} 
-          className="space-y-3"
-          ref={dayIndex === daysWithSessions.length - 1 ? lastElementRef : null}
-        >
-          {/* Cabeçalho do dia */}
-          <div className="flex items-center gap-3 pb-2 border-b border-border">
-            <div className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded-full shadow-lg ${getWeekGemColor(date)}`} />
-              <h3 className="text-lg font-semibold text-foreground">
-                {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-              </h3>
-            </div>
-            <Badge variant="secondary" className="ml-auto">
-              {daySessions.length} {daySessions.length === 1 ? 'sessão' : 'sessões'}
-            </Badge>
-          </div>
-
-          {/* Lista de sessões do dia */}
-          <div className="space-y-2 pl-5 relative">
-            {/* Linha vertical do timeline */}
-            <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-border" />
-            
-            {daySessions.map((session, index) => {
-              const sessionDate = new Date(session.scheduled_at);
-              const endTime = addMinutes(sessionDate, session.duration_minutes || 50);
-              const patient = patients.find(p => p.id === session.patient_id);
-
-              return (
-                <div key={session.id} className="relative">
-                  {/* Card da sessão */}
-                  <Card 
-                    className={`ml-4 cursor-pointer transition-all hover:shadow-medium hover:scale-[1.02] bg-muted/30 border-border/50 text-foreground border-l-4 ${getWeekAccentColor(date)}`}
-                    onClick={() => handleSessionClick(session)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-semibold text-foreground">
-                              {patient?.nickname || patient?.name || 'Paciente não encontrado'}
-                            </span>
-                            {session.schedule_id && (
-                              <Badge variant="outline" className="text-xs">
-                                Recorrente
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>
-                                {format(sessionDate, 'HH:mm')} - {format(endTime, 'HH:mm')}
-                              </span>
-                            </div>
-                            
-                            <span className="text-xs text-muted-foreground">
-                              {session.duration_minutes || 50} min
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-2">
-                          <Badge 
-                            variant={session.status === 'confirmado' || session.status === 'confirmed' || session.status === 'scheduled' ? 'default' : 'secondary'}
-                            className="text-xs"
-                          >
-                            {getStatusLabel(session.status)}
-                          </Badge>
-                          
-                          {session.value && (
-                            <span className="text-sm font-medium text-foreground">
-                              R$ {session.value.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+      {daysWithSessions.map(({ date, sessions: daySessions }, dayIndex) => {
+        const isNewMonth = dayIndex > 0 && 
+          daysWithSessions[dayIndex - 1].date.getMonth() !== date.getMonth();
+        
+        return (
+          <React.Fragment key={date.toISOString()}>
+            {/* Separador de mês */}
+            {isNewMonth && (
+              <div className="flex items-center gap-4 py-6 my-8">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-3 rounded-full border border-primary/20 shadow-soft">
+                  <span className="text-lg font-bold text-primary capitalize">
+                    {format(date, 'MMMM yyyy', { locale: ptBR })}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                <div className="flex-1 h-px bg-gradient-to-r from-border via-border to-transparent" />
+              </div>
+            )}
+
+            <div 
+              className="space-y-3"
+              ref={dayIndex === daysWithSessions.length - 1 ? lastElementRef : null}
+            >
+              {/* Cabeçalho do dia */}
+              <div className="flex items-center gap-3 pb-2 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full shadow-lg ${getWeekGemColor(date)}`} />
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  </h3>
+                </div>
+                <Badge variant="secondary" className="ml-auto">
+                  {daySessions.length} {daySessions.length === 1 ? 'sessão' : 'sessões'}
+                </Badge>
+              </div>
+        
+              {/* Lista de sessões do dia */}
+              <div className="space-y-2 pl-5 relative">
+                {/* Linha vertical do timeline */}
+                <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-border" />
+                
+                {daySessions.map((session, index) => {
+                  const sessionDate = new Date(session.scheduled_at);
+                  const endTime = addMinutes(sessionDate, session.duration_minutes || 50);
+                  const patient = patients.find(p => p.id === session.patient_id);
+        
+                  return (
+                    <div key={session.id} className="relative">
+                      {/* Card da sessão */}
+                      <Card 
+                        className={`ml-4 cursor-pointer transition-all hover:scale-[1.02] bg-muted/30 border-border/50 text-foreground border-l-4 ${getWeekAccentColor(date)} ${getWeekHoverEffect(date)}`}
+                        onClick={() => handleSessionClick(session)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-semibold text-foreground">
+                                  {patient?.nickname || patient?.name || 'Paciente não encontrado'}
+                                </span>
+                                {session.schedule_id && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Recorrente
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>
+                                    {format(sessionDate, 'HH:mm')} - {format(endTime, 'HH:mm')}
+                                  </span>
+                                </div>
+                                
+                                <span className="text-xs text-muted-foreground">
+                                  {session.duration_minutes || 50} min
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col items-end gap-2">
+                              <Badge 
+                                variant={session.status === 'confirmado' || session.status === 'confirmed' || session.status === 'scheduled' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {getStatusLabel(session.status)}
+                              </Badge>
+                              
+                              {session.value && (
+                                <span className="text-sm font-medium text-foreground">
+                                  R$ {session.value.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      })}
 
       {/* Loading indicator para carregamento incremental */}
       {isLoadingMore && (
