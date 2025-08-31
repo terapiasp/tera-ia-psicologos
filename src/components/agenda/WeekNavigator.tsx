@@ -36,7 +36,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             variant="ghost"
             size="sm"
             onClick={goToPreviousWeek}
-            className="h-8 w-8 p-0 hover:bg-muted"
+            className="h-8 w-8 p-0 hover:bg-transparent hover:text-foreground hover:font-bold transition-colors [&_svg]:[stroke-width:2] hover:[&_svg]:[stroke-width:2.5]"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -45,7 +45,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             variant="ghost"
             size="sm"
             onClick={goToCurrentWeek}
-            className="h-8 px-3 text-xs font-medium hover:bg-gradient-to-r hover:from-orange-500/20 hover:to-red-500/20 hover:text-orange-600 hover:border-orange-300/50 transition-all duration-200"
+            className="h-8 px-3 text-xs font-medium hover:font-bold hover:bg-transparent hover:text-foreground transition-colors"
           >
             Hoje
           </Button>
@@ -54,7 +54,7 @@ export const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             variant="ghost"
             size="sm"
             onClick={goToNextWeek}
-            className="h-8 w-8 p-0 hover:bg-muted"
+            className="h-8 w-8 p-0 hover:bg-transparent hover:text-foreground hover:font-bold transition-colors [&_svg]:[stroke-width:2] hover:[&_svg]:[stroke-width:2.5]"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
