@@ -30,7 +30,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
     const grouped: { [key: string]: Session[] } = {};
     
     sessions.forEach(session => {
-      const dayKey = format(new Date(session.scheduled_at), 'yyyy-MM-dd');
+      const sessionDate = new Date(session.scheduled_at);
+      const dayKey = format(sessionDate, 'yyyy-MM-dd');
       if (!grouped[dayKey]) {
         grouped[dayKey] = [];
       }
@@ -51,10 +52,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
   const daysWithSessions = useMemo(() => {
     return Object.keys(sessionsByDay)
       .sort()
-      .map(dayKey => ({
-        date: new Date(dayKey),
-        sessions: sessionsByDay[dayKey]
-      }));
+      .map(dayKey => {
+        // Usar a primeira sessão do dia para obter a data correta
+        const firstSession = sessionsByDay[dayKey][0];
+        const sessionDate = new Date(firstSession.scheduled_at);
+        return {
+          date: new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate()),
+          sessions: sessionsByDay[dayKey]
+        };
+      });
   }, [sessionsByDay]);
 
   const handleSessionClick = (session: Session) => {
