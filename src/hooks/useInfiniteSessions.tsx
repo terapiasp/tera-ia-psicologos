@@ -11,6 +11,10 @@ interface UseInfiniteSessionsReturn {
   loadMore: () => void;
   lastElementRef: (node: HTMLElement | null) => void;
   deleteSession: (id: string) => Promise<void>;
+  error: string | null;
+  retryFetch: () => void;
+  loadPrevious: () => void;
+  isLoadingPrevious: boolean;
 }
 
 const INITIAL_DAYS = 30;
@@ -20,13 +24,17 @@ export const useInfiniteSessions = (): UseInfiniteSessionsReturn => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [loadedUntil, setLoadedUntil] = useState<Date | null>(null);
+  const [loadedFrom, setLoadedFrom] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const fetchSessions = useCallback(async (startDate: Date, endDate: Date) => {
+  const fetchSessions = useCallback(async (startDate: Date, endDate: Date, retryCount = 0) => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from('sessions')
         .select(`
@@ -43,6 +51,15 @@ export const useInfiniteSessions = (): UseInfiniteSessionsReturn => {
       return data || [];
     } catch (error) {
       console.error('Error fetching sessions:', error);
+      
+      // Retry logic para falhas de rede
+      if (retryCount < 3 && (error as any).message?.includes('fetch')) {
+        console.log(`Retrying fetch... attempt ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return fetchSessions(startDate, endDate, retryCount + 1);
+      }
+      
+      setError('Erro ao carregar sessões. Verifique sua conexão.');
       return [];
     }
   }, []);
@@ -56,8 +73,23 @@ export const useInfiniteSessions = (): UseInfiniteSessionsReturn => {
     
     setSessions(newSessions);
     setLoadedUntil(endDate);
+    setLoadedFrom(startDate);
     setIsLoading(false);
   }, [fetchSessions]);
+
+  const loadPrevious = useCallback(async () => {
+    if (!loadedFrom || isLoadingPrevious) return;
+    
+    setIsLoadingPrevious(true);
+    const endDate = addDays(loadedFrom, -1);
+    const startDate = startOfDay(addDays(endDate, -LOAD_MORE_DAYS));
+    
+    const newSessions = await fetchSessions(startDate, endDate);
+    
+    setSessions(prev => [...newSessions, ...prev]);
+    setLoadedFrom(startDate);
+    setIsLoadingPrevious(false);
+  }, [loadedFrom, isLoadingPrevious, fetchSessions]);
 
   const loadMore = useCallback(async () => {
     if (!loadedUntil || isLoadingMore) return;
@@ -99,6 +131,7 @@ export const useInfiniteSessions = (): UseInfiniteSessionsReturn => {
 
   const deleteSession = useCallback(async (id: string) => {
     try {
+      setError(null);
       const { error } = await supabase
         .from('sessions')
         .delete()
@@ -109,9 +142,14 @@ export const useInfiniteSessions = (): UseInfiniteSessionsReturn => {
       setSessions(prev => prev.filter(session => session.id !== id));
     } catch (error) {
       console.error('Error deleting session:', error);
+      setError('Erro ao excluir sessão');
       throw error;
     }
   }, []);
+
+  const retryFetch = useCallback(() => {
+    loadInitial();
+  }, [loadInitial]);
 
   useEffect(() => {
     loadInitial();
@@ -129,9 +167,13 @@ export const useInfiniteSessions = (): UseInfiniteSessionsReturn => {
     sessions,
     isLoading,
     isLoadingMore,
+    isLoadingPrevious,
     hasMore,
     loadMore,
+    loadPrevious,
     lastElementRef,
-    deleteSession
+    deleteSession,
+    error,
+    retryFetch
   };
 };
