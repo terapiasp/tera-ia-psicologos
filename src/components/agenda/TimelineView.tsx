@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { format, addMinutes } from 'date-fns';
+import { format, addMinutes, startOfWeek, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -98,6 +98,42 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
     }
   };
 
+  // Calcular a semana do mês para cores das pedras preciosas
+  const getWeekOfMonth = (date: Date) => {
+    const firstDayOfMonth = startOfMonth(date);
+    const firstWeekStart = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
+    const currentWeekStart = startOfWeek(date, { weekStartsOn: 1 });
+    
+    const diffInWeeks = Math.floor((currentWeekStart.getTime() - firstWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return Math.max(1, Math.min(5, diffInWeeks + 1));
+  };
+
+  // Cores das pedras preciosas para cada semana
+  const getWeekGemColor = (date: Date) => {
+    const weekOfMonth = getWeekOfMonth(date);
+    const gemColors = {
+      1: 'bg-blue-600 border-blue-600/30 shadow-blue-600/25', // Safira
+      2: 'bg-emerald-600 border-emerald-600/30 shadow-emerald-600/25', // Esmeralda  
+      3: 'bg-purple-600 border-purple-600/30 shadow-purple-600/25', // Ametista
+      4: 'bg-amber-600 border-amber-600/30 shadow-amber-600/25', // Âmbar
+      5: 'bg-red-600 border-red-600/30 shadow-red-600/25' // Ruby
+    };
+    return gemColors[weekOfMonth as keyof typeof gemColors] || gemColors[1];
+  };
+
+  // Cor de marcação do card baseada na semana
+  const getWeekAccentColor = (date: Date) => {
+    const weekOfMonth = getWeekOfMonth(date);
+    const accentColors = {
+      1: 'border-l-blue-600/70', // Safira
+      2: 'border-l-emerald-600/70', // Esmeralda  
+      3: 'border-l-purple-600/70', // Ametista
+      4: 'border-l-amber-600/70', // Âmbar
+      5: 'border-l-red-600/70' // Ruby
+    };
+    return accentColors[weekOfMonth as keyof typeof accentColors] || accentColors[1];
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6 p-4">
@@ -139,7 +175,7 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
           {/* Cabeçalho do dia */}
           <div className="flex items-center gap-3 pb-2 border-b border-border">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary" />
+              <div className={`w-4 h-4 rounded-full shadow-lg ${getWeekGemColor(date)}`} />
               <h3 className="text-lg font-semibold text-foreground">
                 {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </h3>
@@ -161,14 +197,9 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
 
               return (
                 <div key={session.id} className="relative">
-                  {/* Ponto no timeline */}
-                  <div className="absolute -left-[7px] top-4 w-3 h-3 rounded-full bg-primary border-2 border-background" />
-                  
                   {/* Card da sessão */}
                   <Card 
-                    className={`ml-4 cursor-pointer transition-all hover:shadow-medium hover:scale-[1.02] ${getStatusColor(session.status)} ${
-                      session.schedule_id ? 'border-l-4 border-l-accent' : ''
-                    }`}
+                    className={`ml-4 cursor-pointer transition-all hover:shadow-medium hover:scale-[1.02] bg-muted/30 border-border/50 text-foreground border-l-4 ${getWeekAccentColor(date)}`}
                     onClick={() => handleSessionClick(session)}
                   >
                     <CardContent className="p-4">
