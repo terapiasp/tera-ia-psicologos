@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes } from 'date-fns';
+import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +49,29 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
+
+  // Calcular a semana do mês para border animado
+  const getWeekOfMonth = (date: Date) => {
+    const firstDayOfMonth = startOfMonth(date);
+    const firstWeekStart = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
+    const currentWeekStart = startOfWeek(date, { weekStartsOn: 1 });
+    
+    const diffInWeeks = Math.floor((currentWeekStart.getTime() - firstWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return Math.max(1, Math.min(5, diffInWeeks + 1));
+  };
+
+  const weekOfMonth = getWeekOfMonth(weekStart);
+  
+  // Estilos de border únicos para cada semana
+  const weekBorderStyles = {
+    1: 'border-4 border-blue-500/70 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50/30 to-transparent',
+    2: 'border-4 border-emerald-500/70 shadow-lg shadow-emerald-500/20 bg-gradient-to-br from-emerald-50/30 to-transparent border-dashed',
+    3: 'border-4 border-purple-500/70 shadow-lg shadow-purple-500/20 bg-gradient-to-br from-purple-50/30 to-transparent border-dotted',
+    4: 'border-4 border-amber-500/70 shadow-lg shadow-amber-500/20 bg-gradient-to-br from-amber-50/30 to-transparent border-double',
+    5: 'border-4 border-rose-500/70 shadow-lg shadow-rose-500/20 bg-gradient-to-br from-rose-50/30 to-transparent'
+  };
+
+  const currentBorderStyle = weekBorderStyles[weekOfMonth as keyof typeof weekBorderStyles];
 
   const handleDragStart = (event: DragStartEvent) => {
     const session = sessions.find(s => s.id === event.active.id);
@@ -147,10 +170,10 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   };
 
   return (
-    <div className="p-2">
+    <div className={`p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in ${currentBorderStyle}`}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background z-10 border-b pb-2">
+        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg">
           <div className="py-2" /> {/* Espaço vazio onde antes ficavam os botões de navegação */}
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-2">
@@ -160,6 +183,11 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
               <div className="text-sm text-muted-foreground font-medium">
                 {format(day, 'dd/MM')}
               </div>
+              {day === weekStart && (
+                <div className="text-xs font-medium mt-1 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse">
+                  Semana {weekOfMonth}
+                </div>
+              )}
             </div>
           ))}
         </div>
