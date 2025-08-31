@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes, startOfMonth, getWeeksInMonth } from 'date-fns';
+import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,29 +49,6 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
-
-  // Calcular a semana do mês para styling
-  const getWeekOfMonth = (date: Date) => {
-    const firstDayOfMonth = startOfMonth(date);
-    const firstWeekStart = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
-    const currentWeekStart = startOfWeek(date, { weekStartsOn: 1 });
-    
-    const diffInWeeks = Math.floor((currentWeekStart.getTime() - firstWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
-    return Math.max(1, Math.min(5, diffInWeeks + 1));
-  };
-
-  const weekOfMonth = getWeekOfMonth(weekStart);
-  
-  // Classes de background baseadas na semana do mês - tons acizentados sutis
-  const weekBackgroundClasses = {
-    1: 'bg-slate-50/50 dark:bg-slate-900/30',
-    2: 'bg-gray-50/50 dark:bg-gray-900/30', 
-    3: 'bg-zinc-50/50 dark:bg-zinc-900/30',
-    4: 'bg-stone-50/50 dark:bg-stone-900/30',
-    5: 'bg-neutral-50/50 dark:bg-neutral-900/30'
-  };
-
-  const currentWeekBg = weekBackgroundClasses[weekOfMonth as keyof typeof weekBackgroundClasses];
 
   const handleDragStart = (event: DragStartEvent) => {
     const session = sessions.find(s => s.id === event.active.id);
@@ -170,10 +147,10 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   };
 
   return (
-    <div className={`p-2 rounded-lg border transition-all duration-300 ${currentWeekBg}`}>
+    <div className="p-2">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b pb-2 rounded-lg">
+        <div className="grid grid-cols-8 gap-1 mb-1 sticky top-0 bg-background z-10 border-b pb-2">
           <div className="py-2" /> {/* Espaço vazio onde antes ficavam os botões de navegação */}
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-2">
@@ -183,11 +160,6 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
               <div className="text-sm text-muted-foreground font-medium">
                 {format(day, 'dd/MM')}
               </div>
-              {day === weekStart && (
-                <div className="text-xs text-primary font-medium mt-1">
-                  Semana {weekOfMonth}
-                </div>
-              )}
             </div>
           ))}
         </div>
