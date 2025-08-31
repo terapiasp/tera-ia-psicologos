@@ -71,13 +71,34 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'confirmado':
+      case 'confirmed':
+      case 'scheduled':
         return 'bg-success/10 border-success/20 text-success-foreground';
       case 'pendente':
+      case 'pending':
         return 'bg-warning/10 border-warning/20 text-warning-foreground';
       case 'cancelado':
+      case 'cancelled':
         return 'bg-destructive/10 border-destructive/20 text-destructive-foreground';
       default:
         return 'bg-muted border-border text-muted-foreground';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'confirmado':
+      case 'confirmed':
+      case 'scheduled':
+        return 'Agendado';
+      case 'pendente':
+      case 'pending':
+        return 'Pendente';
+      case 'cancelado':
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
     }
   };
 
@@ -173,20 +194,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ weekStart }) => {
                               </span>
                             </div>
                             
-                            {session.type && (
-                              <Badge variant="secondary" className="text-xs">
-                                {session.type}
-                              </Badge>
-                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {session.duration_minutes || 50} min
+                            </span>
                           </div>
                         </div>
 
                         <div className="flex flex-col items-end gap-2">
                           <Badge 
-                            variant={session.status === 'confirmado' ? 'default' : 'secondary'}
+                            variant={session.status === 'confirmado' || session.status === 'confirmed' || session.status === 'scheduled' ? 'default' : 'secondary'}
                             className="text-xs"
                           >
-                            {session.status}
+                            {getStatusLabel(session.status)}
                           </Badge>
                           
                           {session.value && (
