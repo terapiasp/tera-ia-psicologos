@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 interface TimeInputProps {
   value: string;
@@ -93,8 +93,11 @@ export function TimeInput({ value, onChange, className = "", disabled = false }:
               Horários Disponíveis
             </div>
           </div>
-          <ScrollArea className="h-64 px-2">
-            <div className="space-y-1 pb-2">
+          <div
+            className="max-h-64 overflow-y-auto px-2 pb-2"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
               {TIME_OPTIONS.map((option) => (
                 <Button
                   key={option.value}
@@ -107,7 +110,7 @@ export function TimeInput({ value, onChange, className = "", disabled = false }:
                 </Button>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
