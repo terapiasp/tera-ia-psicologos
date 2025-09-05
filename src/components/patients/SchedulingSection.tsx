@@ -8,7 +8,6 @@ import { Calendar, Clock, Users, RotateCcw } from 'lucide-react';
 import { RecurrenceRule } from '@/types/frequency';
 import { countNextMonth } from '@/utils/recurrence';
 import { format, parseISO } from 'date-fns';
-import { TimeInput } from './TimeInput';
 
 interface SchedulingSectionProps {
   value?: RecurrenceRule;
@@ -215,10 +214,11 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
               <Clock className="h-4 w-4 inline mr-1" />
               Horário
             </Label>
-            <TimeInput
+            <Input
+              type="time"
               value={currentTime}
-              onChange={handleTimeChange}
-              className=""
+              onChange={(e) => handleTimeChange(e.target.value)}
+              className="h-12"
             />
           </div>
         </div>
