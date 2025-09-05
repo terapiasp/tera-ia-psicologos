@@ -23,7 +23,7 @@ import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
 import { RecurrenceRule } from "@/types/frequency";
-import { RecurrenceBuilder } from "./RecurrenceBuilder";
+import { FrequencyScheduler } from "./FrequencyScheduler";
 import {
   Dialog,
   DialogContent,
@@ -428,30 +428,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                         <FormItem>
                           <FormLabel>Frequência das Sessões</FormLabel>
                           <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              // Atualizar recurrenceRule baseado na seleção
-                              if (value === 'weekly') {
-                                setRecurrenceRule({
-                                  frequency: 'weekly',
-                                  interval: 1,
-                                  daysOfWeek: [1], // Segunda-feira por padrão
-                                  startDate: new Date().toISOString(),
-                                  startTime: '09:00',
-                                });
-                              } else if (value === 'biweekly') {
-                                setRecurrenceRule({
-                                  frequency: 'biweekly',
-                                  interval: 2,
-                                  daysOfWeek: [1],
-                                  startDate: new Date().toISOString(),
-                                  startTime: '09:00',
-                                });
-                              } else {
-                                setRecurrenceRule(undefined);
-                              }
-                            }}
-                            defaultValue={field.value}
+                            onValueChange={field.onChange}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className="h-12">
@@ -470,17 +448,11 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                       )}
                     />
 
-                    {/* RecurrenceBuilder apenas se for personalizada */}
-                    {form.watch("frequency") === "custom" && (
-                      <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-                        <RecurrenceBuilder
-                          value={recurrenceRule}
-                          onChange={setRecurrenceRule}
-                          sessionType={form.watch("therapy_type")}
-                          sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
-                        />
-                      </div>
-                    )}
+                    <FrequencyScheduler
+                      value={recurrenceRule}
+                      onChange={setRecurrenceRule}
+                      sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+                    />
                   </div>
                 </CardContent>
               </Card>
