@@ -56,6 +56,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PhoneInputField } from "./PhoneInputField";
+import { SessionValueInput } from "./SessionValueInput";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
@@ -397,17 +398,12 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                           Valor da Sessão
                         </FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">R$</span>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="80"
-                              {...field}
-                              className="h-12 pl-10 text-base"
-                            />
-                          </div>
+                          <SessionValueInput
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            disabled={form.formState.isSubmitting}
+                            placeholder="80"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
