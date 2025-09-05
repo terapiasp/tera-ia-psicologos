@@ -87,12 +87,14 @@ export function TimeInput({ value, onChange, className = "", disabled = false }:
           </div>
         </PopoverTrigger>
         
-        <PopoverContent className="w-48 p-2" align="start">
-          <div className="space-y-1">
+        <PopoverContent className="w-48 p-0" align="start">
+          <div className="p-2">
             <div className="text-xs font-medium text-muted-foreground px-2 py-1">
               Horários Disponíveis
             </div>
-            <ScrollArea className="h-64">
+          </div>
+          <ScrollArea className="h-64 px-2">
+            <div className="space-y-1 pb-2">
               {TIME_OPTIONS.map((option) => (
                 <Button
                   key={option.value}
@@ -104,8 +106,8 @@ export function TimeInput({ value, onChange, className = "", disabled = false }:
                   {option.label}
                 </Button>
               ))}
-            </ScrollArea>
-          </div>
+            </div>
+          </ScrollArea>
         </PopoverContent>
       </Popover>
     </div>
