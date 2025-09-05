@@ -31,32 +31,38 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
   const [schedulingMode, setSchedulingMode] = useState<'single' | 'recurring'>(
     value ? 'recurring' : 'single'
   );
+  
+  // Local states for single session mode
+  const [singleDate, setSingleDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [singleTime, setSingleTime] = useState('09:00');
 
   // Sync mode with external value when editing existing data
   useEffect(() => {
     setSchedulingMode(value ? 'recurring' : 'single');
   }, [value]);
 
+  // Sync single states with value when switching modes
+  useEffect(() => {
+    if (value) {
+      setSingleDate(value.startDate);
+      setSingleTime(value.startTime);
+    }
+  }, [value]);
+
   const handleModeChange = (mode: 'single' | 'recurring') => {
     setSchedulingMode(mode);
     
     if (mode === 'single') {
-      // Clear recurring rule but keep date/time for single session
-      if (value) {
-        onChange(undefined);
-      }
+      // Clear recurring rule and preserve current values in local state
+      onChange(undefined);
     } else {
-      // Create basic recurring rule
-      const now = new Date();
-      const defaultDate = format(now, 'yyyy-MM-dd');
-      const defaultTime = value?.startTime || '09:00';
-      
+      // Create basic recurring rule using current single values
       onChange({
         frequency: 'weekly',
         interval: 1,
         daysOfWeek: [1], // Monday by default
-        startDate: value?.startDate || defaultDate,
-        startTime: defaultTime,
+        startDate: singleDate,
+        startTime: singleTime,
       });
     }
   };
@@ -111,22 +117,20 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
 
   const handleDateChange = (date: string) => {
     if (schedulingMode === 'single') {
-      // For single sessions, we don't need a RecurrenceRule
-      return;
+      setSingleDate(date);
+    } else {
+      if (!value) return;
+      onChange({ ...value, startDate: date });
     }
-    
-    if (!value) return;
-    onChange({ ...value, startDate: date });
   };
 
   const handleTimeChange = (time: string) => {
     if (schedulingMode === 'single') {
-      // For single sessions, we don't need a RecurrenceRule  
-      return;
+      setSingleTime(time);
+    } else {
+      if (!value) return;
+      onChange({ ...value, startTime: time });
     }
-    
-    if (!value) return;
-    onChange({ ...value, startTime: time });
   };
 
   const getFrequencyDescription = (): string => {
@@ -165,8 +169,8 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
     }
   };
 
-  const currentDate = value?.startDate || format(new Date(), 'yyyy-MM-dd');
-  const currentTime = value?.startTime || '09:00';
+  const currentDate = schedulingMode === 'single' ? singleDate : (value?.startDate || format(new Date(), 'yyyy-MM-dd'));
+  const currentTime = schedulingMode === 'single' ? singleTime : (value?.startTime || '09:00');
 
   return (
     <div className={className}>
