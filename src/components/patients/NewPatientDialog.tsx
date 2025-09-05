@@ -3,7 +3,22 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  Plus, 
+  ChevronDown, 
+  ChevronUp, 
+  User, 
+  Phone, 
+  MessageCircle,
+  Stethoscope,
+  Monitor,
+  DollarSign,
+  Calendar,
+  FileText,
+  Mail,
+  MapPin,
+  Cake
+} from "lucide-react";
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
 import { RecurrenceRule } from "@/types/frequency";
 import { RecurrenceBuilder } from "./RecurrenceBuilder";
@@ -36,6 +51,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
@@ -202,275 +219,373 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            {isEdit ? 'Editar Paciente' : 'Novo Paciente'}
-          </DialogTitle>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Dados Básicos */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-border">
-                <h3 className="text-lg font-medium text-foreground">Dados Básicos</h3>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <div className="bg-gradient-to-br from-background via-background to-muted/10 p-6">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <FileText className="h-6 w-6 text-primary" />
               </div>
-              
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Nome *
-                      <span className="text-xs text-muted-foreground block font-normal">
-                        Como o paciente prefere ser chamado (usado em lembretes automáticos)
-                      </span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome preferido do paciente" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="whatsapp"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>WhatsApp *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(11) 99999-9999" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div>
+                <DialogTitle className="text-2xl font-semibold">
+                  {isEdit ? 'Ficha do Paciente' : 'Nova Ficha de Paciente'}
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isEdit ? 'Atualizar informações do paciente' : 'Cadastrar novo paciente no sistema'}
+                </p>
+              </div>
             </div>
+          </DialogHeader>
+        </div>
 
-            {/* Dados Técnicos */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-border">
-                <h3 className="text-lg font-medium text-foreground">Dados Técnicos</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="therapy_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Terapia *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="individual_adult">Individual Adulto</SelectItem>
-                          <SelectItem value="individual_child">Individual Infantil</SelectItem>
-                          <SelectItem value="individual_teen">Individual Adolescente</SelectItem>
-                          <SelectItem value="couple">Terapia de Casal</SelectItem>
-                          <SelectItem value="family">Terapia Familiar</SelectItem>
-                          <SelectItem value="group">Terapia em Grupo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="session_mode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Modo da Sessão *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o modo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="online">Online</SelectItem>
-                          <SelectItem value="in_person">Presencial</SelectItem>
-                          <SelectItem value="hybrid">Híbrido</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="session_value"
-                render={({ field }) => (
-                  <FormItem className="max-w-xs">
-                    <FormLabel>Valor da Sessão (R$)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="80.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Agendamento Recorrente */}
-              <RecurrenceBuilder
-                value={recurrenceRule}
-                onChange={setRecurrenceRule}
-                sessionType={form.watch("therapy_type")}
-                sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
-              />
-            </div>
-
-            {/* Dados Adicionais (Colapsível) */}
-            <Collapsible open={showAdditionalData} onOpenChange={setShowAdditionalData}>
-              <CollapsibleTrigger asChild>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full justify-between p-0 h-auto"
-                >
-                  <div className="flex items-center gap-2 pb-2 border-b border-border w-full">
-                    <h3 className="text-lg font-medium text-foreground">Dados Adicionais</h3>
-                    <span className="text-sm text-muted-foreground">(opcional)</span>
+        <div className="px-6 pb-6 max-h-[calc(90vh-140px)] overflow-y-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Dados Básicos */}
+              <Card className="border-l-4 border-l-primary shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-6">
+                    <User className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold text-foreground">Dados Básicos</h3>
+                    <Badge variant="secondary" className="ml-auto">Obrigatório</Badge>
                   </div>
-                  {showAdditionalData ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              
-              <CollapsibleContent className="space-y-4 pt-4">
-                <FormField
-                  control={form.control}
-                  name="nickname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome completo para documentos" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <User className="h-4 w-4" />
+                            Nome *
+                          </FormLabel>
+                          <div className="text-sm text-muted-foreground mb-2">
+                            Como o paciente prefere ser chamado (usado em lembretes automáticos)
+                          </div>
+                          <FormControl>
+                            <Input 
+                              placeholder="Ex: João, Maria, Dr. Silva..." 
+                              {...field} 
+                              className="h-12 text-base"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <MessageCircle className="h-4 w-4" />
+                            WhatsApp *
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="(11) 99999-9999" 
+                              {...field} 
+                              className="h-12 text-base"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Dados Técnicos */}
+              <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Stethoscope className="h-5 w-5 text-blue-500" />
+                    <h3 className="text-lg font-semibold text-foreground">Configuração Terapêutica</h3>
+                    <Badge variant="outline" className="ml-auto">Técnico</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <FormField
+                      control={form.control}
+                      name="therapy_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <Stethoscope className="h-4 w-4" />
+                            Tipo de Terapia *
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="individual_adult">👤 Individual Adulto</SelectItem>
+                              <SelectItem value="individual_child">🧒 Individual Infantil</SelectItem>
+                              <SelectItem value="individual_teen">👦 Individual Adolescente</SelectItem>
+                              <SelectItem value="couple">💑 Terapia de Casal</SelectItem>
+                              <SelectItem value="family">👨‍👩‍👧‍👦 Terapia Familiar</SelectItem>
+                              <SelectItem value="group">👥 Terapia em Grupo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="session_mode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <Monitor className="h-4 w-4" />
+                            Modalidade *
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecione a modalidade" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="online">🖥️ Online</SelectItem>
+                              <SelectItem value="in_person">🏢 Presencial</SelectItem>
+                              <SelectItem value="hybrid">🔄 Híbrido</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="session_value"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
+                      <FormItem className="max-w-xs mb-6">
+                        <FormLabel className="flex items-center gap-2 text-base">
+                          <DollarSign className="h-4 w-4" />
+                          Valor da Sessão
+                        </FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="email@exemplo.com" {...field} />
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="80,00"
+                              {...field}
+                              className="h-12 pl-8 text-base"
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="(11) 99999-9999" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  {/* Agendamento Recorrente */}
+                  <div className="border-t pt-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Calendar className="h-4 w-4 text-blue-500" />
+                      <h4 className="font-medium">Frequência e Agendamento</h4>
+                    </div>
+                    <RecurrenceBuilder
+                      value={recurrenceRule}
+                      onChange={setRecurrenceRule}
+                      sessionType={form.watch("therapy_type")}
+                      sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="birth_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data de Nascimento</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* Dados Adicionais (Colapsível) */}
+              <Collapsible open={showAdditionalData} onOpenChange={setShowAdditionalData}>
+                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                  <CardContent className="p-6">
+                    <CollapsibleTrigger asChild>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="w-full justify-between p-0 h-auto hover:bg-transparent"
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-emerald-500" />
+                          <h3 className="text-lg font-semibold text-foreground">Informações Complementares</h3>
+                          <Badge variant="outline" className="ml-2">Opcional</Badge>
+                        </div>
+                        {showAdditionalData ? (
+                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="space-y-6 pt-6 animate-accordion-down">
+                      <FormField
+                        control={form.control}
+                        name="nickname"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2 text-base">
+                              <User className="h-4 w-4" />
+                              Nome Completo
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Nome completo para documentos oficiais" 
+                                {...field} 
+                                className="h-12 text-base"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Endereço</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Rua, número, bairro" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 text-base">
+                                <Mail className="h-4 w-4" />
+                                Email
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="email" 
+                                  placeholder="email@exemplo.com" 
+                                  {...field} 
+                                  className="h-12 text-base"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-            <div className="flex gap-4 justify-end pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
-                Cancelar
-              </Button>
-              {isEdit && patient && !patient.is_archived && (
-                <Button 
-                  type="button" 
-                  variant="destructive" 
-                  onClick={() => {
-                    archivePatient(patient.id);
-                    setOpen(false);
-                  }}
-                  disabled={isArchiving}
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 text-base">
+                                <Phone className="h-4 w-4" />
+                                Telefone Adicional
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="(11) 3333-4444" 
+                                  {...field} 
+                                  className="h-12 text-base"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="birth_date"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 text-base">
+                                <Cake className="h-4 w-4" />
+                                Data de Nascimento
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="date" 
+                                  {...field} 
+                                  className="h-12 text-base"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 text-base">
+                                <MapPin className="h-4 w-4" />
+                                Endereço
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Rua, número, bairro" 
+                                  {...field} 
+                                  className="h-12 text-base"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </CardContent>
+                </Card>
+              </Collapsible>
+
+              {/* Botões de Ação */}
+              <div className="flex flex-wrap gap-3 justify-end pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  className="min-w-[100px]"
                 >
-                  {isArchiving ? "Arquivando..." : "Arquivar"}
+                  Cancelar
                 </Button>
-              )}
-              <Button
-                type="submit"
-                disabled={isCreating || isUpdating}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                {isCreating || isUpdating 
-                  ? "Salvando..." 
-                  : isEdit 
-                    ? "Salvar Alterações" 
-                    : "Salvar Paciente"
-                }
-              </Button>
-            </div>
-          </form>
-        </Form>
+                {isEdit && patient && !patient.is_archived && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    onClick={() => {
+                      archivePatient(patient.id);
+                      setOpen(false);
+                    }}
+                    disabled={isArchiving}
+                    className="min-w-[100px]"
+                  >
+                    {isArchiving ? "Arquivando..." : "Arquivar"}
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  disabled={isCreating || isUpdating}
+                  className="bg-gradient-primary hover:opacity-90 min-w-[140px]"
+                >
+                  {isCreating || isUpdating 
+                    ? "Salvando..." 
+                    : isEdit 
+                      ? "Salvar Alterações" 
+                      : "Salvar Paciente"
+                  }
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
