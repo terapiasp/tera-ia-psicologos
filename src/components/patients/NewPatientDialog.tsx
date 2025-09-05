@@ -10,7 +10,7 @@ import {
   User, 
   Phone, 
   MessageCircle,
-  Stethoscope,
+  Brain,
   Monitor,
   DollarSign,
   Calendar,
@@ -353,7 +353,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
               <Card className="border-l-4 border-l-blue-500 shadow-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-6">
-                    <Stethoscope className="h-5 w-5 text-blue-500" />
+                    <Brain className="h-5 w-5 text-blue-500" />
                     <h3 className="text-lg font-semibold text-foreground">Configuração Terapêutica</h3>
                     <Badge variant="outline" className="ml-auto">Técnico</Badge>
                   </div>
@@ -365,7 +365,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="flex items-center gap-2 text-base">
-                            <Stethoscope className="h-4 w-4" />
+                            <Brain className="h-4 w-4" />
                             Tipo de Terapia *
                           </FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
