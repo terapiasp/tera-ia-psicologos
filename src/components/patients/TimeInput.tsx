@@ -42,7 +42,44 @@ export function TimeInput({ value, onChange, className = "", disabled = false }:
   };
 
   const handleInputChange = (newValue: string) => {
-    onChange(newValue);
+    // Remove non-numeric characters except colon
+    let cleanValue = newValue.replace(/[^\d:]/g, '');
+    
+    // Auto-format as user types
+    if (cleanValue.length === 2 && !cleanValue.includes(':')) {
+      cleanValue = cleanValue + ':';
+    }
+    
+    // Limit to HH:MM format
+    if (cleanValue.length > 5) {
+      cleanValue = cleanValue.substring(0, 5);
+    }
+    
+    // Validate hour and minute ranges
+    const parts = cleanValue.split(':');
+    if (parts.length === 2) {
+      let [hour, minute] = parts;
+      
+      // Validate hour (00-23)
+      if (hour.length === 2) {
+        const hourNum = parseInt(hour);
+        if (hourNum > 23) {
+          hour = '23';
+        }
+      }
+      
+      // Validate minute (00-59)
+      if (minute.length === 2) {
+        const minuteNum = parseInt(minute);
+        if (minuteNum > 59) {
+          minute = '59';
+        }
+      }
+      
+      cleanValue = hour + ':' + minute;
+    }
+    
+    onChange(cleanValue);
   };
 
   const handleInputClick = () => {
