@@ -19,6 +19,8 @@ import {
   MapPin,
   Cake
 } from "lucide-react";
+import PhoneInput from 'react-phone-number-input';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
 import { RecurrenceRule } from "@/types/frequency";
 import { RecurrenceBuilder } from "./RecurrenceBuilder";
@@ -53,13 +55,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PhoneInputField } from "./PhoneInputField";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
 const patientSchema = z.object({
   // Dados Básicos (obrigatórios)
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  whatsapp: z.string().min(10, "WhatsApp deve ter pelo menos 10 dígitos"),
+  whatsapp: z.string()
+    .min(1, "WhatsApp é obrigatório")
+    .refine((value) => {
+      try {
+        return isValidPhoneNumber(value);
+      } catch {
+        return false;
+      }
+    }, "Número de WhatsApp inválido"),
   
   // Dados Técnicos
   therapy_type: z.string().min(1, "Selecione o tipo de terapia"),
@@ -284,12 +295,19 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                             <MessageCircle className="h-4 w-4" />
                             WhatsApp *
                           </FormLabel>
+                          <div className="text-sm text-muted-foreground mb-2">
+                            Incluindo código do país (ex: +55 11 99999-9999 para Brasil)
+                          </div>
                           <FormControl>
-                            <Input 
-                              placeholder="(11) 99999-9999" 
-                              {...field} 
-                              className="h-12 text-base"
-                            />
+                            <div className="relative">
+                              <PhoneInputField
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder="Selecione o país e digite o número"
+                                className="h-12 text-base"
+                                disabled={form.formState.isSubmitting}
+                              />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
