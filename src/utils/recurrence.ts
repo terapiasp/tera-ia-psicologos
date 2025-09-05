@@ -40,11 +40,22 @@ export const generateOccurrencesInRange = (
 
 export const countNextMonth = (rule: RecurrenceRule): number => {
   const today = new Date();
-  const nextMonth = addMonths(today, 1);
-  const nextMonthStart = startOfMonth(nextMonth);
-  const nextMonthEnd = endOfMonth(nextMonth);
+  const currentMonth = startOfMonth(today);
+  const currentMonthEnd = endOfMonth(today);
   
-  const occurrences = generateOccurrencesInRange(rule, nextMonthStart, nextMonthEnd);
+  // Calculate sessions per week based on rule
+  const sessionsPerWeek = rule.daysOfWeek.length;
+  
+  if (rule.frequency === 'weekly') {
+    // Weekly: sessions per week * 4 weeks
+    return sessionsPerWeek * 4;
+  } else if (rule.frequency === 'biweekly') {
+    // Biweekly: sessions per week * 2 (every 2 weeks in a month)
+    return sessionsPerWeek * 2;
+  }
+  
+  // For custom or other frequencies, use the original calculation
+  const occurrences = generateOccurrencesInRange(rule, currentMonth, currentMonthEnd);
   return occurrences.length;
 };
 
