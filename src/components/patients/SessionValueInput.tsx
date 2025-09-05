@@ -68,7 +68,7 @@ export function SessionValueInput({
                 onClick={handleInputClick}
                 placeholder={placeholder}
                 disabled={disabled}
-                className="h-12 pl-10 pr-12 text-base cursor-pointer"
+                className="h-12 pl-10 pr-12 text-base cursor-pointer [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
               />
             </div>
           </PopoverTrigger>
