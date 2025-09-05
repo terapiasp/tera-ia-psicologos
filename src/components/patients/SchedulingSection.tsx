@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TimeInput } from './TimeInput';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -214,10 +215,9 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
               <Clock className="h-4 w-4 inline mr-1" />
               Horário
             </Label>
-            <Input
-              type="time"
+            <TimeInput
               value={currentTime}
-              onChange={(e) => handleTimeChange(e.target.value)}
+              onChange={handleTimeChange}
               className="h-12"
             />
           </div>
