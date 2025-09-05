@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
 import { RecurrenceRule } from "@/types/frequency";
 import { RecurrenceBuilder } from "./RecurrenceBuilder";
@@ -14,6 +14,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Form,
   FormControl,
@@ -35,16 +40,21 @@ import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
 const patientSchema = z.object({
+  // Dados Básicos (obrigatórios)
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  whatsapp: z.string().min(10, "WhatsApp deve ter pelo menos 10 dígitos"),
+  
+  // Dados Técnicos
+  therapy_type: z.string().min(1, "Selecione o tipo de terapia"),
+  session_mode: z.string().min(1, "Selecione o modo da sessão"),
+  session_value: z.string().optional(),
+  
+  // Dados Adicionais (opcionais)
   nickname: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().optional(),
-  whatsapp: z.string().min(10, "WhatsApp deve ter pelo menos 10 dígitos"),
   birth_date: z.string().optional(),
-  therapy_type: z.string().min(1, "Selecione o tipo de terapia"),
-  session_mode: z.string().min(1, "Selecione o modo da sessão"),
   address: z.string().optional(),
-  session_value: z.string().optional(),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -59,6 +69,7 @@ interface NewPatientDialogProps {
 
 export function NewPatientDialog({ children, patient, isEdit = false, open: controlledOpen, onOpenChange: controlledOnOpenChange }: NewPatientDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [showAdditionalData, setShowAdditionalData] = useState(false);
   
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -200,68 +211,32 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Dados Básicos */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
+                <h3 className="text-lg font-medium text-foreground">Dados Básicos</h3>
+              </div>
+              
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo *</FormLabel>
+                    <FormLabel>
+                      Nome *
+                      <span className="text-xs text-muted-foreground block font-normal">
+                        Como o paciente prefere ser chamado (usado em lembretes automáticos)
+                      </span>
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do paciente" {...field} />
+                      <Input placeholder="Nome preferido do paciente" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="nickname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apelido</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Como prefere ser chamado" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="email@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(11) 99999-9999" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="whatsapp"
@@ -275,112 +250,190 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Dados Técnicos */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
+                <h3 className="text-lg font-medium text-foreground">Dados Técnicos</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="therapy_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Terapia *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="individual_adult">Individual Adulto</SelectItem>
+                          <SelectItem value="individual_child">Individual Infantil</SelectItem>
+                          <SelectItem value="individual_teen">Individual Adolescente</SelectItem>
+                          <SelectItem value="couple">Terapia de Casal</SelectItem>
+                          <SelectItem value="family">Terapia Familiar</SelectItem>
+                          <SelectItem value="group">Terapia em Grupo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="session_mode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modo da Sessão *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o modo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="online">Online</SelectItem>
+                          <SelectItem value="in_person">Presencial</SelectItem>
+                          <SelectItem value="hybrid">Híbrido</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="birth_date"
+                name="session_value"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Nascimento</FormLabel>
+                  <FormItem className="max-w-xs">
+                    <FormLabel>Valor da Sessão (R$)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="80.00"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {/* Agendamento Recorrente */}
+              <RecurrenceBuilder
+                value={recurrenceRule}
+                onChange={setRecurrenceRule}
+                sessionType={form.watch("therapy_type")}
+                sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="therapy_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Terapia *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="individual_adult">Individual Adulto</SelectItem>
-                      <SelectItem value="individual_child">Individual Infantil</SelectItem>
-                      <SelectItem value="individual_teen">Individual Adolescente</SelectItem>
-                      <SelectItem value="couple">Terapia de Casal</SelectItem>
-                      <SelectItem value="family">Terapia Familiar</SelectItem>
-                      <SelectItem value="group">Terapia em Grupo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Dados Adicionais (Colapsível) */}
+            <Collapsible open={showAdditionalData} onOpenChange={setShowAdditionalData}>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="w-full justify-between p-0 h-auto"
+                >
+                  <div className="flex items-center gap-2 pb-2 border-b border-border w-full">
+                    <h3 className="text-lg font-medium text-foreground">Dados Adicionais</h3>
+                    <span className="text-sm text-muted-foreground">(opcional)</span>
+                  </div>
+                  {showAdditionalData ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="space-y-4 pt-4">
+                <FormField
+                  control={form.control}
+                  name="nickname"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome Completo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome completo para documentos" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="session_mode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Modo da Sessão *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o modo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="in_person">Presencial</SelectItem>
-                      <SelectItem value="hybrid">Híbrido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="email@exemplo.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endereço</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Rua, número, bairro" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="(11) 99999-9999" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <FormField
-              control={form.control}
-              name="session_value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor da Sessão (R$)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="80.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="birth_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Nascimento</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* Agendamento Recorrente Integrado */}
-            <RecurrenceBuilder
-              value={recurrenceRule}
-              onChange={setRecurrenceRule}
-              sessionType={form.watch("therapy_type")}
-              sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
-            />
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Rua, número, bairro" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="flex gap-4 justify-end pt-4">
               <Button
