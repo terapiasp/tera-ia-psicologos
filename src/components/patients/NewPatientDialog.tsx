@@ -391,21 +391,21 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     control={form.control}
                     name="session_value"
                     render={({ field }) => (
-                      <FormItem className="max-w-xs">
+                      <FormItem className="max-w-xs mb-6">
                         <FormLabel className="flex items-center gap-2 text-base">
                           <DollarSign className="h-4 w-4" />
                           Valor da Sessão
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">R$</span>
                             <Input
                               type="number"
                               min="0"
                               step="0.01"
-                              placeholder="80,00"
+                              placeholder="80"
                               {...field}
-                              className="h-12 pl-8 text-base"
+                              className="h-12 pl-10 text-base"
                             />
                           </div>
                         </FormControl>
@@ -415,8 +415,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   />
 
                   {/* Frequência e Agendamento integrados */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-2 mb-4">
                       <Calendar className="h-4 w-4 text-blue-500" />
                       <h4 className="font-medium">Frequência e Agendamento</h4>
                     </div>
