@@ -76,6 +76,7 @@ const patientSchema = z.object({
   therapy_type: z.string().min(1, "Selecione o tipo de terapia"),
   session_mode: z.string().min(1, "Selecione o modo da sessão"),
   session_value: z.string().optional(),
+  frequency: z.string().optional(),
   
   // Dados Adicionais (opcionais)
   nickname: z.string().optional(),
@@ -107,16 +108,6 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
 
-  // Carregar agenda existente do paciente quando for edição
-  useEffect(() => {
-    if (isEdit && patient && schedules.length > 0) {
-      const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
-      if (existingSchedule) {
-        setRecurrenceRule(existingSchedule.rrule_json);
-      }
-    }
-  }, [isEdit, patient, schedules]);
-
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
@@ -130,8 +121,21 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       session_mode: patient?.session_mode || "online",
       address: patient?.address || "",
       session_value: "80",
+      frequency: patient?.frequency || "",
     },
   });
+
+  // Carregar agenda existente do paciente quando for edição
+  useEffect(() => {
+    if (isEdit && patient && schedules.length > 0) {
+      const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+      if (existingSchedule) {
+        setRecurrenceRule(existingSchedule.rrule_json);
+        // Definir o valor da frequência no formulário baseado na agenda existente
+        form.setValue('frequency', existingSchedule.rrule_json?.frequency || 'custom');
+      }
+    }
+  }, [isEdit, patient, schedules, form]);
 
   const onSubmit = (data: PatientFormData) => {
     if (isEdit && patient) {
@@ -186,7 +190,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       });
     } else {
       // Modo criação
-      const frequency = recurrenceRule?.frequency || 'custom';
+      const frequency = recurrenceRule?.frequency || form.getValues('frequency') || 'custom';
       
       const patientData: CreatePatientData = {
         name: data.name,
@@ -387,7 +391,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     control={form.control}
                     name="session_value"
                     render={({ field }) => (
-                      <FormItem className="max-w-xs mb-6">
+                      <FormItem className="max-w-xs">
                         <FormLabel className="flex items-center gap-2 text-base">
                           <DollarSign className="h-4 w-4" />
                           Valor da Sessão
@@ -410,18 +414,73 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     )}
                   />
 
-                  {/* Agendamento Recorrente */}
-                  <div className="border-t pt-6">
-                    <div className="flex items-center gap-2 mb-4">
+                  {/* Frequência e Agendamento integrados */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-500" />
                       <h4 className="font-medium">Frequência e Agendamento</h4>
                     </div>
-                    <RecurrenceBuilder
-                      value={recurrenceRule}
-                      onChange={setRecurrenceRule}
-                      sessionType={form.watch("therapy_type")}
-                      sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+                    
+                    <FormField
+                      control={form.control}
+                      name="frequency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Frequência das Sessões</FormLabel>
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              // Atualizar recurrenceRule baseado na seleção
+                              if (value === 'weekly') {
+                                setRecurrenceRule({
+                                  frequency: 'weekly',
+                                  interval: 1,
+                                  daysOfWeek: [1], // Segunda-feira por padrão
+                                  startDate: new Date().toISOString(),
+                                  startTime: '09:00',
+                                });
+                              } else if (value === 'biweekly') {
+                                setRecurrenceRule({
+                                  frequency: 'biweekly',
+                                  interval: 2,
+                                  daysOfWeek: [1],
+                                  startDate: new Date().toISOString(),
+                                  startTime: '09:00',
+                                });
+                              } else {
+                                setRecurrenceRule(undefined);
+                              }
+                            }}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecione a frequência" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="weekly">📅 Semanal</SelectItem>
+                              <SelectItem value="biweekly">📅 Quinzenal</SelectItem>
+                              <SelectItem value="monthly">📅 Mensal</SelectItem>
+                              <SelectItem value="custom">⚙️ Personalizada</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
+
+                    {/* RecurrenceBuilder apenas se for personalizada */}
+                    {form.watch("frequency") === "custom" && (
+                      <div className="mt-4 p-4 border rounded-lg bg-muted/30">
+                        <RecurrenceBuilder
+                          value={recurrenceRule}
+                          onChange={setRecurrenceRule}
+                          sessionType={form.watch("therapy_type")}
+                          sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
+                        />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
