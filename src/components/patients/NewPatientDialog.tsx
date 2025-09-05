@@ -604,7 +604,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 {isEdit && patient && !patient.is_archived && (
                   <Button 
                     type="button" 
-                    variant="destructive" 
+                    variant="archive" 
                     onClick={() => {
                       archivePatient(patient.id);
                       setOpen(false);
