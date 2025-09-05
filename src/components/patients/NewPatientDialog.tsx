@@ -120,28 +120,56 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       therapy_type: patient?.therapy_type || "",
       session_mode: patient?.session_mode || "online",
       address: patient?.address || "",
-      session_value: "80",
+      session_value: patient?.session_value?.toString() || "80",
     },
   });
 
-  // Carregar agenda existente do paciente quando for edição
+  // Carregar dados quando o dialog abre para edição
   useEffect(() => {
-    if (isEdit && patient && schedules.length > 0) {
-      const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
-      if (existingSchedule) {
-        setRecurrenceRule(existingSchedule.rrule_json);
+    if (isEdit && patient) {
+      // Resetar form com valores do paciente
+      form.reset({
+        name: patient.name || "",
+        nickname: patient.nickname || "",
+        email: patient.email || "",
+        phone: patient.phone || "",
+        whatsapp: patient.whatsapp || "",
+        birth_date: patient.birth_date || "",
+        therapy_type: patient.therapy_type || "",
+        session_mode: patient.session_mode || "online",
+        address: patient.address || "",
+        session_value: patient.session_value?.toString() || "80",
+      });
+
+      // Carregar agenda existente
+      if (schedules.length > 0) {
+        const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+        if (existingSchedule) {
+          setRecurrenceRule(existingSchedule.rrule_json);
+        }
       }
     }
-  }, [isEdit, patient, schedules, form]);
+  }, [isEdit, patient, schedules, form, open]);
+
+  // Limpar estados quando dialog fecha
+  useEffect(() => {
+    if (!open) {
+      setRecurrenceRule(undefined);
+      form.reset();
+    }
+  }, [open, form]);
 
   const onSubmit = (data: PatientFormData) => {
     if (isEdit && patient) {
       // Modo edição
+      const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+      
       const updates = {
         name: data.name,
         whatsapp: data.whatsapp,
         therapy_type: data.therapy_type,
         session_mode: data.session_mode,
+        session_value: sessionValue,
         email: data.email || undefined,
         phone: data.phone || undefined,
         nickname: data.nickname || undefined,
@@ -189,12 +217,15 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       // Modo criação
       const frequency = recurrenceRule?.frequency || 'custom';
       
+      const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+      
       const patientData: CreatePatientData = {
         name: data.name,
         whatsapp: data.whatsapp,
         therapy_type: data.therapy_type,
         frequency: frequency,
         session_mode: data.session_mode,
+        session_value: sessionValue,
         email: data.email || undefined,
         phone: data.phone || undefined,
         nickname: data.nickname || undefined,
