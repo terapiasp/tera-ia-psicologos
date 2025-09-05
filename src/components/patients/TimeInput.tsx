@@ -63,12 +63,13 @@ export function TimeInput({ value, onChange, className = "", disabled = false }:
             </span>
             <Input
               ref={inputRef}
-              type="time"
+              type="text"
               value={value}
               onChange={(e) => handleInputChange(e.target.value)}
               onClick={handleInputClick}
               disabled={disabled}
-              className="h-12 pl-10 pr-10 cursor-pointer"
+              placeholder="00:00"
+              className="h-12 pl-10 pr-10 cursor-pointer font-mono"
             />
             <Button
               type="button"
