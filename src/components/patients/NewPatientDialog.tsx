@@ -456,15 +456,15 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                             <Calendar className="h-4 w-4" />
                             Duração da Sessão
                           </FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || "50"}>
                             <FormControl>
                               <SelectTrigger className="h-12">
                                 <SelectValue placeholder="Duração" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="50">50 minutos (padrão)</SelectItem>
                               <SelectItem value="30">30 minutos</SelectItem>
-                              <SelectItem value="50">50 minutos</SelectItem>
                               <SelectItem value="100">100 minutos</SelectItem>
                             </SelectContent>
                           </Select>
