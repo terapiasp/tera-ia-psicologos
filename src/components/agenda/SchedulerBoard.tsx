@@ -184,6 +184,22 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     });
   };
 
+  const hasSessionsForTime = (time: Date) => {
+    return weekDays.some(day => {
+      const daySessions = getSessionsForDay(day);
+      return daySessions.some(session => {
+        const sessionStart = new Date(session.scheduled_at);
+        const sessionEnd = addMinutes(sessionStart, session.duration_minutes || 50);
+        const hourStart = new Date(day);
+        hourStart.setHours(time.getHours(), 0, 0, 0);
+        const hourEnd = new Date(hourStart);
+        hourEnd.setHours(hourStart.getHours() + 1);
+        
+        return sessionStart < hourEnd && sessionEnd > hourStart;
+      });
+    });
+  };
+
   const goToPreviousWeek = () => {
     onWeekChange(subWeeks(weekStart, 1));
   };
@@ -241,7 +257,11 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
             {timeLabels.map((time) => (
               <div 
                 key={time.toISOString()} 
-                className="h-[60px] flex items-center justify-center text-sm font-semibold text-foreground bg-success/10"
+                className={`h-[60px] flex items-center justify-center text-sm font-semibold text-foreground transition-colors duration-200 ${
+                  hasSessionsForTime(time) 
+                    ? 'bg-orange-100 dark:bg-orange-950/30' 
+                    : 'bg-success/10'
+                }`}
               >
                 <div className="bg-card rounded-lg px-2 py-1 shadow-soft border border-border/50">
                   {format(time, 'HH:mm')}

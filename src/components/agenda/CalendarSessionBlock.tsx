@@ -72,15 +72,15 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
         ${session.schedule_id ? 'ring-1 ring-primary/30' : ''}
       `}
     >
-      <CardContent className="p-2 h-full flex flex-col justify-between">
-        <div className="flex-1 min-h-0">
-          <div className="font-semibold truncate text-sm">
+      <CardContent className="p-2 h-full flex flex-col justify-center text-center">
+        <div className="flex-1 flex flex-col justify-center min-h-0">
+          <div className="font-semibold text-sm leading-tight">
             {session.patients?.nickname || session.patients?.name}
             {session.schedule_id && (
               <span className="opacity-75 ml-1">•</span>
             )}
           </div>
-          <div className="text-xs opacity-90 mt-1">
+          <div className="text-xs opacity-90 mt-1 leading-tight">
             {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
           </div>
         </div>
