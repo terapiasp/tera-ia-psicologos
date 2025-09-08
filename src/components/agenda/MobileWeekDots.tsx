@@ -147,7 +147,7 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
                   className={`text-[10px] font-medium px-2 py-1 transition-all duration-200 ${
                     hasSessionsForTime(time) 
                       ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200' 
-                      : 'bg-muted/50 text-muted-foreground border-border/50'
+                      : 'bg-success/10 text-success border-success/20 hover:bg-success/20'
                   }`}
                 >
                   {format(time, 'HH')}h
