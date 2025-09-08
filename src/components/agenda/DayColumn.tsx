@@ -59,16 +59,17 @@ export const DayColumn: React.FC<DayColumnProps> = ({
     });
 
     const totalOverlapping = overlapping.length + 1;
-    const width = 100 / totalOverlapping;
+    // Deixar mais espaço entre sessões sobrepostas e uma margem de segurança
+    const width = Math.max(30, (100 - 8) / totalOverlapping); // 8% de margem total
     const leftOffset = overlapping.filter(other => 
       other.startMinutesFromTop < session.startMinutesFromTop || 
       (other.startMinutesFromTop === session.startMinutesFromTop && other.id < session.id)
-    ).length * width;
+    ).length * (width + 2); // 2% de espaçamento entre sessões
 
     return {
       ...session,
-      width: `${width}%`,
-      left: `${leftOffset}%`
+      width: `${Math.min(width, 96)}%`, // Máximo de 96% para evitar overflow
+      left: `${Math.min(leftOffset, 100 - width)}%`
     };
   });
 

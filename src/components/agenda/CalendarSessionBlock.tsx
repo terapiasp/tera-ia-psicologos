@@ -68,7 +68,7 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
       className={`
         ${getStatusColor(session.status)}
         shadow-soft hover:shadow-medium transition-all duration-200 cursor-grab active:cursor-grabbing
-        hover:scale-[1.02] border-2 mx-2 mr-3
+        hover:scale-[1.02] border-2 mx-1
         ${session.schedule_id ? 'ring-1 ring-primary/30' : ''}
       `}
     >
