@@ -13,10 +13,10 @@ import { useLocation } from 'react-router-dom';
 const Agenda = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
+  const selectedDate = location.state?.selectedDate;
   
   const [currentWeek, setCurrentWeek] = useState(() => {
     // Verificar se há uma data selecionada no state do router
-    const selectedDate = location.state?.selectedDate;
     if (selectedDate) {
       return startOfWeek(new Date(selectedDate), { weekStartsOn: 1 });
     }
@@ -26,7 +26,6 @@ const Agenda = () => {
   // Estado do modo de visualização com preferência salva
   const [viewMode, setViewMode] = useState<'week' | 'timeline'>(() => {
     // Se há uma data selecionada, abrir na visão timeline
-    const selectedDate = location.state?.selectedDate;
     if (selectedDate) {
       return 'timeline';
     }
@@ -55,13 +54,12 @@ const Agenda = () => {
 
   // Atualizar semana e modo de visualização quando uma data específica for selecionada via navegação
   useEffect(() => {
-    const selectedDate = location.state?.selectedDate;
     if (selectedDate) {
       const weekStart = startOfWeek(new Date(selectedDate), { weekStartsOn: 1 });
       setCurrentWeek(weekStart);
       setViewMode('timeline');
     }
-  }, [location.state?.selectedDate]);
+  }, [selectedDate]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,7 +99,7 @@ const Agenda = () => {
                 showWeekends={showWeekends}
               />
             ) : (
-              <TimelineView />
+              <TimelineView selectedDate={selectedDate ? new Date(selectedDate) : undefined} />
             )}
           </div>
         </main>

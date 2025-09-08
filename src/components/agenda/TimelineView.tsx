@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { format, addMinutes, startOfWeek, startOfMonth } from 'date-fns';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { format, addMinutes, startOfWeek, startOfMonth, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +11,15 @@ import { Session } from '@/hooks/useSessions';
 import { CalendarDays, Clock, User, Loader2 } from 'lucide-react';
 
 interface TimelineViewProps {
-  // Não precisa mais do weekStart - timeline é infinita
+  selectedDate?: Date; // Data para rolar automaticamente
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = () => {
+export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate }) => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  
+  // Refs para os elementos dos dias para scroll automático
+  const dayRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   
   const { sessions, isLoading, isLoadingMore, hasMore, lastElementRef, deleteSession } = useInfiniteSessions();
   const { patients } = usePatients();
@@ -58,6 +61,24 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
         };
       });
   }, [sessionsByDay]);
+
+  // Scroll automático para data selecionada
+  useEffect(() => {
+    if (selectedDate && !isLoading) {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const dayElement = dayRefs.current[dateKey];
+      
+      if (dayElement) {
+        // Esperar um pouco para os elementos renderizarem
+        setTimeout(() => {
+          dayElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }, 100);
+      }
+    }
+  }, [selectedDate, isLoading, daysWithSessions.length]);
 
   const handleSessionClick = (session: Session) => {
     setSelectedSession(session);
@@ -200,7 +221,14 @@ export const TimelineView: React.FC<TimelineViewProps> = () => {
 
             <div 
               className="space-y-3"
-              ref={dayIndex === daysWithSessions.length - 1 ? lastElementRef : null}
+              ref={(el) => {
+                const dateKey = format(date, 'yyyy-MM-dd');
+                dayRefs.current[dateKey] = el;
+                // Manter a ref do último elemento para infinite scroll
+                if (dayIndex === daysWithSessions.length - 1) {
+                  lastElementRef(el);
+                }
+              }}
             >
               {/* Cabeçalho do dia */}
               <div className="flex items-center gap-3 pb-2 border-b border-border">
