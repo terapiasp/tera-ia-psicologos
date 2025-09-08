@@ -81,8 +81,8 @@ export const DayColumn: React.FC<DayColumnProps> = ({
     <div 
       ref={setNodeRef}
       className={`
-        relative border-l-2 border-border/60 transition-all duration-200
-        ${isOver ? 'bg-primary/5' : 'hover:bg-muted/20'}
+        relative border-l-2 border-border/70 transition-all duration-200
+        ${isOver ? 'bg-primary/15 border-primary/40' : 'hover:bg-muted/30 hover:border-border/80'}
       `}
       style={{ height: `${totalMinutes * minuteHeight}px` }}
     >
@@ -90,7 +90,9 @@ export const DayColumn: React.FC<DayColumnProps> = ({
       {Array.from({ length: endHour - startHour + 1 }, (_, i) => (
         <div
           key={i}
-          className="absolute left-0 right-0 border-t-2 border-border/50"
+          className={`absolute left-0 right-0 border-t-2 transition-all duration-200 ${
+            isOver ? 'border-primary/40' : 'border-border/60 hover:border-border/80'
+          }`}
           style={{ top: `${i * 60}px` }}
         />
       ))}
