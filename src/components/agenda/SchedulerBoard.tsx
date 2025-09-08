@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
-import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes, startOfMonth } from 'date-fns';
+import { format, startOfWeek, addDays, addHours, setHours, setMinutes, startOfDay, isSameDay, addWeeks, subWeeks, addMinutes, startOfMonth, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,8 +10,7 @@ import { useSessions } from '@/hooks/useSessions';
 import { useRecurringSchedules } from '@/hooks/useRecurringSchedules';
 import { usePatients } from '@/hooks/usePatients';
 import { useIsCompact } from '@/hooks/useIsCompact';
-import { SessionCard } from './SessionCard';
-import { TimeSlot } from './TimeSlot';
+import { DayColumn } from './DayColumn';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 import { MobileWeekDots } from './MobileWeekDots';
 import { Session } from '@/hooks/useSessions';
@@ -38,15 +37,19 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const { moveSession, deleteSession } = useSessions();
   const { patients } = usePatients();
 
-  // Gerar horários de 6h às 22h de hora em hora
-  const timeSlots = useMemo(() => {
-    const slots: Date[] = [];
+  // Horários de início e fim
+  const startHour = 6;
+  const endHour = 22;
+  
+  // Gerar horários para labels
+  const timeLabels = useMemo(() => {
+    const labels: Date[] = [];
     const baseDate = startOfDay(new Date());
     
-    for (let hour = 6; hour <= 22; hour++) {
-      slots.push(setHours(baseDate, hour));
+    for (let hour = startHour; hour <= endHour; hour++) {
+      labels.push(setHours(baseDate, hour));
     }
-    return slots;
+    return labels;
   }, []);
 
   // Gerar dias da semana
@@ -97,10 +100,30 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     if (!session) return;
 
     const dropData = event.over.data.current;
-    if (!dropData?.date || !dropData?.time) return;
+    if (!dropData?.date) return;
 
-    const targetDateTime = new Date(dropData.date);
-    targetDateTime.setHours(dropData.time.getHours(), dropData.time.getMinutes());
+    let targetDateTime: Date;
+
+    if (dropData.type === 'day') {
+      // Dropped on day column - calculate time based on mouse position
+      const rect = event.over.rect;
+      const dropY = event.delta.y + rect.top;
+      const relativeY = dropY - rect.top;
+      
+      // Calculate target time based on position
+      const minutesFromTop = Math.max(0, relativeY / (60 / 60)); // 60px per hour
+      const targetMinutes = Math.round(minutesFromTop / 15) * 15; // Snap to 15-minute intervals
+      
+      targetDateTime = new Date(dropData.date);
+      targetDateTime.setHours(startHour, 0, 0, 0);
+      targetDateTime.setMinutes(targetDateTime.getMinutes() + targetMinutes);
+    } else {
+      // Fallback to time-based drop
+      targetDateTime = new Date(dropData.date);
+      if (dropData.time) {
+        targetDateTime.setHours(dropData.time.getHours(), dropData.time.getMinutes());
+      }
+    }
 
     // Verificar se o evento realmente mudou de posição
     const originalDateTime = new Date(session.scheduled_at);
@@ -154,26 +177,11 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     }
   };
 
-  const getSessionsForSlot = (day: Date, time: Date) => {
+  const getSessionsForDay = (day: Date) => {
     return sessions.filter(session => {
       const sessionDate = new Date(session.scheduled_at);
-      const sessionEndTime = addMinutes(sessionDate, session.duration_minutes || 50);
-      const slotTime = time.getHours();
-      const sessionStartHour = sessionDate.getHours();
-      const sessionEndHour = sessionEndTime.getHours();
-      
-      // Verificar se a sessão acontece neste slot de hora
-      // A sessão aparece no slot se:
-      // 1. Começar exatamente nesta hora
-      // 2. Estar em andamento durante esta hora (começar antes e terminar depois)
-      return isSameDay(sessionDate, day) && 
-             (sessionStartHour === slotTime || 
-              (sessionStartHour <= slotTime && sessionEndHour > slotTime));
+      return isSameDay(sessionDate, day);
     });
-  };
-
-  const hasSessionsForTime = (time: Date) => {
-    return weekDays.some(day => getSessionsForSlot(day, time).length > 0);
   };
 
   const goToPreviousWeek = () => {
@@ -206,9 +214,9 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     <div className={`p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in ${currentBorderStyle}`}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className={`grid gap-1 mb-1 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg`}
+        <div className={`grid gap-1 mb-4 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg`}
              style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)` }}>
-          <div className="py-2" /> {/* Espaço vazio onde antes ficavam os botões de navegação */}
+          <div className="py-2" /> {/* Espaço vazio para coluna de horários */}
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-2">
               <div className="text-sm font-semibold text-foreground">
@@ -226,38 +234,39 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
           ))}
         </div>
 
-        {/* Grid principal */}
-        <div className={`grid gap-1 text-sm`}
-             style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)` }}>
-          {timeSlots.map((time) => (
-            <React.Fragment key={time.toISOString()}>
-              {/* Coluna de horários */}
-              <div className={`text-base font-semibold text-foreground h-[60px] px-4 text-center border-r-2 border-primary/20 flex items-center justify-center min-w-[80px] transition-colors duration-200 ${
-                hasSessionsForTime(time) 
-                  ? 'bg-primary/10' 
-                  : 'bg-success/10'
-              }`}>
-                <div className="bg-card rounded-lg px-3 py-1 shadow-soft border border-border/50">
+        {/* Calendário principal */}
+        <div className="flex">
+          {/* Coluna de horários */}
+          <div className="w-20 flex-shrink-0 border-r-2 border-primary/20">
+            {timeLabels.map((time) => (
+              <div 
+                key={time.toISOString()} 
+                className="h-[60px] flex items-center justify-center text-sm font-semibold text-foreground bg-success/10"
+              >
+                <div className="bg-card rounded-lg px-2 py-1 shadow-soft border border-border/50">
                   {format(time, 'HH:mm')}
                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Grid de dias */}
+          <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${weekDays.length}, 1fr)` }}>
+            {weekDays.map((day) => {
+              const daySessions = getSessionsForDay(day);
               
-              {/* Slots para cada dia */}
-              {weekDays.map((day) => {
-                const slotSessions = getSessionsForSlot(day, time);
-                
-                return (
-                  <TimeSlot
-                    key={`${day.toISOString()}-${time.toISOString()}`}
-                    date={day}
-                    time={time}
-                    sessions={slotSessions}
-                    onSessionClick={handleSessionClick}
-                  />
-                );
-              })}
-            </React.Fragment>
-          ))}
+              return (
+                <DayColumn
+                  key={day.toISOString()}
+                  date={day}
+                  sessions={daySessions}
+                  startHour={startHour}
+                  endHour={endHour}
+                  onSessionClick={handleSessionClick}
+                />
+              );
+            })}
+          </div>
         </div>
 
         <DragOverlay>
