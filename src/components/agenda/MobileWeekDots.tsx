@@ -49,21 +49,31 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
   const getSessionsForSlot = (day: Date, time: Date) => {
     return sessions.filter(session => {
       const sessionDate = new Date(session.scheduled_at);
+      const sessionDuration = session.duration_minutes || 50;
+      const sessionEndTime = new Date(sessionDate.getTime() + sessionDuration * 60000);
+      
+      // Criar início e fim do slot de 1 hora
+      const slotStart = new Date(day);
+      slotStart.setHours(time.getHours(), 0, 0, 0);
+      const slotEnd = new Date(slotStart.getTime() + 60 * 60000);
+      
+      // Verificar se a sessão se sobrepõe com o slot de alguma forma
       return isSameDay(sessionDate, day) && 
-             sessionDate.getHours() === time.getHours();
+             sessionDate < slotEnd && sessionEndTime > slotStart;
     });
   };
 
   const getDotStyle = (sessionCount: number, sessions: Session[]) => {
-    if (sessionCount === 0) return 'bg-muted/50 border border-border';
+    if (sessionCount === 0) return 'bg-muted/50 border border-border hover:bg-muted/70';
     
     // Usar cor baseada na semana do mês para qualquer sessão
     if (sessions.length > 0) {
       const sessionDate = new Date(sessions[0].scheduled_at);
-      return getWeekGemColor(sessionDate);
+      const baseColor = getWeekGemColor(sessionDate);
+      return `${baseColor} hover:scale-110 shadow-lg`;
     }
     
-    return 'bg-primary border border-primary shadow-soft';
+    return 'bg-primary border border-primary shadow-soft hover:scale-110';
   };
 
   // Calcular a semana do mês para cores das pedras preciosas
@@ -133,11 +143,11 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
               {/* Coluna de horários */}
               <div className="flex items-center justify-center py-1">
                 <Badge 
-                  variant={hasSessionsForTime(time) ? "destructive" : "secondary"}
-                  className={`text-[10px] font-medium px-2 py-1 ${
+                  variant={hasSessionsForTime(time) ? "default" : "secondary"}
+                  className={`text-[10px] font-medium px-2 py-1 transition-all duration-200 ${
                     hasSessionsForTime(time) 
-                      ? 'bg-primary/10 text-primary border-primary/20' 
-                      : 'bg-success/10 text-success border-success/20'
+                      ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200' 
+                      : 'bg-muted/50 text-muted-foreground border-border/50'
                   }`}
                 >
                   {format(time, 'HH')}h
@@ -156,7 +166,7 @@ export const MobileWeekDots: React.FC<MobileWeekDotsProps> = ({
                         className={`
                           w-5 h-5 rounded-full transition-all duration-200 flex items-center justify-center
                           ${getDotStyle(sessionCount, slotSessions)}
-                          hover:scale-125 active:scale-105
+                          active:scale-95 relative
                         `}
                         onClick={() => setSelectedSlot({ day, time, sessions: slotSessions })}
                       >

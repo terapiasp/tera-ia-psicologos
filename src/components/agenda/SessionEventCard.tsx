@@ -18,7 +18,8 @@ export const SessionEventCard: React.FC<SessionEventCardProps> = ({
   onSessionClick 
 }) => {
   const sessionTime = new Date(session.scheduled_at);
-  const endTime = addMinutes(sessionTime, 50);
+  const duration = session.duration_minutes || 50;
+  const endTime = addMinutes(sessionTime, duration);
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
