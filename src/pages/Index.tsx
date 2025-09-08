@@ -148,7 +148,7 @@ const Index = () => {
                   value={todaySessionsRaw.length}
                   description={`${todaySessionsRaw.filter(s => s.paid).length} pagas`}
                   icon={Calendar}
-                  onClick={() => navigate('/agenda?view=timeline&date=' + new Date().toISOString().split('T')[0])}
+                  onClick={todaySessionsRaw.length > 0 ? () => navigate('/agenda?view=timeline&date=' + new Date().toISOString().split('T')[0]) : undefined}
                 />
               )}
               
