@@ -66,15 +66,35 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate }) => {
   useEffect(() => {
     if (selectedDate && !isLoading) {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      const dayElement = dayRefs.current[dateKey];
+      const targetDayElement = dayRefs.current[dateKey];
       
-      if (dayElement) {
+      if (targetDayElement) {
         // Esperar um pouco para os elementos renderizarem
         setTimeout(() => {
-          dayElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
+          // Encontrar o índice da data selecionada
+          const selectedIndex = daysWithSessions.findIndex(
+            day => format(day.date, 'yyyy-MM-dd') === dateKey
+          );
+          
+          if (selectedIndex > 0) {
+            // Se não é o primeiro elemento, fazer scroll para o elemento anterior
+            // assim a data selecionada ficará na segunda posição
+            const previousDateKey = format(daysWithSessions[selectedIndex - 1].date, 'yyyy-MM-dd');
+            const previousDayElement = dayRefs.current[previousDateKey];
+            
+            if (previousDayElement) {
+              previousDayElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+              });
+            }
+          } else {
+            // Se é o primeiro elemento, fazer scroll normal
+            targetDayElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }
         }, 100);
       }
     }
