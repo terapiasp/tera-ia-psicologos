@@ -28,6 +28,12 @@ export function WeeklyView({ onDateClick }: WeeklyViewProps) {
     return startOfWeek(new Date(), { weekStartsOn: 1 });
   });
 
+  // Recuperar preferência de fins de semana
+  const [showWeekends, setShowWeekends] = useState(() => {
+    const saved = localStorage.getItem('agenda-show-weekends');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
   // Buscar sessões da semana atual dinamicamente
   const weekEndDate = endOfWeek(currentStartDate, { weekStartsOn: 1 });
   const { sessions: sessionsData, isLoading } = useSessionsRange(currentStartDate, weekEndDate);
@@ -35,7 +41,10 @@ export function WeeklyView({ onDateClick }: WeeklyViewProps) {
   const generateWeekData = (startDate: Date): WeekDay[] => {
     const weekData: WeekDay[] = [];
     
-    for (let i = 0; i < 7; i++) {
+    // Definir quantos dias mostrar baseado na configuração de fins de semana
+    const daysToShow = showWeekends ? 7 : 5;
+    
+    for (let i = 0; i < daysToShow; i++) {
       const currentDate = addDays(startDate, i);
       
       // Filtrar sessões para esta data
@@ -150,7 +159,7 @@ export function WeeklyView({ onDateClick }: WeeklyViewProps) {
           <div className={`flex gap-2 ${isMobile ? 'pb-2 snap-x snap-mandatory' : 'px-1'}`}>
             {isLoading ? (
               // Loading skeletons
-              Array.from({ length: 7 }).map((_, index) => (
+              Array.from({ length: showWeekends ? 7 : 5 }).map((_, index) => (
                 <div 
                   key={index} 
                   className={`${
