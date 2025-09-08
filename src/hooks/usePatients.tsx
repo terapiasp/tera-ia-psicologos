@@ -17,6 +17,7 @@ export interface Patient {
   custom_frequency?: string;
   session_mode: string;
   session_value?: number;
+  session_duration?: number;
   status: string;
   address?: string;
   service_modality_id?: string;
@@ -40,6 +41,7 @@ export interface CreatePatientData {
   address?: string;
   frequency_preset_id?: string;
   session_value?: number;
+  session_duration?: number;
 }
 
 export const usePatients = () => {

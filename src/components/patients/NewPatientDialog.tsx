@@ -77,6 +77,7 @@ const patientSchema = z.object({
   therapy_type: z.string().min(1, "Selecione o tipo de terapia"),
   session_mode: z.string().min(1, "Selecione o modo da sessão"),
   session_value: z.string().optional(),
+  session_duration: z.string().optional(),
   
   // Dados Adicionais (opcionais)
   nickname: z.string().optional(),
@@ -121,6 +122,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       session_mode: patient?.session_mode || "online",
       address: patient?.address || "",
       session_value: patient?.session_value?.toString() || "80",
+      session_duration: patient?.session_duration?.toString() || "50",
     },
   });
 
@@ -139,6 +141,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         session_mode: patient.session_mode || "online",
         address: patient.address || "",
         session_value: patient.session_value?.toString() || "80",
+        session_duration: patient.session_duration?.toString() || "50",
       });
 
       // Carregar agenda existente
@@ -164,12 +167,15 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       // Modo edição
       const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
       
+      const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
+      
       const updates = {
         name: data.name,
         whatsapp: data.whatsapp,
         therapy_type: data.therapy_type,
         session_mode: data.session_mode,
         session_value: sessionValue,
+        session_duration: durationMinutes,
         email: data.email || undefined,
         phone: data.phone || undefined,
         nickname: data.nickname || undefined,
@@ -192,6 +198,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   rrule_json: recurrenceRule,
                   session_type: data.therapy_type,
                   session_value: sessionValue,
+                  duration_minutes: durationMinutes,
                 }
               });
             } else {
@@ -199,7 +206,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
               createSchedule({
                 patient_id: patient.id,
                 rrule_json: recurrenceRule,
-                duration_minutes: 50,
+                duration_minutes: durationMinutes,
                 session_type: data.therapy_type,
                 session_value: sessionValue,
               });
@@ -218,6 +225,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       const frequency = recurrenceRule?.frequency || 'custom';
       
       const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+      const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
       
       const patientData: CreatePatientData = {
         name: data.name,
@@ -226,6 +234,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         frequency: frequency,
         session_mode: data.session_mode,
         session_value: sessionValue,
+        session_duration: durationMinutes,
         email: data.email || undefined,
         phone: data.phone || undefined,
         nickname: data.nickname || undefined,
@@ -243,7 +252,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
             createSchedule({
               patient_id: newPatient.id,
               rrule_json: recurrenceRule,
-              duration_minutes: 50,
+              duration_minutes: durationMinutes,
               session_type: data.therapy_type,
               session_value: sessionValue,
             });
@@ -415,27 +424,55 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="session_value"
-                    render={({ field }) => (
-                      <FormItem className="max-w-xs mb-6">
-                        <FormLabel className="flex items-center gap-2 text-base">
-                          <DollarSign className="h-4 w-4" />
-                          Valor da Sessão
-                        </FormLabel>
-                        <FormControl>
-                          <SessionValueInput
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            disabled={form.formState.isSubmitting}
-                            placeholder="80"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <FormField
+                      control={form.control}
+                      name="session_value"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <DollarSign className="h-4 w-4" />
+                            Valor da Sessão
+                          </FormLabel>
+                          <FormControl>
+                            <SessionValueInput
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              disabled={form.formState.isSubmitting}
+                              placeholder="80"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="session_duration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <Calendar className="h-4 w-4" />
+                            Duração da Sessão
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Duração" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="30">30 minutos</SelectItem>
+                              <SelectItem value="50">50 minutos</SelectItem>
+                              <SelectItem value="100">100 minutos</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   {/* Agendamento */}
                   <div className="space-y-4 pt-2">
