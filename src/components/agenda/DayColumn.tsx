@@ -19,11 +19,6 @@ export const DayColumn: React.FC<DayColumnProps> = ({
   endHour, 
   onSessionClick 
 }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `day-${date.toISOString()}`,
-    data: { date, type: 'day' }
-  });
-
   // Calcular altura total em minutos
   const totalMinutes = (endHour - startHour) * 60;
   const minuteHeight = 60 / 60; // 60px por hora, então 1px por minuto
@@ -79,23 +74,24 @@ export const DayColumn: React.FC<DayColumnProps> = ({
 
   return (
     <div 
-      ref={setNodeRef}
-      className={`
-        relative border-l-2 border-border/70 transition-all duration-200
-        ${isOver ? 'bg-primary/15 border-primary/40' : 'hover:bg-muted/30 hover:border-border/80'}
-      `}
+      className="relative border-l-2 border-border/70"
       style={{ height: `${totalMinutes * minuteHeight}px` }}
     >
-      {/* Linhas de hora */}
-      {Array.from({ length: endHour - startHour + 1 }, (_, i) => (
-        <div
-          key={i}
-          className={`absolute left-0 right-0 border-t-2 transition-all duration-200 ${
-            isOver ? 'border-primary/40' : 'border-border/60 hover:border-border/80'
-          }`}
-          style={{ top: `${i * 60}px` }}
-        />
-      ))}
+      {/* Slots de hora com feedback visual individual */}
+      {Array.from({ length: endHour - startHour }, (_, i) => {
+        const hourDate = new Date(date);
+        hourDate.setHours(startHour + i, 0, 0, 0);
+        
+        return (
+          <HourSlot
+            key={i}
+            date={date}
+            hour={startHour + i}
+            hourDate={hourDate}
+            top={i * 60}
+          />
+        );
+      })}
 
       {/* Sessões */}
       {sessionsWithLayout.map((session) => (
@@ -114,5 +110,32 @@ export const DayColumn: React.FC<DayColumnProps> = ({
         />
       ))}
     </div>
+  );
+};
+
+// Componente para cada slot de hora
+interface HourSlotProps {
+  date: Date;
+  hour: number;
+  hourDate: Date;
+  top: number;
+}
+
+const HourSlot: React.FC<HourSlotProps> = ({ date, hour, hourDate, top }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${date.toISOString()}-${hour}`,
+    data: { date, time: hourDate, type: 'hour' }
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`
+        absolute left-0 right-0 h-[60px] transition-all duration-200
+        border-t-2 border-border/60
+        ${isOver ? 'bg-primary/15 border-primary/40' : 'hover:bg-muted/30 hover:border-border/80'}
+      `}
+      style={{ top: `${top}px` }}
+    />
   );
 };

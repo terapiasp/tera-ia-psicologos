@@ -104,7 +104,10 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
 
     let targetDateTime: Date;
 
-    if (dropData.type === 'day') {
+    if (dropData.type === 'hour') {
+      // Dropped on hour slot - usar o horário exato
+      targetDateTime = new Date(dropData.time);
+    } else if (dropData.type === 'day') {
       // Dropped on day column - calculate time based on mouse position
       const rect = event.over.rect;
       const dropY = event.delta.y + rect.top;
