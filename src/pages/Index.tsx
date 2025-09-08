@@ -159,6 +159,7 @@ const Index = () => {
                   value={patients.filter(p => p.status === 'active').length}
                   description={`${patients.length} total`}
                   icon={Users}
+                  onClick={() => navigate('/patients')}
                 />
               )}
               

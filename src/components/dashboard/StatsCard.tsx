@@ -10,11 +10,17 @@ interface StatsCardProps {
     value: number;
     label: string;
   };
+  onClick?: () => void;
 }
 
-export function StatsCard({ title, value, description, icon: Icon, trend }: StatsCardProps) {
+export function StatsCard({ title, value, description, icon: Icon, trend, onClick }: StatsCardProps) {
   return (
-    <Card className="shadow-soft hover:shadow-medium transition-all duration-200 border-0 bg-gradient-soft">
+    <Card 
+      className={`shadow-soft hover:shadow-medium transition-all duration-200 border-0 bg-gradient-soft ${
+        onClick ? 'cursor-pointer hover:scale-[1.02]' : ''
+      }`}
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
