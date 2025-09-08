@@ -25,6 +25,12 @@ const Agenda = () => {
   
   // Estado do modo de visualização com preferência salva
   const [viewMode, setViewMode] = useState<'week' | 'timeline'>(() => {
+    // Se há uma data selecionada, abrir na visão timeline
+    const selectedDate = location.state?.selectedDate;
+    if (selectedDate) {
+      return 'timeline';
+    }
+    
     const saved = localStorage.getItem('agenda-view-mode');
     if (saved && (saved === 'week' || saved === 'timeline')) {
       return saved;
@@ -47,12 +53,13 @@ const Agenda = () => {
     localStorage.setItem('agenda-show-weekends', JSON.stringify(showWeekends));
   }, [showWeekends]);
 
-  // Atualizar semana quando uma data específica for selecionada via navegação
+  // Atualizar semana e modo de visualização quando uma data específica for selecionada via navegação
   useEffect(() => {
     const selectedDate = location.state?.selectedDate;
     if (selectedDate) {
       const weekStart = startOfWeek(new Date(selectedDate), { weekStartsOn: 1 });
       setCurrentWeek(weekStart);
+      setViewMode('timeline');
     }
   }, [location.state?.selectedDate]);
 
