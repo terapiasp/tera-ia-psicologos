@@ -157,8 +157,18 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
   const getSessionsForSlot = (day: Date, time: Date) => {
     return sessions.filter(session => {
       const sessionDate = new Date(session.scheduled_at);
+      const sessionEndTime = addMinutes(sessionDate, session.duration_minutes || 50);
+      const slotTime = time.getHours();
+      const sessionStartHour = sessionDate.getHours();
+      const sessionEndHour = sessionEndTime.getHours();
+      
+      // Verificar se a sessão acontece neste slot de hora
+      // A sessão aparece no slot se:
+      // 1. Começar exatamente nesta hora
+      // 2. Estar em andamento durante esta hora (começar antes e terminar depois)
       return isSameDay(sessionDate, day) && 
-             sessionDate.getHours() === time.getHours();
+             (sessionStartHour === slotTime || 
+              (sessionStartHour <= slotTime && sessionEndHour > slotTime));
     });
   };
 
@@ -222,7 +232,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
           {timeSlots.map((time) => (
             <React.Fragment key={time.toISOString()}>
               {/* Coluna de horários */}
-              <div className={`text-base font-semibold text-foreground h-[38px] px-4 text-center border-r-2 border-primary/20 flex items-center justify-center min-w-[80px] transition-colors duration-200 ${
+              <div className={`text-base font-semibold text-foreground h-[60px] px-4 text-center border-r-2 border-primary/20 flex items-center justify-center min-w-[80px] transition-colors duration-200 ${
                 hasSessionsForTime(time) 
                   ? 'bg-primary/10' 
                   : 'bg-success/10'
