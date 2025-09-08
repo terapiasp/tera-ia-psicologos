@@ -8,15 +8,18 @@ import { ViewModeToggle } from "@/components/agenda/ViewModeToggle";
 import { WeekendToggle } from "@/components/agenda/WeekendToggle";
 import { startOfWeek } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 
 const Agenda = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const selectedDate = location.state?.selectedDate;
+  const [searchParams] = useSearchParams();
+  
+  // Verificar se há uma data selecionada no state do router ou nos parâmetros da URL
+  const selectedDate = location.state?.selectedDate || searchParams.get('date');
   
   const [currentWeek, setCurrentWeek] = useState(() => {
-    // Verificar se há uma data selecionada no state do router
+    // Verificar se há uma data selecionada
     if (selectedDate) {
       return startOfWeek(new Date(selectedDate), { weekStartsOn: 1 });
     }
@@ -25,6 +28,12 @@ const Agenda = () => {
   
   // Estado do modo de visualização com preferência salva
   const [viewMode, setViewMode] = useState<'week' | 'timeline'>(() => {
+    // Verificar se há um modo específico nos parâmetros da URL
+    const urlView = searchParams.get('view');
+    if (urlView && (urlView === 'week' || urlView === 'timeline')) {
+      return urlView;
+    }
+    
     // Se há uma data selecionada, abrir na visão timeline
     if (selectedDate) {
       return 'timeline';
