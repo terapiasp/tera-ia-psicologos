@@ -8,12 +8,20 @@ import { ViewModeToggle } from "@/components/agenda/ViewModeToggle";
 import { WeekendToggle } from "@/components/agenda/WeekendToggle";
 import { startOfWeek } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLocation } from 'react-router-dom';
 
 const Agenda = () => {
   const isMobile = useIsMobile();
-  const [currentWeek, setCurrentWeek] = useState(() => 
-    startOfWeek(new Date(), { weekStartsOn: 1 })
-  );
+  const location = useLocation();
+  
+  const [currentWeek, setCurrentWeek] = useState(() => {
+    // Verificar se há uma data selecionada no state do router
+    const selectedDate = location.state?.selectedDate;
+    if (selectedDate) {
+      return startOfWeek(new Date(selectedDate), { weekStartsOn: 1 });
+    }
+    return startOfWeek(new Date(), { weekStartsOn: 1 });
+  });
   
   // Estado do modo de visualização com preferência salva
   const [viewMode, setViewMode] = useState<'week' | 'timeline'>(() => {
@@ -38,6 +46,15 @@ const Agenda = () => {
   useEffect(() => {
     localStorage.setItem('agenda-show-weekends', JSON.stringify(showWeekends));
   }, [showWeekends]);
+
+  // Atualizar semana quando uma data específica for selecionada via navegação
+  useEffect(() => {
+    const selectedDate = location.state?.selectedDate;
+    if (selectedDate) {
+      const weekStart = startOfWeek(new Date(selectedDate), { weekStartsOn: 1 });
+      setCurrentWeek(weekStart);
+    }
+  }, [location.state?.selectedDate]);
 
   return (
     <div className="min-h-screen bg-background">

@@ -12,10 +12,12 @@ import { Calendar, Users, DollarSign, TrendingUp } from 'lucide-react';
 import { useSessions } from '@/hooks/useSessions';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SessionsCacheProvider } from '@/contexts/SessionsCacheContext';
 
 const Index = () => {
+  const navigate = useNavigate();
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { sessions: todaySessionsRaw, isLoading: isLoadingToday } = useTodaySessions();
   const { sessions: tomorrowSessionsRaw, isLoading: isLoadingTomorrow } = useTomorrowSessions();
@@ -221,8 +223,9 @@ const Index = () => {
               <div className="lg:col-span-8">
                 <WeeklyView 
                   onDateClick={(date) => {
-                    console.log('Data clicada:', date);
-                    // Aqui você pode implementar navegação para a agenda
+                    navigate('/agenda', { 
+                      state: { selectedDate: date } 
+                    });
                   }}
                 />
               </div>
