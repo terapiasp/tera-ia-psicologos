@@ -17,6 +17,7 @@ const Agenda = () => {
   
   // Verificar se há uma data selecionada no state do router ou nos parâmetros da URL
   const selectedDate = location.state?.selectedDate || searchParams.get('date');
+  const openSessionId = location.state?.openSessionId;
   
   const [currentWeek, setCurrentWeek] = useState(() => {
     // Verificar se há uma data selecionada
@@ -108,7 +109,10 @@ const Agenda = () => {
                 showWeekends={showWeekends}
               />
             ) : (
-              <TimelineView selectedDate={selectedDate ? new Date(selectedDate) : undefined} />
+              <TimelineView 
+                selectedDate={selectedDate ? new Date(selectedDate) : undefined}
+                openSessionId={openSessionId}
+              />
             )}
           </div>
         </main>

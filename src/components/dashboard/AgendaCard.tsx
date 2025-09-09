@@ -16,9 +16,10 @@ interface AgendaCardProps {
   title: string;
   date: string;
   sessions: Session[];
+  onSessionClick?: (sessionId: string) => void;
 }
 
-export function AgendaCard({ title, date, sessions }: AgendaCardProps) {
+export function AgendaCard({ title, date, sessions, onSessionClick }: AgendaCardProps) {
   const getStatusColor = (status: Session["status"]) => {
     switch (status) {
       case "confirmed":
@@ -65,7 +66,8 @@ export function AgendaCard({ title, date, sessions }: AgendaCardProps) {
           sessions.map((session) => (
             <div
               key={session.id}
-              className="flex items-center justify-between p-3 bg-gradient-soft rounded-lg border"
+              className="flex items-center justify-between p-3 bg-gradient-soft rounded-lg border cursor-pointer hover:bg-gradient-medium transition-colors"
+              onClick={() => onSessionClick?.(session.id)}
             >
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">

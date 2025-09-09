@@ -206,6 +206,15 @@ const Index = () => {
                   title="Hoje"
                   date={format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                   sessions={todaySessions}
+                  onSessionClick={(sessionId) => {
+                    navigate('/agenda', { 
+                      state: { 
+                        selectedDate: new Date(),
+                        viewMode: 'timeline',
+                        openSessionId: sessionId
+                      } 
+                    });
+                  }}
                 />
               )}
               
@@ -216,6 +225,16 @@ const Index = () => {
                   title="Amanhã"
                   date={format(new Date(Date.now() + 24 * 60 * 60 * 1000), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                   sessions={tomorrowSessions}
+                  onSessionClick={(sessionId) => {
+                    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    navigate('/agenda', { 
+                      state: { 
+                        selectedDate: tomorrow,
+                        viewMode: 'timeline',
+                        openSessionId: sessionId
+                      } 
+                    });
+                  }}
                 />
               )}
             </div>

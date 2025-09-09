@@ -12,9 +12,10 @@ import { CalendarDays, Clock, User, Loader2 } from 'lucide-react';
 
 interface TimelineViewProps {
   selectedDate?: Date; // Data para rolar automaticamente
+  openSessionId?: string; // ID da sessão para abrir automaticamente
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate }) => {
+export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSessionId }) => {
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   
@@ -62,7 +63,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate }) => {
       });
   }, [sessionsByDay]);
 
-  // Scroll automático para data selecionada
+  // Scroll automático para data selecionada e abrir sessão específica
   useEffect(() => {
     if (selectedDate && !isLoading) {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -95,10 +96,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate }) => {
               block: 'start' 
             });
           }
+          
+          // Se há um ID de sessão específica para abrir, fazer isso após o scroll
+          if (openSessionId) {
+            setTimeout(() => {
+              const sessionToOpen = sessions.find(s => s.id === openSessionId);
+              if (sessionToOpen) {
+                handleSessionClick(sessionToOpen);
+              }
+            }, 500);
+          }
         }, 100);
       }
     }
-  }, [selectedDate, isLoading, daysWithSessions.length]);
+  }, [selectedDate, isLoading, daysWithSessions.length, openSessionId, sessions]);
 
   const handleSessionClick = (session: Session) => {
     setSelectedSession(session);
