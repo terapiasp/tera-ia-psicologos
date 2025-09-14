@@ -25,7 +25,7 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
         setHour('12');
         setPeriod('AM');
       } else if (hourNum === 12) {
-        setHour('Meio-Dia');
+        setHour('12');
         setPeriod('PM');
       } else if (hourNum > 12) {
         setHour((hourNum - 12).toString());
@@ -41,11 +41,11 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
 
   // Convert AM/PM time to 24h format
   const updateTime = (newHour: string, newMinute: string, newPeriod: string) => {
-    let hour24 = parseInt(newHour === 'Meio-Dia' ? '12' : newHour);
+    let hour24 = parseInt(newHour);
     
     if (newPeriod === 'AM' && hour24 === 12) {
       hour24 = 0;
-    } else if (newPeriod === 'PM' && hour24 !== 12 && newHour !== 'Meio-Dia') {
+    } else if (newPeriod === 'PM' && hour24 !== 12) {
       hour24 += 12;
     }
     
@@ -99,7 +99,6 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
     { value: '10', label: '10' },
     { value: '11', label: '11' },
     { value: '12', label: '12' },
-    { value: 'Meio-Dia', label: 'Meio-Dia' },
   ];
 
   return (
