@@ -500,10 +500,10 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                         variant="ghost" 
                         className="w-full justify-between p-0 h-auto hover:bg-transparent"
                       >
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-emerald-500" />
-                          <h3 className="text-lg font-semibold text-foreground">Informações Complementares</h3>
-                          <Badge variant="outline" className="ml-2">Opcional</Badge>
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <FileText className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                          <h3 className="text-sm sm:text-lg font-semibold text-foreground truncate">Informações Complementares</h3>
+                          <Badge variant="outline" className="ml-1 sm:ml-2 text-xs flex-shrink-0">Opcional</Badge>
                         </div>
                         {showAdditionalData ? (
                           <ChevronUp className="h-5 w-5 text-muted-foreground" />
