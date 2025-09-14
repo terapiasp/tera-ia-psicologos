@@ -178,24 +178,24 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
         {/* Mode Toggle */}
         <div>
           <Label className="text-sm font-medium mb-3 block">Tipo de Agendamento</Label>
-          <div className="flex gap-2 w-full">
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
             <Button
               type="button"
               variant={schedulingMode === 'single' ? 'default' : 'outline'}
               onClick={() => handleModeChange('single')}
-              className="flex-1 h-12 min-w-0 text-xs sm:text-sm"
+              className="flex-1 h-12 text-sm"
             >
-              <Calendar className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Sessão Única</span>
+              <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+              Sessão Única
             </Button>
             <Button
               type="button"
               variant={schedulingMode === 'recurring' ? 'default' : 'outline'}
               onClick={() => handleModeChange('recurring')}
-              className="flex-1 h-12 min-w-0 text-xs sm:text-sm"
+              className="flex-1 h-12 text-sm"
             >
-              <RotateCcw className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Sessão Recorrente</span>
+              <RotateCcw className="h-4 w-4 mr-2 flex-shrink-0" />
+              Sessão Recorrente
             </Button>
           </div>
         </div>
