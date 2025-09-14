@@ -133,22 +133,22 @@ const Patients = () => {
         <Header />
         <div className="flex">
           <Sidebar />
-          <main className="flex-1 p-6 ml-64">
+          <main className="flex-1 p-4 md:p-6 md:ml-64 w-full min-w-0">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold">Pacientes</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">Pacientes</h1>
               <p className="text-muted-foreground">
                 Gerencie seus pacientes e acompanhe suas informações
               </p>
             </div>
 
             <Tabs defaultValue="active" className="w-full">
-              <div className="flex justify-between items-center mb-6">
-                <TabsList>
-                  <TabsTrigger value="active">Ativos ({patients.length})</TabsTrigger>
-                  <TabsTrigger value="archived">Arquivados ({archivedPatients.length})</TabsTrigger>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="active" className="flex-1 sm:flex-none">Ativos ({patients.length})</TabsTrigger>
+                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">Arquivados ({archivedPatients.length})</TabsTrigger>
                 </TabsList>
                 <NewPatientDialog>
-                  <Button className="gap-2">
+                  <Button className="gap-2 w-full sm:w-auto">
                     <Plus className="h-4 w-4" />
                     Novo Paciente
                   </Button>
@@ -157,7 +157,7 @@ const Patients = () => {
 
               <TabsContent value="active">
                 {isLoading ? (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {[...Array(6)].map((_, i) => (
                       <Card key={i}>
                         <CardHeader>
@@ -184,20 +184,21 @@ const Patients = () => {
                     </CardHeader>
                   </Card>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {patients.map((patient) => (
-                      <Card key={patient.id} className="relative">
+                      <Card key={patient.id} className="relative w-full">
                         <CardHeader>
                           <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle className="text-lg">{patient.name}</CardTitle>
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-lg truncate">{patient.name}</CardTitle>
                               {patient.nickname && (
-                                <CardDescription>"{patient.nickname}"</CardDescription>
+                                <CardDescription className="truncate">"{patient.nickname}"</CardDescription>
                               )}
                             </div>
                             <Button 
                               variant="ghost" 
                               size="icon"
+                              className="flex-shrink-0"
                               onClick={() => {
                                 setSelectedPatientForDialog(patient);
                                 setDialogOpen(true);
@@ -211,11 +212,11 @@ const Patients = () => {
                           <div className="space-y-2">
                             <div className="flex justify-between">
                               <span className="text-sm text-muted-foreground">Tipo:</span>
-                              <span className="text-sm">{getTherapyTypeLabel(patient.therapy_type)}</span>
+                              <span className="text-sm truncate max-w-[150px]">{getTherapyTypeLabel(patient.therapy_type)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-sm text-muted-foreground">Frequência:</span>
-                              <span className="text-sm">{getFrequencyLabel(patient.frequency, patient.custom_frequency)}</span>
+                              <span className="text-sm truncate max-w-[150px]">{getFrequencyLabel(patient.frequency, patient.custom_frequency)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-sm text-muted-foreground">Status:</span>
@@ -226,7 +227,7 @@ const Patients = () => {
                             {patient.whatsapp && (
                               <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">WhatsApp:</span>
-                                <span className="text-sm">{patient.whatsapp}</span>
+                                <span className="text-sm truncate max-w-[150px]">{patient.whatsapp}</span>
                               </div>
                             )}
                             {patient.email && (
