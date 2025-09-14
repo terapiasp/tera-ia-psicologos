@@ -17,8 +17,8 @@ const TIME_SLOTS = [
 
 export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
   const handleSlotClick = (slot: string) => {
-    if (value === slot) {
-      // Se é o horário já selecionado, incrementa 10 minutos
+    if (value && value.startsWith(slot.split(':')[0] + ':')) {
+      // Se é o horário já selecionado (mesma hora), incrementa 10 minutos
       incrementMinutes();
     } else {
       // Se é um novo horário, seleciona ele
@@ -30,18 +30,22 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
     if (!value) return;
 
     const [hours, minutes] = value.split(':').map(Number);
-    const currentMinutes = minutes + 10;
+    let newMinutes = minutes + 10;
+    let newHours = hours;
 
-    if (currentMinutes >= 60) {
-      // Se passou de 50min (próximo seria 60), vai para a próxima hora
-      const nextHour = hours + 1;
-      if (nextHour <= 23) {
-        onChange(`${nextHour.toString().padStart(2, '0')}:00`);
+    if (newMinutes >= 60) {
+      // Se passou de 50min, vai para a próxima hora
+      newHours = hours + 1;
+      newMinutes = 0;
+      
+      // Se passou das 23h, para por aqui
+      if (newHours > 23) {
+        return;
       }
-    } else {
-      // Incrementa 10 minutos
-      onChange(`${hours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`);
     }
+
+    const newTime = `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+    onChange(newTime);
   };
 
   const getDisplayTime = (slot: string) => {
@@ -60,7 +64,7 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-4", className)}>
       {/* Grid de slots pré-definidos */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {TIME_SLOTS.map((slot) => {
@@ -72,9 +76,9 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
               key={slot}
               variant={selected ? "default" : "outline"}
               className={cn(
-                "cursor-pointer text-center py-2 px-3 transition-all hover:scale-105",
+                "cursor-pointer text-center py-3 px-4 transition-all hover:scale-105 font-medium",
                 selected
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-md"
                   : "hover:bg-accent hover:text-accent-foreground"
               )}
               onClick={() => handleSlotClick(slot)}
@@ -85,15 +89,10 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
         })}
       </div>
 
-      {/* Dica no rodapé */}
-      <div className="text-center text-xs text-muted-foreground">
-        Clique em um horário já selecionado para adicionar minutos
-      </div>
-
-      {/* Preview do horário selecionado */}
+      {/* Dica sutil no rodapé */}
       {value && (
-        <div className="text-center text-sm text-muted-foreground">
-          Horário selecionado: <span className="font-medium text-foreground">{value}</span>
+        <div className="text-center text-xs text-muted-foreground opacity-70">
+          Clique novamente para adicionar +10min
         </div>
       )}
     </div>
