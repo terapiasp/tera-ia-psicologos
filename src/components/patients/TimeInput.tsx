@@ -66,7 +66,7 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
   return (
     <div className={cn("space-y-3", className)}>
       {/* Grid de slots pré-definidos */}
-      <div className="grid grid-cols-6 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
         {TIME_SLOTS.map((slot) => {
           const selected = isSlotSelected(slot);
           const displayTime = getDisplayTime(slot);
@@ -76,8 +76,9 @@ export const TimeInput = ({ value, onChange, className }: TimeInputProps) => {
               key={slot}
               variant={selected ? "default" : "outline"}
               className={cn(
-                "cursor-pointer text-center py-2 px-3 text-sm font-medium transition-all hover:scale-[1.02]",
-                "min-h-[36px] flex items-center justify-center",
+                "cursor-pointer text-center py-2.5 px-2 text-sm font-medium transition-all hover:scale-[1.02]",
+                "min-h-[40px] flex items-center justify-center shrink-0",
+                "w-full max-w-none",
                 selected
                   ? "bg-primary text-primary-foreground shadow-sm border-primary"
                   : "hover:bg-accent hover:text-accent-foreground border-border"
