@@ -5,12 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Edit, Plus, Download, Trash2, RotateCcw } from 'lucide-react';
+import { Edit, Plus } from 'lucide-react';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { NewPatientDialog } from '@/components/patients/NewPatientDialog';
+import { ArchivedPatientsList } from '@/components/patients/ArchivedPatientsList';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { SessionsCacheProvider } from '@/contexts/SessionsCacheContext';
@@ -245,137 +243,18 @@ const Patients = () => {
               </TabsContent>
 
               <TabsContent value="archived">
-                <div className="space-y-4">
-                  {archivedPatients.length > 0 && (
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={handleExportSelected}
-                        disabled={selectedPatients.length === 0}
-                        className="gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        Exportar Selecionados ({selectedPatients.length})
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleExportAll}
-                        className="gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        Exportar Todos
-                      </Button>
-                    </div>
-                  )}
-
-                  {archivedPatients.length === 0 ? (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Nenhum paciente arquivado</CardTitle>
-                        <CardDescription>
-                          Quando você arquivar pacientes, eles aparecerão aqui.
-                        </CardDescription>
-                      </CardHeader>
-                    </Card>
-                  ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Pacientes Arquivados</CardTitle>
-                        <CardDescription>
-                          Gerencie pacientes arquivados e exporte dados
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-12">
-                                <Checkbox
-                                  checked={selectedPatients.length === archivedPatients.length}
-                                  onCheckedChange={handleSelectAll}
-                                />
-                              </TableHead>
-                              <TableHead>Nome</TableHead>
-                              <TableHead>WhatsApp</TableHead>
-                              <TableHead>Arquivado em</TableHead>
-                              <TableHead className="text-right">Ações</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {archivedPatients.map((patient) => (
-                              <TableRow key={patient.id}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={selectedPatients.includes(patient.id)}
-                                    onCheckedChange={(checked) => handleSelectPatient(patient.id, checked as boolean)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <div>
-                                    <div className="font-medium">{patient.name}</div>
-                                    {patient.nickname && (
-                                      <div className="text-sm text-muted-foreground">"{patient.nickname}"</div>
-                                    )}
-                                  </div>
-                                </TableCell>
-                                <TableCell>{patient.whatsapp}</TableCell>
-                                <TableCell>
-                                  {patient.archived_at ? new Date(patient.archived_at).toLocaleDateString('pt-BR') : '-'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex gap-1 justify-end">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => unarchivePatient(patient.id)}
-                                      disabled={isUnarchiving}
-                                      title="Reativar paciente"
-                                    >
-                                      <RotateCcw className="h-4 w-4" />
-                                    </Button>
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          disabled={isDeleting}
-                                          title="Deletar permanentemente"
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Deletar paciente permanentemente?</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            <strong>⚠️ ATENÇÃO:</strong> Esta ação não pode ser desfeita. Todos os dados do paciente "{patient.name}" serão removidos permanentemente, incluindo:
-                                            <br />• Histórico de sessões
-                                            <br />• Agendamentos recorrentes
-                                            <br />• Anotações e prontuários
-                                            <br />• Todas as informações pessoais
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                          <AlertDialogAction
-                                            onClick={() => handleDeletePatient(patient.id)}
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          >
-                                            Deletar Permanentemente
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                <ArchivedPatientsList
+                  archivedPatients={archivedPatients}
+                  selectedPatients={selectedPatients}
+                  onSelectPatient={handleSelectPatient}
+                  onSelectAll={handleSelectAll}
+                  onExportSelected={handleExportSelected}
+                  onExportAll={handleExportAll}
+                  onUnarchivePatient={unarchivePatient}
+                  onDeletePatient={handleDeletePatient}
+                  isUnarchiving={isUnarchiving}
+                  isDeleting={isDeleting}
+                />
               </TabsContent>
             </Tabs>
           </main>
