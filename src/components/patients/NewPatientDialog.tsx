@@ -222,7 +222,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       });
     } else {
       // Modo criação
-      const frequency = recurrenceRule?.frequency || 'custom';
+      const frequency = recurrenceRule?.frequency === 'custom' ? 'others' : (recurrenceRule?.frequency || 'weekly');
       
       const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
       const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
