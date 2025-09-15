@@ -1,4 +1,4 @@
-import { Bell, Calendar, LogOut, Menu, User, ArrowLeft, CreditCard } from "lucide-react";
+import { Bell, Calendar, LogOut, Menu, User, ArrowLeft, CreditCard, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -184,7 +184,7 @@ export function Header() {
                 Notificações
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/configuracoes#conta')}>
-                <Settings className="h-4 w-4 mr-2" />
+                <Shield className="h-4 w-4 mr-2" />
                 Conta
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout} className="text-destructive border-t">
