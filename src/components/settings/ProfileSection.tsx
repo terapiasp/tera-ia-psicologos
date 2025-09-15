@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, MapPin, Phone, FileText, Building, Info, CheckCircle, AlertCircle } from "lucide-react";
 import { Profile } from "@/hooks/useProfile";
+import { PhoneInputField } from "@/components/patients/PhoneInputField";
 
 interface ProfileSectionProps {
   profile: Profile | undefined;
@@ -34,19 +35,15 @@ export const ProfileSection = ({ profile, formData, onInputChange, onSubmit, isU
   };
 
   const validatePhone = (phone: string): boolean => {
-    // Remove todos os caracteres não numéricos
+    // Para números internacionais, aceitar qualquer número com + e pelo menos 8 dígitos
+    if (!phone) return false;
     const cleanPhone = phone.replace(/\D/g, '');
-    // Valida se tem 10 ou 11 dígitos (com DDD)
-    return cleanPhone.length >= 10 && cleanPhone.length <= 11;
+    return phone.startsWith('+') && cleanPhone.length >= 8;
   };
 
   const formatPhone = (phone: string): string => {
-    const clean = phone.replace(/\D/g, '');
-    if (clean.length <= 10) {
-      return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    } else {
-      return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    }
+    // Para números internacionais, manter o formato original
+    return phone;
   };
 
   const getProfileCompleteness = () => {
@@ -212,25 +209,19 @@ export const ProfileSection = ({ profile, formData, onInputChange, onSubmit, isU
                             <Info className="h-4 w-4 text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Usado para contato e notificações importantes</p>
+                            <p>Selecione o país e digite seu número completo</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </Label>
-                    <Input
-                      id="phone"
+                    <PhoneInputField
                       value={formData.phone}
-                      onChange={(e) => {
-                        const formatted = formatPhone(e.target.value);
-                        if (formatted.replace(/\D/g, '').length <= 11) {
-                          onInputChange("phone", formatted);
-                        }
-                      }}
-                      placeholder="(11) 99999-9999"
+                      onChange={(value) => onInputChange("phone", value || "")}
+                      placeholder="Selecione o país e digite o número"
                       className={formData.phone && !validatePhone(formData.phone) ? "border-destructive" : ""}
                     />
                     {formData.phone && !validatePhone(formData.phone) && (
-                      <p className="text-xs text-destructive">Formato inválido. Use (XX) XXXXX-XXXX</p>
+                      <p className="text-xs text-destructive">Formato inválido. Selecione o país e digite o número completo</p>
                     )}
                   </div>
                 </div>
