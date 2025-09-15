@@ -171,8 +171,10 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Perfil</DropdownMenuItem>
-              <DropdownMenuItem>Configurações</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/configuracoes')}>
+                <Settings className="h-4 w-4 mr-2" />
+                Configurações
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair

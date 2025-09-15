@@ -9,7 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Patients from "./pages/Patients";
-import Profile from "./pages/Profile";
+
 import Agenda from "./pages/Agenda";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
@@ -33,11 +33,6 @@ const App = () => (
             <Route path="/patients" element={
               <ProtectedRoute>
                 <Patients />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
               </ProtectedRoute>
             } />
             <Route path="/agenda" element={
