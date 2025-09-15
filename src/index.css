@@ -45,6 +45,9 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    --validation-error: 0 84% 60%;
+    --validation-success: 142 76% 36%;
+
     --gradient-primary: linear-gradient(135deg, hsl(350 85% 60%), hsl(25 95% 65%));
     --gradient-accent: linear-gradient(135deg, hsl(280 85% 60%), hsl(350 85% 60%));
     --gradient-soft: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 14% 96%));
