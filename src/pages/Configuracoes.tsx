@@ -10,9 +10,22 @@ import { useProfile, type TipoCobranca } from "@/hooks/useProfile";
 import { ProfileSection } from "@/components/settings/ProfileSection";
 import { BillingSection } from "@/components/settings/BillingSection";
 import { NotificationsSection } from "@/components/settings/NotificationsSection";
+import { useLocation } from "react-router-dom";
 
 const Configuracoes = () => {
+  const location = useLocation();
   const { profile, isLoading, updateProfile, isUpdating } = useProfile();
+  
+  // Detectar qual aba abrir baseado no hash da URL
+  const getInitialTab = () => {
+    const hash = location.hash.substring(1); // Remove o #
+    if (['perfil', 'cobranca', 'notificacoes', 'conta'].includes(hash)) {
+      return hash;
+    }
+    return 'perfil';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -29,6 +42,34 @@ const Configuracoes = () => {
   });
 
   // Atualizar formData quando o profile carrega
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        phone: profile.phone || "",
+        crp_number: profile.crp_number || "",
+        clinic_name: profile.clinic_name || "",
+        bio: profile.bio || "",
+        address: profile.address || "",
+        city: profile.city || "",
+        state: profile.state || "",
+        tipo_cobranca: (profile.tipo_cobranca as TipoCobranca) || "DIA_FIXO",
+        parametro_cobranca: profile.parametro_cobranca || 10,
+        template_lembrete_sessao: profile.template_lembrete_sessao || "Olá, {{paciente}}! Este é um lembrete da sua sessão agendada para {{data_hora}}. Até breve!",
+        template_lembrete_pagamento: profile.template_lembrete_pagamento || "Olá, {{paciente}}! Este é um lembrete sobre o pagamento da sua terapia, com vencimento em {{vencimento}}. Obrigado!",
+      });
+    }
+  }, [profile]);
+
+  // Detectar mudanças no hash da URL
+  useEffect(() => {
+    const handleHashChange = () => {
+      setActiveTab(getInitialTab());
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [location.hash]);
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -132,7 +173,7 @@ const Configuracoes = () => {
                 </div>
               </div>
 
-              <Tabs defaultValue="perfil" className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="perfil" className="flex items-center gap-2">
                     <User className="h-4 w-4" />

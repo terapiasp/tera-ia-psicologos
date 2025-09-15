@@ -1,4 +1,4 @@
-import { Bell, Calendar, LogOut, Menu, User, ArrowLeft } from "lucide-react";
+import { Bell, Calendar, LogOut, Menu, User, ArrowLeft, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -171,11 +171,23 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate('/configuracoes')}>
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
+              <DropdownMenuItem onClick={() => navigate('/configuracoes#perfil')}>
+                <User className="h-4 w-4 mr-2" />
+                Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+              <DropdownMenuItem onClick={() => navigate('/configuracoes#cobranca')}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Cobrança
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/configuracoes#notificacoes')}>
+                <Bell className="h-4 w-4 mr-2" />
+                Notificações
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/configuracoes#conta')}>
+                <Settings className="h-4 w-4 mr-2" />
+                Conta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive border-t">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </DropdownMenuItem>
