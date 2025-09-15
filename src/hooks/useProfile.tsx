@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
 
+export type TipoCobranca = 'DIA_FIXO' | 'POR_SESSAO' | 'PACOTE_SESSOES';
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -21,6 +23,10 @@ export interface Profile {
   country: string;
   onboarding_completed: boolean;
   metadata: Record<string, any>;
+  tipo_cobranca?: TipoCobranca;
+  parametro_cobranca?: number;
+  template_lembrete_sessao?: string;
+  template_lembrete_pagamento?: string;
   created_at: string;
   updated_at: string;
 }
