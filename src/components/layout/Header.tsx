@@ -165,7 +165,7 @@ export function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="hover:bg-gradient-primary hover:text-white hover:border-transparent transition-all duration-300">
                 <User className="h-4 w-4" />
                 <span className="hidden md:block ml-2">{user?.email}</span>
               </Button>
