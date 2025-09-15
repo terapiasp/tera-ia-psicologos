@@ -193,9 +193,13 @@ export type Database = {
           metadata: Json
           name: string
           onboarding_completed: boolean | null
+          parametro_cobranca: number | null
           phone: string | null
           state: string | null
+          template_lembrete_pagamento: string | null
+          template_lembrete_sessao: string | null
           timezone: string | null
+          tipo_cobranca: string | null
           updated_at: string
           user_id: string
         }
@@ -213,9 +217,13 @@ export type Database = {
           metadata?: Json
           name: string
           onboarding_completed?: boolean | null
+          parametro_cobranca?: number | null
           phone?: string | null
           state?: string | null
+          template_lembrete_pagamento?: string | null
+          template_lembrete_sessao?: string | null
           timezone?: string | null
+          tipo_cobranca?: string | null
           updated_at?: string
           user_id: string
         }
@@ -233,9 +241,13 @@ export type Database = {
           metadata?: Json
           name?: string
           onboarding_completed?: boolean | null
+          parametro_cobranca?: number | null
           phone?: string | null
           state?: string | null
+          template_lembrete_pagamento?: string | null
+          template_lembrete_sessao?: string | null
           timezone?: string | null
+          tipo_cobranca?: string | null
           updated_at?: string
           user_id?: string
         }
