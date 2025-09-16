@@ -450,6 +450,37 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: string
       }
+      get_daily_agenda: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          patient_name: string
+          psychologist_name: string
+          psychologist_phone: string
+          scheduled_at: string
+          template_lembrete_sessao: string
+          timezone: string
+          user_id: string
+        }[]
+      }
+      get_daily_sessions_for_notifications: {
+        Args: { target_date?: string }
+        Returns: {
+          consolidated_status: string
+          duration_minutes: number
+          patient_name: string
+          payment_status: string
+          psychologist_name: string
+          psychologist_phone: string
+          scheduled_at: string
+          scheduled_at_formatted: string
+          session_id: string
+          session_status: string
+          session_value: number
+          template_lembrete_sessao: string
+          timezone: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
