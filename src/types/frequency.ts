@@ -36,3 +36,16 @@ export interface RecurrenceRule {
   presetId?: string; // Reference to custom preset
   customPattern?: RecurrencePattern; // For custom frequencies
 }
+
+// Interface for single session data
+export interface SingleSessionData {
+  date: string;
+  time: string;
+}
+
+// Combined scheduling data interface
+export interface SchedulingData {
+  type: 'single' | 'recurring';
+  recurrenceRule?: RecurrenceRule;
+  singleSession?: SingleSessionData;
+}

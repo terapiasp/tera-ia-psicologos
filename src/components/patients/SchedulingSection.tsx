@@ -6,13 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Users, RotateCcw } from 'lucide-react';
-import { RecurrenceRule } from '@/types/frequency';
+import { RecurrenceRule, SchedulingData } from '@/types/frequency';
 import { countNextMonth } from '@/utils/recurrence';
 import { format, parseISO } from 'date-fns';
 
 interface SchedulingSectionProps {
-  value?: RecurrenceRule;
-  onChange: (rule: RecurrenceRule | undefined) => void;
+  value?: SchedulingData;
+  onChange: (data: SchedulingData | undefined) => void;
   sessionValue?: number;
   className?: string;
 }
@@ -29,23 +29,28 @@ const DAYS_OF_WEEK = [
 
 export const SchedulingSection = ({ value, onChange, sessionValue = 80, className }: SchedulingSectionProps) => {
   const [schedulingMode, setSchedulingMode] = useState<'single' | 'recurring'>(
-    value ? 'recurring' : 'single'
+    value?.type || 'single'
   );
   
   // Local states for single session mode
-  const [singleDate, setSingleDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [singleTime, setSingleTime] = useState('09:00');
+  const [singleDate, setSingleDate] = useState(
+    value?.singleSession?.date || format(new Date(), 'yyyy-MM-dd')
+  );
+  const [singleTime, setSingleTime] = useState(
+    value?.singleSession?.time || '09:00'
+  );
 
   // Sync mode with external value when editing existing data
   useEffect(() => {
-    setSchedulingMode(value ? 'recurring' : 'single');
-  }, [value]);
-
-  // Sync single states with value when switching modes
-  useEffect(() => {
     if (value) {
-      setSingleDate(value.startDate);
-      setSingleTime(value.startTime);
+      setSchedulingMode(value.type);
+      if (value.singleSession) {
+        setSingleDate(value.singleSession.date);
+        setSingleTime(value.singleSession.time);
+      } else if (value.recurrenceRule) {
+        setSingleDate(value.recurrenceRule.startDate);
+        setSingleTime(value.recurrenceRule.startTime);
+      }
     }
   }, [value]);
 
@@ -53,25 +58,34 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
     setSchedulingMode(mode);
     
     if (mode === 'single') {
-      // Clear recurring rule and preserve current values in local state
-      onChange(undefined);
+      // Create single session data
+      onChange({
+        type: 'single',
+        singleSession: {
+          date: singleDate,
+          time: singleTime,
+        }
+      });
     } else {
       // Create basic recurring rule using current single values
       onChange({
-        frequency: 'weekly',
-        interval: 1,
-        daysOfWeek: [1], // Monday by default
-        startDate: singleDate,
-        startTime: singleTime,
+        type: 'recurring',
+        recurrenceRule: {
+          frequency: 'weekly',
+          interval: 1,
+          daysOfWeek: [1], // Monday by default
+          startDate: singleDate,
+          startTime: singleTime,
+        }
       });
     }
   };
 
   const handleFrequencyChange = (frequency: string) => {
-    if (!value) return;
+    if (!value?.recurrenceRule) return;
     
     const newRule: RecurrenceRule = {
-      ...value,
+      ...value.recurrenceRule,
       frequency: frequency as 'weekly' | 'biweekly' | 'custom',
     };
 
@@ -89,13 +103,16 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
       }
     }
 
-    onChange(newRule);
+    onChange({
+      ...value,
+      recurrenceRule: newRule
+    });
   };
 
   const handleDayToggle = (dayValue: number) => {
-    if (!value) return;
+    if (!value?.recurrenceRule) return;
 
-    const currentDays = value.daysOfWeek || [];
+    const currentDays = value.recurrenceRule.daysOfWeek || [];
     let newDays;
 
     if (currentDays.includes(dayValue)) {
@@ -105,31 +122,54 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
     }
 
     // For weekly and biweekly, allow only one day
-    if ((value.frequency === 'weekly' || value.frequency === 'biweekly') && newDays.length > 1) {
+    if ((value.recurrenceRule.frequency === 'weekly' || value.recurrenceRule.frequency === 'biweekly') && newDays.length > 1) {
       newDays = [dayValue];
     }
 
     onChange({
       ...value,
-      daysOfWeek: newDays,
+      recurrenceRule: {
+        ...value.recurrenceRule,
+        daysOfWeek: newDays,
+      }
     });
   };
 
   const handleDateChange = (date: string) => {
+    setSingleDate(date);
+    
     if (schedulingMode === 'single') {
-      setSingleDate(date);
-    } else {
-      if (!value) return;
-      onChange({ ...value, startDate: date });
+      onChange({
+        type: 'single',
+        singleSession: {
+          date,
+          time: singleTime,
+        }
+      });
+    } else if (value?.recurrenceRule) {
+      onChange({
+        ...value,
+        recurrenceRule: { ...value.recurrenceRule, startDate: date }
+      });
     }
   };
 
   const handleTimeChange = (time: string) => {
+    setSingleTime(time);
+    
     if (schedulingMode === 'single') {
-      setSingleTime(time);
-    } else {
-      if (!value) return;
-      onChange({ ...value, startTime: time });
+      onChange({
+        type: 'single',
+        singleSession: {
+          date: singleDate,
+          time,
+        }
+      });
+    } else if (value?.recurrenceRule) {
+      onChange({
+        ...value,
+        recurrenceRule: { ...value.recurrenceRule, startTime: time }
+      });
     }
   };
 
@@ -138,15 +178,16 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
       return 'Sessão única agendada';
     }
     
-    if (!value) return '';
+    if (!value?.recurrenceRule) return '';
 
-    const days = value.daysOfWeek?.map(d => DAYS_OF_WEEK[d].fullLabel).join(', ') || '';
+    const rule = value.recurrenceRule;
+    const days = rule.daysOfWeek?.map(d => DAYS_OF_WEEK[d].fullLabel).join(', ') || '';
     
-    if (value.frequency === 'weekly') {
-      return `Toda semana às ${value.startTime || '09:00'} nas ${days}`;
-    } else if (value.frequency === 'biweekly') {
-      return `A cada duas semanas às ${value.startTime || '09:00'} nas ${days}`;
-    } else if (value.frequency === 'custom') {
+    if (rule.frequency === 'weekly') {
+      return `Toda semana às ${rule.startTime || '09:00'} nas ${days}`;
+    } else if (rule.frequency === 'biweekly') {
+      return `A cada duas semanas às ${rule.startTime || '09:00'} nas ${days}`;
+    } else if (rule.frequency === 'custom') {
       return 'Frequência personalizada configurada';
     }
     
@@ -158,10 +199,10 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
       return sessionValue; // Just one session
     }
     
-    if (!value || !sessionValue) return 0;
+    if (!value?.recurrenceRule || !sessionValue) return 0;
 
     try {
-      const sessionsNextMonth = countNextMonth(value);
+      const sessionsNextMonth = countNextMonth(value.recurrenceRule);
       return sessionsNextMonth * sessionValue;
     } catch (error) {
       console.error('Error calculating monthly revenue:', error);
@@ -169,8 +210,8 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
     }
   };
 
-  const currentDate = schedulingMode === 'single' ? singleDate : (value?.startDate || format(new Date(), 'yyyy-MM-dd'));
-  const currentTime = schedulingMode === 'single' ? singleTime : (value?.startTime || '09:00');
+  const currentDate = schedulingMode === 'single' ? singleDate : (value?.recurrenceRule?.startDate || format(new Date(), 'yyyy-MM-dd'));
+  const currentTime = schedulingMode === 'single' ? singleTime : (value?.recurrenceRule?.startTime || '09:00');
 
   return (
     <div className={className}>
@@ -234,7 +275,7 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
             <div>
               <Label className="text-sm font-medium mb-2 block">Frequência</Label>
               <Select 
-                value={value?.frequency || 'weekly'} 
+                value={value?.recurrenceRule?.frequency || 'weekly'} 
                 onValueChange={handleFrequencyChange}
               >
                 <SelectTrigger className="h-12">
@@ -249,17 +290,17 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
             </div>
 
             {/* Day Selection */}
-            {value && (
+            {value?.recurrenceRule && (
               <div>
                 <Label className="text-sm font-medium mb-2 block">
-                  Dia{value.frequency === 'weekly' || value.frequency === 'biweekly' ? '' : 's'} da Semana
+                  Dia{value.recurrenceRule.frequency === 'weekly' || value.recurrenceRule.frequency === 'biweekly' ? '' : 's'} da Semana
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {DAYS_OF_WEEK.map((day) => (
                     <Button
                       key={day.value}
                       type="button"
-                      variant={value.daysOfWeek?.includes(day.value) ? "default" : "outline"}
+                      variant={value.recurrenceRule.daysOfWeek?.includes(day.value) ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleDayToggle(day.value)}
                       className="h-8 px-3 text-xs"
@@ -268,9 +309,9 @@ export const SchedulingSection = ({ value, onChange, sessionValue = 80, classNam
                     </Button>
                   ))}
                 </div>
-                {(value.frequency === 'weekly' || value.frequency === 'biweekly') && (
+                {(value.recurrenceRule.frequency === 'weekly' || value.recurrenceRule.frequency === 'biweekly') && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Selecione apenas um dia para sessões {value.frequency === 'weekly' ? 'semanais' : 'quinzenais'}
+                    Selecione apenas um dia para sessões {value.recurrenceRule.frequency === 'weekly' ? 'semanais' : 'quinzenais'}
                   </p>
                 )}
               </div>

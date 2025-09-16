@@ -22,7 +22,7 @@ import {
 import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
-import { RecurrenceRule } from "@/types/frequency";
+import { RecurrenceRule, SchedulingData } from "@/types/frequency";
 import { SchedulingSection } from "./SchedulingSection";
 import {
   Dialog,
@@ -58,6 +58,7 @@ import { Badge } from "@/components/ui/badge";
 import { PhoneInputField } from "./PhoneInputField";
 import { SessionValueInput } from "./SessionValueInput";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
+import { useSessions } from "@/hooks/useSessions";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
 const patientSchema = z.object({
@@ -104,10 +105,11 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
-  const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>();
+  const [schedulingData, setSchedulingData] = useState<SchedulingData | undefined>();
   const { createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
+  const { createSession } = useSessions();
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -148,7 +150,10 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       if (schedules.length > 0) {
         const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
         if (existingSchedule) {
-          setRecurrenceRule(existingSchedule.rrule_json);
+          setSchedulingData({
+            type: 'recurring',
+            recurrenceRule: existingSchedule.rrule_json
+          });
         }
       }
     }
@@ -157,7 +162,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   // Limpar estados quando dialog fecha
   useEffect(() => {
     if (!open) {
-      setRecurrenceRule(undefined);
+      setSchedulingData(undefined);
       form.reset();
     }
   }, [open, form]);
@@ -185,30 +190,45 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: () => {
-          // Atualizar agenda se há regra de recorrência
-          if (recurrenceRule) {
-            const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+          // Atualizar agenda se há dados de agendamento
+          if (schedulingData) {
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
-            if (existingSchedule) {
-              // Atualizar agenda existente
-              updateSchedule({
-                id: existingSchedule.id,
-                updates: {
-                  rrule_json: recurrenceRule,
+            if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
+              const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+              
+              if (existingSchedule) {
+                // Atualizar agenda existente
+                updateSchedule({
+                  id: existingSchedule.id,
+                  updates: {
+                    rrule_json: schedulingData.recurrenceRule,
+                    session_type: data.therapy_type,
+                    session_value: sessionValue,
+                    duration_minutes: durationMinutes,
+                  }
+                });
+              } else {
+                // Criar nova agenda
+                createSchedule({
+                  patient_id: patient.id,
+                  rrule_json: schedulingData.recurrenceRule,
+                  duration_minutes: durationMinutes,
                   session_type: data.therapy_type,
                   session_value: sessionValue,
-                  duration_minutes: durationMinutes,
-                }
-              });
-            } else {
-              // Criar nova agenda
-              createSchedule({
+                });
+              }
+            } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
+              // Criar sessão única
+              const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
+              
+              createSession({
                 patient_id: patient.id,
-                rrule_json: recurrenceRule,
+                scheduled_at: scheduledAt.toISOString(),
                 duration_minutes: durationMinutes,
-                session_type: data.therapy_type,
-                session_value: sessionValue,
+                modality: 'individual',
+                value: sessionValue,
+                notes: '',
               });
             }
             
@@ -222,7 +242,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       });
     } else {
       // Modo criação
-      const frequency = recurrenceRule?.frequency === 'custom' ? 'others' : (recurrenceRule?.frequency || 'weekly');
+      const frequency = schedulingData?.recurrenceRule?.frequency === 'custom' ? 'others' : (schedulingData?.recurrenceRule?.frequency || 'weekly');
       
       const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
       const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
@@ -240,26 +260,41 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         nickname: data.nickname || undefined,
         birth_date: data.birth_date || undefined,
         address: data.address || undefined,
-        frequency_preset_id: recurrenceRule?.presetId || undefined,
+        frequency_preset_id: schedulingData?.recurrenceRule?.presetId || undefined,
       };
 
       createPatient(patientData, {
         onSuccess: (newPatient: any) => {
-          // Se há regra de recorrência, criar o agendamento recorrente
-          if (recurrenceRule && newPatient) {
+          // Criar agendamento baseado no tipo
+          if (schedulingData && newPatient) {
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
-            createSchedule({
-              patient_id: newPatient.id,
-              rrule_json: recurrenceRule,
-              duration_minutes: durationMinutes,
-              session_type: data.therapy_type,
-              session_value: sessionValue,
-            });
+            if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
+              // Criar agenda recorrente
+              createSchedule({
+                patient_id: newPatient.id,
+                rrule_json: schedulingData.recurrenceRule,
+                duration_minutes: durationMinutes,
+                session_type: data.therapy_type,
+                session_value: sessionValue,
+              });
+            } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
+              // Criar sessão única
+              const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
+              
+              createSession({
+                patient_id: newPatient.id,
+                scheduled_at: scheduledAt.toISOString(),
+                duration_minutes: durationMinutes,
+                modality: 'individual',
+                value: sessionValue,
+                notes: '',
+              });
+            }
           }
           
           form.reset();
-          setRecurrenceRule(undefined);
+          setSchedulingData(undefined);
           setOpen(false);
         },
       });
@@ -482,8 +517,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     </div>
                     
                     <SchedulingSection
-                      value={recurrenceRule}
-                      onChange={setRecurrenceRule}
+                      value={schedulingData}
+                      onChange={setSchedulingData}
                       sessionValue={form.watch("session_value") ? parseFloat(form.watch("session_value")) : 80}
                     />
                   </div>
