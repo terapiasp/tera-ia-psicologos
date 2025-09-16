@@ -11,6 +11,44 @@ import { ProfileSection } from "@/components/settings/ProfileSection";
 import { BillingSection } from "@/components/settings/BillingSection";
 import { NotificationsSection } from "@/components/settings/NotificationsSection";
 import { useLocation } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+
+// Lista de timezones com prioridade para Brasil
+const TIMEZONES = [
+  // Timezones do Brasil (prioritários)
+  { value: "America/Sao_Paulo", label: "São Paulo (UTC-3)", country: "Brasil" },
+  { value: "America/Manaus", label: "Manaus (UTC-4)", country: "Brasil" },
+  { value: "America/Rio_Branco", label: "Rio Branco (UTC-5)", country: "Brasil" },
+  
+  // Timezones Internacionais (ordenados por UTC offset)
+  { value: "Pacific/Midway", label: "Midway (UTC-11)", country: "EUA" },
+  { value: "Pacific/Honolulu", label: "Honolulu (UTC-10)", country: "EUA" },
+  { value: "America/Anchorage", label: "Anchorage (UTC-9)", country: "EUA" },
+  { value: "America/Los_Angeles", label: "Los Angeles (UTC-8)", country: "EUA" },
+  { value: "America/Denver", label: "Denver (UTC-7)", country: "EUA" },
+  { value: "America/Chicago", label: "Chicago (UTC-6)", country: "EUA" },
+  { value: "America/New_York", label: "Nova York (UTC-5)", country: "EUA" },
+  { value: "America/Caracas", label: "Caracas (UTC-4)", country: "Venezuela" },
+  { value: "America/Argentina/Buenos_Aires", label: "Buenos Aires (UTC-3)", country: "Argentina" },
+  { value: "America/Noronha", label: "Fernando de Noronha (UTC-2)", country: "Brasil" },
+  { value: "Atlantic/Azores", label: "Açores (UTC-1)", country: "Portugal" },
+  { value: "Europe/London", label: "Londres (UTC+0)", country: "Reino Unido" },
+  { value: "Europe/Paris", label: "Paris (UTC+1)", country: "França" },
+  { value: "Europe/Berlin", label: "Berlim (UTC+1)", country: "Alemanha" },
+  { value: "Europe/Rome", label: "Roma (UTC+1)", country: "Itália" },
+  { value: "Europe/Athens", label: "Atenas (UTC+2)", country: "Grécia" },
+  { value: "Europe/Moscow", label: "Moscou (UTC+3)", country: "Rússia" },
+  { value: "Asia/Dubai", label: "Dubai (UTC+4)", country: "EAU" },
+  { value: "Asia/Karachi", label: "Karachi (UTC+5)", country: "Paquistão" },
+  { value: "Asia/Dhaka", label: "Dhaka (UTC+6)", country: "Bangladesh" },
+  { value: "Asia/Bangkok", label: "Bangkok (UTC+7)", country: "Tailândia" },
+  { value: "Asia/Shanghai", label: "Shanghai (UTC+8)", country: "China" },
+  { value: "Asia/Tokyo", label: "Tóquio (UTC+9)", country: "Japão" },
+  { value: "Australia/Sydney", label: "Sydney (UTC+10)", country: "Austrália" },
+  { value: "Pacific/Auckland", label: "Auckland (UTC+12)", country: "Nova Zelândia" },
+];
 
 const Configuracoes = () => {
   const location = useLocation();
@@ -35,6 +73,7 @@ const Configuracoes = () => {
     address: "",
     city: "",
     state: "",
+    timezone: "America/Sao_Paulo",
     tipo_cobranca: "DIA_FIXO" as TipoCobranca,
     parametro_cobranca: 10,
     template_lembrete_sessao: "",
@@ -53,34 +92,7 @@ const Configuracoes = () => {
         address: profile.address || "",
         city: profile.city || "",
         state: profile.state || "",
-        tipo_cobranca: (profile.tipo_cobranca as TipoCobranca) || "DIA_FIXO",
-        parametro_cobranca: profile.parametro_cobranca || 10,
-        template_lembrete_sessao: profile.template_lembrete_sessao || "Olá, {{paciente}}! Este é um lembrete da sua sessão agendada para {{data_hora}}. Até breve!",
-        template_lembrete_pagamento: profile.template_lembrete_pagamento || "Olá, {{paciente}}! Este é um lembrete sobre o pagamento da sua terapia, com vencimento em {{vencimento}}. Obrigado!",
-      });
-    }
-  }, [profile]);
-
-  // Detectar mudanças no hash da URL
-  useEffect(() => {
-    const handleHashChange = () => {
-      setActiveTab(getInitialTab());
-    };
-    
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [location.hash]);
-  useEffect(() => {
-    if (profile) {
-      setFormData({
-        name: profile.name || "",
-        phone: profile.phone || "",
-        crp_number: profile.crp_number || "",
-        clinic_name: profile.clinic_name || "",
-        bio: profile.bio || "",
-        address: profile.address || "",
-        city: profile.city || "",
-        state: profile.state || "",
+        timezone: profile.timezone || "America/Sao_Paulo",
         tipo_cobranca: (profile.tipo_cobranca as TipoCobranca) || "DIA_FIXO",
         parametro_cobranca: profile.parametro_cobranca || 10,
         template_lembrete_sessao: profile.template_lembrete_sessao || "Olá, {{paciente}}! Este é um lembrete da sua sessão agendada para {{data_hora}}. Até breve!",
@@ -241,22 +253,63 @@ const Configuracoes = () => {
                           Informações da Conta
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium">Email</div>
-                          <div className="text-sm text-muted-foreground">{profile?.email || ""}</div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium">Fuso Horário</div>
-                          <div className="text-sm text-muted-foreground">{profile?.timezone || "America/Sao_Paulo"}</div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium">Membro desde</div>
-                          <div className="text-sm text-muted-foreground">
-                            {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : ""}
-                          </div>
-                        </div>
-                      </CardContent>
+                       <CardContent className="space-y-4">
+                         <div className="space-y-2">
+                           <div className="text-sm font-medium">Email</div>
+                           <div className="text-sm text-muted-foreground">{profile?.email || ""}</div>
+                         </div>
+                         
+                         <div className="space-y-2">
+                           <Label htmlFor="timezone" className="text-sm font-medium">Fuso Horário</Label>
+                           <Select 
+                             value={formData.timezone} 
+                             onValueChange={(value) => handleInputChange('timezone', value)}
+                           >
+                             <SelectTrigger>
+                               <SelectValue placeholder="Selecione o fuso horário" />
+                             </SelectTrigger>
+                             <SelectContent className="max-h-60">
+                               {/* Timezones do Brasil */}
+                               <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                                 Brasil
+                               </div>
+                               {TIMEZONES.filter(tz => tz.country === "Brasil").map((timezone) => (
+                                 <SelectItem key={timezone.value} value={timezone.value}>
+                                   {timezone.label}
+                                 </SelectItem>
+                               ))}
+                               
+                               {/* Separador */}
+                               <div className="border-t my-1"></div>
+                               
+                               {/* Timezones Internacionais */}
+                               <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                                 Internacional
+                               </div>
+                               {TIMEZONES.filter(tz => tz.country !== "Brasil").map((timezone) => (
+                                 <SelectItem key={timezone.value} value={timezone.value}>
+                                   {timezone.label}
+                                 </SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                         </div>
+                         
+                         <div className="space-y-2">
+                           <div className="text-sm font-medium">Membro desde</div>
+                           <div className="text-sm text-muted-foreground">
+                             {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : ""}
+                           </div>
+                         </div>
+                         
+                         <Button 
+                           onClick={handleSubmit} 
+                           disabled={isUpdating}
+                           className="w-full"
+                         >
+                           {isUpdating ? "Salvando..." : "Salvar Alterações"}
+                         </Button>
+                       </CardContent>
                     </Card>
 
                     {/* Segurança e Privacidade */}
