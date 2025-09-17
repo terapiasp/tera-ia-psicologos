@@ -21,7 +21,7 @@ export const DayColumn: React.FC<DayColumnProps> = ({
 }) => {
   // Calcular altura total em minutos
   const totalMinutes = (endHour - startHour) * 60;
-  const minuteHeight = 40 / 60; // 40px por hora, então 0.67px por minuto
+  const minuteHeight = 60 / 60; // 60px por hora, então 1px por minuto
 
   // Filtrar e processar sessões do dia
   const daySessions = sessions.filter(session => {
@@ -89,7 +89,7 @@ export const DayColumn: React.FC<DayColumnProps> = ({
             date={date}
             hour={startHour + i}
             hourDate={hourDate}
-            top={i * 40}
+            top={i * 60}
           />
         );
       })}
@@ -132,8 +132,8 @@ const HourSlot: React.FC<HourSlotProps> = ({ date, hour, hourDate, top }) => {
     <div
       ref={setNodeRef}
       className={`
-        absolute left-0 right-0 h-[40px] transition-all duration-200
-        border-t border-border/60
+        absolute left-0 right-0 h-[60px] transition-all duration-200
+        border-t-2 border-border/60
         ${isOver ? 'bg-primary/15 border-primary/40' : 'hover:bg-muted/30 hover:border-border/80'}
       `}
       style={{ top: `${top}px` }}

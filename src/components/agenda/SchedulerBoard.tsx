@@ -233,16 +233,19 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
     <div className={`p-4 rounded-xl transition-all duration-500 ease-in-out animate-fade-in ${currentBorderStyle}`}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Header com dias da semana */}
-        <div className={`grid gap-1 mb-2 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-1 rounded-lg`}
-             style={{ gridTemplateColumns: `60px repeat(${weekDays.length}, 1fr)` }}>
-          <div className="py-1" /> {/* Espaço vazio para coluna de horários */}
+        <div className={`grid gap-1 mb-4 sticky top-0 bg-background/90 backdrop-blur-sm z-10 border-b pb-2 rounded-lg`}
+             style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)` }}>
+          <div className="py-2" /> {/* Espaço vazio para coluna de horários */}
           {weekDays.map((day) => (
-            <div key={day.toISOString()} className="text-center py-1">
-              <div className="text-xs font-semibold text-foreground">
-                {format(day, 'EEE', { locale: ptBR })} {format(day, 'dd/MM')}
+            <div key={day.toISOString()} className="text-center py-2">
+              <div className="text-sm font-semibold text-foreground">
+                {format(day, 'EEE', { locale: ptBR })}
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">
+                {format(day, 'dd/MM')}
               </div>
               {day === weekStart && (
-                <div className="text-xs font-medium mt-0.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">
+                <div className="text-xs font-medium mt-1 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse">
                   Semana {weekOfMonth}
                 </div>
               )}
@@ -253,17 +256,17 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
         {/* Calendário principal */}
         <div className="flex">
           {/* Coluna de horários */}
-          <div className="w-15 flex-shrink-0 border-r-2 border-primary/20">
+          <div className="w-20 flex-shrink-0 border-r-2 border-primary/20">
             {timeLabels.map((time) => (
               <div 
                 key={time.toISOString()} 
-                className={`h-[40px] flex items-center justify-center text-xs font-semibold text-foreground transition-colors duration-200 ${
+                className={`h-[60px] flex items-center justify-center text-sm font-semibold text-foreground transition-colors duration-200 ${
                   hasSessionsForTime(time) 
                     ? 'bg-orange-100 dark:bg-orange-950/30' 
                     : 'bg-success/10'
                 }`}
               >
-                <div className="bg-card rounded px-1.5 py-0.5 shadow-soft border border-border/50">
+                <div className="bg-card rounded-lg px-2 py-1 shadow-soft border border-border/50">
                   {format(time, 'HH:mm')}
                 </div>
               </div>
