@@ -239,10 +239,7 @@ export const SchedulerBoard: React.FC<SchedulerBoardProps> = ({ weekStart, onWee
           {weekDays.map((day) => (
             <div key={day.toISOString()} className="text-center py-2">
               <div className="text-sm font-semibold text-foreground">
-                {format(day, 'EEE', { locale: ptBR })}
-              </div>
-              <div className="text-sm text-muted-foreground font-medium">
-                {format(day, 'dd/MM')}
+                {format(day, 'EEE', { locale: ptBR })} {format(day, 'dd/MM')}
               </div>
               {day === weekStart && (
                 <div className="text-xs font-medium mt-1 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse">
