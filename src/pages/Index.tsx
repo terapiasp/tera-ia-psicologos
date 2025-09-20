@@ -5,6 +5,7 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { AgendaCard } from '@/components/dashboard/AgendaCard';
 import { WeeklyView } from '@/components/dashboard/WeeklyView';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { QuickNotes } from '@/components/dashboard/QuickNotes';
 import { useTodaySessions, useTomorrowSessions } from '@/hooks/useSessions';
 import { usePatients } from '@/hooks/usePatients';
 import { useProfile } from '@/hooks/useProfile';
@@ -250,8 +251,9 @@ const Index = () => {
                   }}
                 />
               </div>
-              <div className="lg:col-span-4">
+              <div className="lg:col-span-4 space-y-6">
                 <QuickActions />
+                <QuickNotes />
               </div>
             </div>
             </div>
