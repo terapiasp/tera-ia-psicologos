@@ -468,6 +468,27 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_next_day_sessions_for_patient_notifications: {
+        Args: { target_date?: string }
+        Returns: {
+          clinic_name: string
+          consolidated_status: string
+          duration_minutes: number
+          patient_name: string
+          patient_phone: string
+          patient_whatsapp: string
+          payment_status: string
+          psychologist_crp: string
+          psychologist_name: string
+          scheduled_at: string
+          scheduled_at_formatted: string
+          session_id: string
+          session_status: string
+          session_value: number
+          template_lembrete_sessao: string
+          timezone: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
