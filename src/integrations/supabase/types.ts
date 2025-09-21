@@ -450,19 +450,6 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: string
       }
-      get_daily_agenda: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          patient_name: string
-          psychologist_name: string
-          psychologist_phone: string
-          scheduled_at: string
-          template_lembrete_sessao: string
-          timezone: string
-          user_id: string
-        }[]
-      }
       get_daily_sessions_for_notifications: {
         Args: { target_date?: string }
         Returns: {
