@@ -61,9 +61,18 @@ import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessions } from "@/hooks/useSessions";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
 
-const patientSchema = z.object({
+// Create schema function to have access to context
+const createPatientSchema = (existingNames: string[], currentPatientId?: string) => z.object({
   // Dados Básicos (obrigatórios)
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  name: z.string()
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .refine((name) => {
+      const normalizedName = name.trim().toLowerCase();
+      const isDuplicate = existingNames.some(existingName => 
+        existingName.toLowerCase() === normalizedName
+      );
+      return !isDuplicate;
+    }, "Já existe um paciente com este nome"),
   whatsapp: z.string()
     .min(1, "WhatsApp é obrigatório")
     .refine((value) => {
@@ -88,7 +97,7 @@ const patientSchema = z.object({
   address: z.string().optional(),
 });
 
-type PatientFormData = z.infer<typeof patientSchema>;
+type PatientFormData = z.infer<ReturnType<typeof createPatientSchema>>;
 
 interface NewPatientDialogProps {
   children: React.ReactNode;
@@ -106,10 +115,17 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
   const [schedulingData, setSchedulingData] = useState<SchedulingData | undefined>();
-  const { createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
+  const { patients, createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
   const { createSession } = useSessions();
+
+  // Get existing patient names for validation, excluding current patient if editing
+  const existingNames = patients
+    .filter(p => isEdit ? p.id !== patient?.id : true)
+    .map(p => p.name);
+  
+  const patientSchema = createPatientSchema(existingNames, patient?.id);
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
