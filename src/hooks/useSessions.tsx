@@ -24,6 +24,8 @@ export interface Session {
   patients?: {
     name: string;
     nickname?: string;
+    session_link?: string;
+    session_mode?: string;
   };
 }
 
@@ -67,6 +69,8 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
           patients!inner (
             name,
             nickname,
+            session_link,
+            session_mode,
             is_archived
           )
         `)

@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { format, addMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Session } from '@/hooks/useSessions';
+import { Video } from 'lucide-react';
 
 interface SessionCardProps {
   session: Session;
@@ -69,12 +70,25 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onSessionClic
     >
       <CardContent className="p-2 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold truncate flex-1 text-sm text-foreground">
-            {session.patients?.nickname || session.patients?.name}
-            {session.schedule_id && (
-              <span className="opacity-75 ml-1">•</span>
+          <div className="flex items-center gap-1 flex-1 truncate">
+            <span className="font-semibold truncate text-sm text-foreground">
+              {session.patients?.nickname || session.patients?.name}
+              {session.schedule_id && (
+                <span className="opacity-75 ml-1">•</span>
+              )}
+            </span>
+            {session.patients?.session_link && (session.patients?.session_mode === 'online' || session.patients?.session_mode === 'hybrid') && (
+              <a 
+                href={session.patients.session_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                <Video className="h-3 w-3" />
+              </a>
             )}
-          </span>
+          </div>
           <span className="font-medium opacity-90 whitespace-nowrap text-xs">
             {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
           </span>

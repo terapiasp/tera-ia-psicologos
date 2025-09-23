@@ -18,7 +18,7 @@ import {
   Mail,
   MapPin,
   Cake,
-  Link
+  Video
 } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'libphonenumber-js';
@@ -478,6 +478,32 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     />
                   </div>
 
+                  {(form.watch("session_mode") === "online" || form.watch("session_mode") === "hybrid") && (
+                    <div className="mb-6">
+                      <FormField
+                        control={form.control}
+                        name="session_link"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2 text-base">
+                              <Video className="h-4 w-4" />
+                              Link Fixo de Sessão
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="https://meet.google.com/abc-def-ghi" 
+                                type="url"
+                                {...field} 
+                                className="h-12 text-base"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <FormField
                       control={form.control}
@@ -677,27 +703,6 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="session_link"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="flex items-center gap-2 text-base">
-                                <Link className="h-4 w-4" />
-                                Link Fixo de Sessão
-                              </FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="https://meet.google.com/abc-def-ghi" 
-                                  type="url"
-                                  {...field} 
-                                  className="h-12 text-base"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                       </div>
                     </CollapsibleContent>
                   </CardContent>

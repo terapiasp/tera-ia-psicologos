@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { format, addMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Session } from '@/hooks/useSessions';
+import { Video } from 'lucide-react';
 
 interface CalendarSessionBlockProps {
   session: Session;
@@ -74,10 +75,23 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
     >
       <CardContent className="p-2 h-full flex flex-col justify-center">
         <div className="flex-1 flex flex-col justify-center min-h-0">
-          <div className="font-semibold text-sm leading-tight text-left">
-            {session.patients?.nickname || session.patients?.name}
-            {session.schedule_id && (
-              <span className="opacity-75 ml-1">•</span>
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-sm leading-tight truncate">
+              {session.patients?.nickname || session.patients?.name}
+              {session.schedule_id && (
+                <span className="opacity-75 ml-1">•</span>
+              )}
+            </span>
+            {session.patients?.session_link && (session.patients?.session_mode === 'online' || session.patients?.session_mode === 'hybrid') && (
+              <a 
+                href={session.patients.session_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                <Video className="h-3 w-3" />
+              </a>
             )}
           </div>
           <div className="text-xs opacity-90 mt-1 leading-tight text-left">

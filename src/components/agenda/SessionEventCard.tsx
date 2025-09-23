@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Session } from '@/hooks/useSessions';
 import { Patient } from '@/hooks/usePatients';
-import { Clock, User, DollarSign, Repeat } from 'lucide-react';
+import { Clock, User, DollarSign, Repeat, Video } from 'lucide-react';
 
 interface SessionEventCardProps {
   session: Session;
@@ -110,6 +110,17 @@ export const SessionEventCard: React.FC<SessionEventCardProps> = ({
             </span>
             {session.schedule_id && (
               <Repeat className="h-3 w-3 text-primary opacity-75" />
+            )}
+            {patient?.session_link && (patient?.session_mode === 'online' || patient?.session_mode === 'hybrid') && (
+              <a 
+                href={patient.session_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                <Video className="h-4 w-4" />
+              </a>
             )}
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
