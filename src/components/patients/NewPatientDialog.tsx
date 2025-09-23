@@ -17,7 +17,8 @@ import {
   FileText,
   Mail,
   MapPin,
-  Cake
+  Cake,
+  Link
 } from "lucide-react";
 import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'libphonenumber-js';
@@ -95,6 +96,7 @@ const createPatientSchema = (existingNames: string[], currentPatientId?: string)
   phone: z.string().optional(),
   birth_date: z.string().optional(),
   address: z.string().optional(),
+  session_link: z.string().optional(),
 });
 
 type PatientFormData = z.infer<ReturnType<typeof createPatientSchema>>;
@@ -158,6 +160,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         therapy_type: patient.therapy_type || "",
         session_mode: patient.session_mode || "online",
         address: patient.address || "",
+        session_link: patient.session_link || "",
         session_value: patient.session_value?.toString() || "80",
         session_duration: patient.session_duration?.toString() || "50",
       });
@@ -665,6 +668,28 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                               <FormControl>
                                 <Input 
                                   placeholder="Rua, número, bairro" 
+                                  {...field} 
+                                  className="h-12 text-base"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="session_link"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-2 text-base">
+                                <Link className="h-4 w-4" />
+                                Link Fixo de Sessão
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="https://meet.google.com/abc-def-ghi" 
+                                  type="url"
                                   {...field} 
                                   className="h-12 text-base"
                                 />

@@ -112,6 +112,7 @@ export type Database = {
           phone: string | null
           service_modality_id: string | null
           session_duration: number | null
+          session_link: string | null
           session_mode: string
           session_value: number | null
           status: string
@@ -136,6 +137,7 @@ export type Database = {
           phone?: string | null
           service_modality_id?: string | null
           session_duration?: number | null
+          session_link?: string | null
           session_mode?: string
           session_value?: number | null
           status?: string
@@ -160,6 +162,7 @@ export type Database = {
           phone?: string | null
           service_modality_id?: string | null
           session_duration?: number | null
+          session_link?: string | null
           session_mode?: string
           session_value?: number | null
           status?: string

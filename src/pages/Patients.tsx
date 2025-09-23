@@ -234,6 +234,19 @@ const Patients = () => {
                                 <span className="text-sm truncate max-w-[150px]">{patient.email}</span>
                               </div>
                             )}
+                            {patient.session_link && (
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Link da Sessão:</span>
+                                <a 
+                                  href={patient.session_link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-primary hover:underline truncate max-w-[150px]"
+                                >
+                                  Acessar
+                                </a>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
