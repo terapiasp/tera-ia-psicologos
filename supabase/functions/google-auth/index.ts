@@ -31,7 +31,7 @@ serve(async (req) => {
       throw new Error('Invalid token');
     }
 
-    if (req.method === 'GET') {
+    if (req.method === 'GET' || req.method === 'POST') {
       // Return Google OAuth URL
       const clientId = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID');
       const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/google-callback`;
@@ -52,6 +52,7 @@ serve(async (req) => {
         `state=${user.id}`;
 
       console.log('Generated auth URL for user:', user.id);
+      console.log('Redirect URI configured:', redirectUri);
 
       return new Response(JSON.stringify({ authUrl }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
