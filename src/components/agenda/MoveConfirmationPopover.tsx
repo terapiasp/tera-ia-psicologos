@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Dialog,
@@ -11,11 +11,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Session } from '@/hooks/useSessions';
 import { Patient } from '@/hooks/usePatients';
+import { usePatients } from '@/hooks/usePatients';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin, Eye, Settings, Phone, Mail } from 'lucide-react';
+import { CalendarDays, Clock, User, DollarSign, Repeat, Trash2, MapPin, Eye, Settings, Phone, Mail, Video, Save } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface MoveConfirmationPopoverProps {
   open: boolean;
@@ -36,11 +40,63 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
   onConfirm,
   onDelete,
 }) => {
+  const [sessionLink, setSessionLink] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const { updatePatient } = usePatients();
+  const { toast } = useToast();
+  const linkInputRef = useRef<HTMLInputElement>(null);
+
   if (!session) return null;
 
   const isRecurring = !!session.schedule_id;
   const sessionDate = new Date(session.scheduled_at);
   const sessionPatient = session.patients;
+
+  // Sincronizar o estado com os dados do paciente quando o modal abrir
+  React.useEffect(() => {
+    if (open && patientData?.session_link) {
+      setSessionLink(patientData.session_link);
+    } else if (open) {
+      setSessionLink('');
+    }
+  }, [open, patientData?.session_link]);
+
+  const formatUrl = (url: string) => {
+    if (!url) return '';
+    const trimmedUrl = url.trim();
+    if (trimmedUrl && !trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      return `https://${trimmedUrl}`;
+    }
+    return trimmedUrl;
+  };
+
+  const handleSaveSessionLink = async () => {
+    if (!patientData) return;
+    
+    setIsSaving(true);
+    try {
+      const formattedUrl = formatUrl(sessionLink);
+      await updatePatient({
+        id: patientData.id,
+        updates: {
+          session_link: formattedUrl,
+        }
+      });
+      
+      toast({
+        title: "Link salvo com sucesso",
+        description: "O link da sessão foi atualizado.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o link da sessão.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const formatCurrency = (value: number | null | undefined) => {
     if (!value) return 'Não informado';
@@ -209,6 +265,56 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                     </div>
                   )}
                 </div>
+              </div>
+            </>
+          )}
+
+          {/* Link da Sessão */}
+          {(patientData?.session_mode === 'online' || patientData?.session_mode === 'hybrid') && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Video className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="session-link" className="text-sm font-medium">
+                    Link da Sessão
+                  </Label>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    id="session-link"
+                    ref={linkInputRef}
+                    placeholder="https://meet.google.com/abc-def-ghi"
+                    value={sessionLink}
+                    onChange={(e) => setSessionLink(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveSessionLink}
+                    disabled={isSaving}
+                    className="px-3"
+                  >
+                    {isSaving ? (
+                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                {patientData?.session_link && (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={formatUrl(patientData.session_link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Video className="h-3 w-3" />
+                      Acessar link atual
+                    </a>
+                  </div>
+                )}
               </div>
             </>
           )}

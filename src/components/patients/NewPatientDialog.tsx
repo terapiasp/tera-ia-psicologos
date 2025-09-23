@@ -186,6 +186,16 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
     }
   }, [open, form]);
 
+  // Function to format URL with https://
+  const formatUrl = (url: string) => {
+    if (!url) return '';
+    const trimmedUrl = url.trim();
+    if (trimmedUrl && !trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      return `https://${trimmedUrl}`;
+    }
+    return trimmedUrl;
+  };
+
   const onSubmit = (data: PatientFormData) => {
     if (isEdit && patient) {
       // Modo edição
@@ -193,6 +203,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       
       const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
       
+      // Format the session link
+      const formattedSessionLink = data.session_link ? formatUrl(data.session_link) : '';
+
       const updates = {
         name: data.name,
         whatsapp: data.whatsapp,
@@ -205,6 +218,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         nickname: data.nickname || undefined,
         birth_date: data.birth_date || undefined,
         address: data.address || undefined,
+        session_link: formattedSessionLink || undefined,
       };
 
       updatePatient({ id: patient.id, updates }, {
