@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Check, X, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
+import { Calendar, Check, X, ExternalLink, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 
@@ -15,7 +15,9 @@ export const GoogleCalendarSection = () => {
     connectCalendar, 
     disconnectCalendar, 
     isConnecting, 
-    isDisconnecting 
+    isDisconnecting,
+    syncAllSessions,
+    isSyncingAll
   } = useGoogleCalendar();
 
   const handleConnect = async () => {
@@ -41,6 +43,22 @@ export const GoogleCalendarSection = () => {
       toast({
         title: "Erro ao desconectar",
         description: error.message || "Não foi possível desconectar do Google Calendar",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSyncAll = async () => {
+    try {
+      await syncAllSessions();
+      toast({
+        title: "Sincronização concluída",
+        description: "Todas as sessões foram sincronizadas com o Google Calendar",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro na sincronização",
+        description: error.message || "Não foi possível sincronizar todas as sessões",
         variant: "destructive",
       });
     }
@@ -166,6 +184,20 @@ export const GoogleCalendarSection = () => {
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Abrir Google Calendar
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSyncAll}
+                  disabled={isSyncingAll}
+                >
+                  {isSyncingAll ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  {isSyncingAll ? "Sincronizando..." : "Sincronizar Tudo"}
                 </Button>
               </div>
               

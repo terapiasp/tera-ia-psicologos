@@ -3,12 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
+import { useSessions } from './useSessions';
 
 export const useGoogleCalendar = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
+
+  // Get all sessions for sync
+  const { sessions } = useSessions();
 
   // Check if Google Calendar is connected
   const { data: isConnected, isLoading } = useQuery({
@@ -118,6 +123,46 @@ export const useGoogleCalendar = () => {
     },
   });
 
+  // Sync all existing sessions to Google Calendar
+  const syncAllSessions = useCallback(async () => {
+    if (!user || !isConnected || !sessions.length) return;
+    
+    setIsSyncingAll(true);
+    
+    try {
+      const session = await supabase.auth.getSession();
+      const authToken = session.data.session?.access_token;
+      
+      const syncPromises = sessions.map(sessionData => {
+        if (!sessionData.patients?.name) return Promise.resolve();
+        
+        return supabase.functions.invoke('google-calendar-sync', {
+          body: {
+            sessionData: {
+              id: sessionData.id,
+              scheduled_at: sessionData.scheduled_at,
+              duration_minutes: sessionData.duration_minutes,
+              patient_name: sessionData.patients.name,
+              notes: sessionData.notes || '',
+              status: sessionData.status,
+            },
+            action: 'create'
+          },
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+      });
+
+      await Promise.allSettled(syncPromises);
+    } catch (error) {
+      console.error('Error syncing all sessions:', error);
+      throw error;
+    } finally {
+      setIsSyncingAll(false);
+    }
+  }, [user, isConnected, sessions]);
+
   return {
     isConnected: isConnected || false,
     isLoading,
@@ -127,5 +172,7 @@ export const useGoogleCalendar = () => {
     isDisconnecting: disconnectMutation.isPending,
     syncSession: syncSessionMutation.mutate,
     isSyncing: syncSessionMutation.isPending,
+    syncAllSessions,
+    isSyncingAll,
   };
 };
