@@ -6,9 +6,11 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar, Check, X, ExternalLink, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
+import { useSessions } from "@/hooks/useSessions";
 
 export const GoogleCalendarSection = () => {
   const { toast } = useToast();
+  const { sessions } = useSessions(); // Get sessions here instead
   const { 
     isConnected, 
     isLoading, 
@@ -50,7 +52,7 @@ export const GoogleCalendarSection = () => {
 
   const handleSyncAll = async () => {
     try {
-      await syncAllSessions();
+      await syncAllSessions(sessions);
       toast({
         title: "Sincronização concluída",
         description: "Todas as sessões foram sincronizadas com o Google Calendar",

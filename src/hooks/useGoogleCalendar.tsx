@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
-import { useSessions } from './useSessions';
 
 export const useGoogleCalendar = () => {
   const { user } = useAuth();
@@ -11,9 +10,6 @@ export const useGoogleCalendar = () => {
   const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSyncingAll, setIsSyncingAll] = useState(false);
-
-  // Get all sessions for sync
-  const { sessions } = useSessions();
 
   // Check if Google Calendar is connected
   const { data: isConnected, isLoading } = useQuery({
@@ -124,7 +120,7 @@ export const useGoogleCalendar = () => {
   });
 
   // Sync all existing sessions to Google Calendar
-  const syncAllSessions = useCallback(async () => {
+  const syncAllSessions = useCallback(async (sessions: any[]) => {
     if (!user || !isConnected || !sessions.length) return;
     
     setIsSyncingAll(true);
@@ -161,7 +157,7 @@ export const useGoogleCalendar = () => {
     } finally {
       setIsSyncingAll(false);
     }
-  }, [user, isConnected, sessions]);
+  }, [user, isConnected]);
 
   return {
     isConnected: isConnected || false,
