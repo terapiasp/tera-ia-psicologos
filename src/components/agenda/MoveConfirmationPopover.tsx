@@ -40,17 +40,12 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
   onConfirm,
   onDelete,
 }) => {
+  // All hooks must be called before any early returns
   const [sessionLink, setSessionLink] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { updatePatient } = usePatients();
   const { toast } = useToast();
   const linkInputRef = useRef<HTMLInputElement>(null);
-
-  if (!session) return null;
-
-  const isRecurring = !!session.schedule_id;
-  const sessionDate = new Date(session.scheduled_at);
-  const sessionPatient = session.patients;
 
   // Sincronizar o estado com os dados do paciente quando o modal abrir
   React.useEffect(() => {
@@ -60,6 +55,14 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
       setSessionLink('');
     }
   }, [open, patientData?.session_link]);
+
+  // Early return after all hooks have been called
+  if (!session) return null;
+
+  const isRecurring = !!session.schedule_id;
+  const sessionDate = new Date(session.scheduled_at);
+  const sessionPatient = session.patients;
+
 
   const formatUrl = (url: string) => {
     if (!url) return '';
