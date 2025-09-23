@@ -480,6 +480,7 @@ export type Database = {
           payment_status: string
           psychologist_crp: string
           psychologist_name: string
+          psychologist_whatsapp: string
           scheduled_at: string
           scheduled_at_formatted: string
           session_id: string
