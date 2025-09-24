@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
 };
 
 serve(async (req) => {
@@ -60,6 +61,8 @@ serve(async (req) => {
     }
 
     if (req.method === 'DELETE') {
+      console.log('DELETE request received for user:', user.id);
+      
       // Disconnect Google Calendar
       const { error: updateError } = await supabaseClient
         .from('profiles')
@@ -77,9 +80,9 @@ serve(async (req) => {
         throw updateError;
       }
 
-      console.log('Google Calendar disconnected for user:', user.id);
+      console.log('Google Calendar disconnected successfully for user:', user.id);
 
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ success: true, message: 'Google Calendar disconnected' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
