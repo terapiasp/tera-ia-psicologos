@@ -74,14 +74,22 @@ export const useGoogleCalendar = () => {
     mutationFn: async () => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { error } = await supabase.functions.invoke('google-auth', {
+      // Use direct fetch call to support DELETE method
+      const session = await supabase.auth.getSession();
+      const response = await fetch('https://zrhhaoppytpbytpudywq.supabase.co/functions/v1/google-auth', {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.data.session?.access_token}`,
+          'Content-Type': 'application/json',
         },
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao desconectar');
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
