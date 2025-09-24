@@ -148,17 +148,31 @@ serve(async (req) => {
           <div class="container">
             <div class="success">✅ Autorização concluída!</div>
             <p>Google Calendar conectado com sucesso!</p>
-            <p><small>Você pode fechar esta janela e voltar para o aplicativo.</small></p>
+            <p><small>Esta janela fechará automaticamente...</small></p>
           </div>
           <script>
-            setTimeout(() => {
+            // Try to close immediately
+            try {
               window.close();
-            }, 3000);
+            } catch (e) {
+              // Fallback for when window.close() doesn't work
+              setTimeout(() => {
+                try {
+                  window.close();
+                } catch (e) {
+                  // If still can't close, show message
+                  document.body.innerHTML = '<div style="text-align: center; padding: 2rem;"><h2>✅ Sucesso!</h2><p>Você pode fechar esta aba manualmente.</p></div>';
+                }
+              }, 1000);
+            }
           </script>
         </body>
       </html>
     `, {
-      headers: { 'Content-Type': 'text/html' },
+      headers: { 
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      },
     });
 
   } catch (error) {
