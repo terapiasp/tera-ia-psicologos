@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Check, X, ExternalLink, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { useSessions } from "@/hooks/useSessions";
 
@@ -38,14 +38,16 @@ export const GoogleCalendarSection = () => {
     try {
       await disconnectCalendar();
       toast({
-        title: "Google Calendar desconectado",
-        description: "A sincronização foi desabilitada com sucesso",
+        title: "✅ Google Calendar desconectado",
+        description: "A sincronização foi desabilitada com sucesso. Suas sessões não serão mais sincronizadas automaticamente.",
+        duration: 5000,
       });
     } catch (error: any) {
       toast({
-        title: "Erro ao desconectar",
+        title: "❌ Erro ao desconectar",
         description: error.message || "Não foi possível desconectar do Google Calendar",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };
