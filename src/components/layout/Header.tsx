@@ -35,19 +35,39 @@ export function Header() {
   };
   const handleLogout = async () => {
     try {
-      const {
-        error
-      } = await supabase.auth.signOut();
+      // First check if there's a valid session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // If no session exists, just clear local state and redirect
+        toast({
+          title: "Logout realizado com sucesso!"
+        });
+        navigate('/auth');
+        return;
+      }
+
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       toast({
         title: "Logout realizado com sucesso!"
       });
+      navigate('/auth');
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: "Erro ao fazer logout: " + error.message,
-        variant: "destructive"
-      });
+      // Handle specific auth errors more gracefully
+      if (error.message.includes('session_not_found') || error.message.includes('Auth session missing')) {
+        toast({
+          title: "Logout realizado com sucesso!"
+        });
+        navigate('/auth');
+      } else {
+        toast({
+          title: "Erro",
+          description: "Erro ao fazer logout: " + error.message,
+          variant: "destructive"
+        });
+      }
     }
   };
   return (
