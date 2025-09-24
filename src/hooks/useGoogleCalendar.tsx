@@ -127,7 +127,7 @@ export const useGoogleCalendar = () => {
     },
   });
 
-  // Sync all existing sessions to Google Calendar
+  // Sync all existing sessions to Google Calendar with rate limiting
   const syncAllSessions = useCallback(async (sessions: any[]) => {
     if (!user || !isConnected || !sessions.length) return;
     
@@ -137,28 +137,65 @@ export const useGoogleCalendar = () => {
       const session = await supabase.auth.getSession();
       const authToken = session.data.session?.access_token;
       
-      const syncPromises = sessions.map(sessionData => {
-        if (!sessionData.patients?.name) return Promise.resolve();
+      // Filter only valid sessions
+      const validSessions = sessions.filter(sessionData => sessionData.patients?.name);
+      
+      // Rate limiting: process in batches of 10 sessions with 2 second delay between batches
+      const BATCH_SIZE = 10;
+      const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds
+      
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (let i = 0; i < validSessions.length; i += BATCH_SIZE) {
+        const batch = validSessions.slice(i, i + BATCH_SIZE);
         
-        return supabase.functions.invoke('google-calendar-sync', {
-          body: {
-            sessionData: {
-              id: sessionData.id,
-              scheduled_at: sessionData.scheduled_at,
-              duration_minutes: sessionData.duration_minutes,
-              patient_name: sessionData.patients.name,
-              notes: sessionData.notes || '',
-              status: sessionData.status,
+        const batchPromises = batch.map(sessionData => 
+          supabase.functions.invoke('google-calendar-sync', {
+            body: {
+              sessionData: {
+                id: sessionData.id,
+                scheduled_at: sessionData.scheduled_at,
+                duration_minutes: sessionData.duration_minutes,
+                patient_name: sessionData.patients.name,
+                notes: sessionData.notes || '',
+                status: sessionData.status,
+              },
+              action: 'create'
             },
-            action: 'create'
-          },
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        });
-      });
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }).then(
+            (result) => {
+              if (result.error) throw result.error;
+              successCount++;
+              return result;
+            },
+            (error) => {
+              errorCount++;
+              console.error('Session sync error:', error);
+              return error;
+            }
+          )
+        );
 
-      await Promise.allSettled(syncPromises);
+        await Promise.allSettled(batchPromises);
+        
+        // Wait before processing next batch (except for the last batch)
+        if (i + BATCH_SIZE < validSessions.length) {
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        }
+      }
+      
+      console.log(`Sync completed: ${successCount} success, ${errorCount} errors`);
+      
+      if (errorCount > 0 && successCount === 0) {
+        throw new Error(`Falha na sincronização. Tente novamente em alguns minutos.`);
+      } else if (errorCount > 0) {
+        throw new Error(`Sincronização parcial: ${successCount} sessões sincronizadas, ${errorCount} falharam.`);
+      }
+      
     } catch (error) {
       console.error('Error syncing all sessions:', error);
       throw error;

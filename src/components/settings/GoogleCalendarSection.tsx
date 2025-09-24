@@ -184,7 +184,7 @@ export const GoogleCalendarSection = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open("https://calendar.google.com", "_blank")}
+                  onClick={() => window.open("https://calendar.google.com/calendar", "_blank")}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Abrir Google Calendar
