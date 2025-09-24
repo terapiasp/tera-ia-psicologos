@@ -143,7 +143,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         description: "Nova sessão criada com sucesso!",
       });
 
-      // Sync to Google Calendar
+      // Sync to Google Calendar with session mode
       if (newSession.patients?.name) {
         await syncSessionToCalendar({
           id: newSession.id,
@@ -152,6 +152,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
           patient_name: newSession.patients.name,
           notes: newSession.notes || '',
           status: newSession.status,
+          session_mode: newSession.patients.session_mode,
         }, 'create');
       }
     },
@@ -189,7 +190,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         description: "Informações atualizadas com sucesso!",
       });
 
-      // Sync to Google Calendar
+      // Sync to Google Calendar with session mode
       if (updatedSession.patients?.name) {
         await syncSessionToCalendar({
           id: updatedSession.id,
@@ -198,6 +199,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
           patient_name: updatedSession.patients.name,
           notes: updatedSession.notes || '',
           status: updatedSession.status,
+          session_mode: updatedSession.patients.session_mode,
         }, 'update');
       }
     },
@@ -235,7 +237,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         description: "Sessão reposicionada com sucesso!",
       });
 
-      // Sync to Google Calendar
+      // Sync to Google Calendar with session mode
       if (movedSession.patients?.name) {
         await syncSessionToCalendar({
           id: movedSession.id,
@@ -244,6 +246,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
           patient_name: movedSession.patients.name,
           notes: movedSession.notes || '',
           status: movedSession.status,
+          session_mode: movedSession.patients.session_mode,
         }, 'update');
       }
     },
@@ -287,7 +290,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         description: 'A sessão foi removida com sucesso.'
       });
 
-      // Sync deletion to Google Calendar
+      // Sync deletion to Google Calendar with session mode
       if (sessionToDelete?.patients?.name) {
         await syncSessionToCalendar({
           id: sessionToDelete.id,
@@ -296,6 +299,7 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
           patient_name: sessionToDelete.patients.name,
           notes: sessionToDelete.notes || '',
           status: sessionToDelete.status,
+          session_mode: sessionToDelete.patients.session_mode,
         }, 'delete');
       }
     },

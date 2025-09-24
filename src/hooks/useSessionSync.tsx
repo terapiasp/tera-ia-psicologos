@@ -8,6 +8,7 @@ interface SessionData {
   patient_name: string;
   notes?: string;
   status: string;
+  session_mode?: string; // online, presencial, etc.
 }
 
 export const useSessionSync = () => {

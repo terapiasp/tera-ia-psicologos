@@ -14,6 +14,7 @@ interface SessionData {
   patient_name: string;
   notes?: string;
   status: string;
+  session_mode?: string; // online, presencial, etc.
 }
 
 serve(async (req) => {
@@ -126,7 +127,10 @@ serve(async (req) => {
       const startTime = new Date(sessionData.scheduled_at);
       const endTime = new Date(startTime.getTime() + (sessionData.duration_minutes * 60 * 1000));
 
-      const eventData = {
+      // Check if session is online to add Google Meet
+      const isOnlineSession = sessionData.session_mode === 'online';
+
+      const eventData: any = {
         summary: `Sessão - ${sessionData.patient_name}`,
         description: sessionData.notes || '',
         start: {
@@ -140,32 +144,44 @@ serve(async (req) => {
         status: sessionData.status === 'cancelled' ? 'cancelled' : 'confirmed',
       };
 
+      // Add Google Meet for online sessions
+      if (isOnlineSession) {
+        eventData.conferenceData = {
+          createRequest: {
+            requestId: `${sessionData.id}-${Date.now()}`, // Unique ID for each request
+            conferenceSolutionKey: {
+              type: 'hangoutsMeet'
+            }
+          }
+        };
+      }
+
       let response;
       
       if (action === 'create') {
-        response = await fetch(
-          `https://www.googleapis.com/calendar/v3/calendars/${profile.google_calendar_id}/events`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(eventData),
-          }
-        );
+        // Add conferenceDataVersion=1 for Google Meet support
+        const createUrl = `https://www.googleapis.com/calendar/v3/calendars/${profile.google_calendar_id}/events${isOnlineSession ? '?conferenceDataVersion=1' : ''}`;
+        
+        response = await fetch(createUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(eventData),
+        });
       } else {
-        response = await fetch(
-          `https://www.googleapis.com/calendar/v3/calendars/${profile.google_calendar_id}/events/${sessionData.id}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(eventData),
-          }
-        );
+        // Add conferenceDataVersion=1 for Google Meet support
+        const updateUrl = `https://www.googleapis.com/calendar/v3/calendars/${profile.google_calendar_id}/events/${sessionData.id}${isOnlineSession ? '?conferenceDataVersion=1' : ''}`;
+        
+        response = await fetch(updateUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(eventData),
+        });
       }
 
       if (!response.ok) {
