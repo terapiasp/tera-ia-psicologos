@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Video, Link, ExternalLink, Star, RefreshCw, Trash2 } from "lucide-react";
+import { Video, Link, ExternalLink, Star, RefreshCw, Trash2, Check } from "lucide-react";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
@@ -105,10 +105,10 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Video className="h-4 w-4 text-primary" />
-          Link de Sessão
+          Google Meet
           <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-            <Star className="h-3 w-3 mr-1" />
-            Recomendado
+            <Check className="h-3 w-3 mr-1" />
+            OK
           </Badge>
         </div>
         
@@ -160,13 +160,17 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Link className="h-4 w-4 text-primary" />
-          Link de Sessão
+          Link Externo
+          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+            <Check className="h-3 w-3 mr-1" />
+            OK
+          </Badge>
         </div>
         
         <Card className="p-4 bg-primary/5 border-2 border-primary">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-muted-foreground mb-1">Link externo</div>
+              <div className="text-sm text-muted-foreground mb-1">💡 Link sempre ativo quando configurado.</div>
               <Button
                 variant="ghost"
                 className="h-auto p-0 text-left justify-start text-primary hover:text-primary/80"
