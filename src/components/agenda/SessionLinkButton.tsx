@@ -41,15 +41,18 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
   if (hasLinkData) {
     resolvedLink = getResolvedLink(patient as Patient);
     linkStatus = getLinkStatus(patient as Patient);
+    console.log('SessionLinkButton - Patient:', patient.name, 'Link Type:', patient.link_type, 'Resolved Link:', resolvedLink);
     
     // Se não há link nos novos campos, tentar fallback
     if (!resolvedLink && patient.session_link) {
       resolvedLink = patient.session_link;
       linkStatus = { status: 'active', resolvedLink: patient.session_link };
+      console.log('SessionLinkButton - Using fallback session_link:', resolvedLink);
     }
   } else if (patient.session_link) {
     resolvedLink = patient.session_link;
     linkStatus = { status: 'active', resolvedLink: patient.session_link };
+    console.log('SessionLinkButton - Only session_link available:', resolvedLink);
   }
 
   // Só mostrar para sessões online ou híbridas e quando há link configurado

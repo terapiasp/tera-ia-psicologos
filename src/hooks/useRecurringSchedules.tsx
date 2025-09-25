@@ -177,9 +177,14 @@ export const useRecurringSchedules = () => {
 
     try {
       console.log('Inserindo', sessionsToInsert.length, 'sessões no banco');
+      
+      // Usar upsert para evitar duplicação de chaves
       const { data, error } = await supabase
         .from('sessions')
-        .insert(sessionsToInsert);
+        .upsert(sessionsToInsert, {
+          onConflict: 'schedule_id,scheduled_at',
+          ignoreDuplicates: false
+        });
 
       if (error) {
         console.error('Erro ao materializar sessões:', error);

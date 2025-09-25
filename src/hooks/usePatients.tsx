@@ -151,12 +151,7 @@ export const usePatients = () => {
       const { data, error } = await supabase
         .from('patients')
         .update({ 
-          is_archived: true,
-          recurring_meet_code: null,
-          external_session_link: null,
-          link_type: null,
-          link_created_at: null,
-          link_last_used: null
+          is_archived: true
         })
         .eq('id', patientId)
         .eq('user_id', user.id)
