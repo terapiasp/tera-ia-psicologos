@@ -356,9 +356,22 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
                       );
                     } else {
                       return (
-                        <Badge variant="secondary" className="text-xs">
-                          Não configurado
-                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          asChild
+                          className="text-xs h-auto p-1"
+                        >
+                          <Link 
+                            to={`/patients?pid=${patientData?.id}&open=1&section=link`}
+                            onClick={() => onOpenChange(false)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80">
+                              Não configurado - Clique para configurar
+                            </Badge>
+                          </Link>
+                        </Button>
                       );
                     }
                   })()}
