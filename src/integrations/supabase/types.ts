@@ -103,13 +103,18 @@ export type Database = {
           created_at: string
           custom_frequency: string | null
           email: string | null
+          external_session_link: string | null
           frequency: string
           frequency_preset_id: string | null
           id: string
           is_archived: boolean
+          link_created_at: string | null
+          link_last_used: string | null
+          link_type: string | null
           name: string
           nickname: string | null
           phone: string | null
+          recurring_meet_code: string | null
           service_modality_id: string | null
           session_duration: number | null
           session_link: string | null
@@ -128,13 +133,18 @@ export type Database = {
           created_at?: string
           custom_frequency?: string | null
           email?: string | null
+          external_session_link?: string | null
           frequency?: string
           frequency_preset_id?: string | null
           id?: string
           is_archived?: boolean
+          link_created_at?: string | null
+          link_last_used?: string | null
+          link_type?: string | null
           name: string
           nickname?: string | null
           phone?: string | null
+          recurring_meet_code?: string | null
           service_modality_id?: string | null
           session_duration?: number | null
           session_link?: string | null
@@ -153,13 +163,18 @@ export type Database = {
           created_at?: string
           custom_frequency?: string | null
           email?: string | null
+          external_session_link?: string | null
           frequency?: string
           frequency_preset_id?: string | null
           id?: string
           is_archived?: boolean
+          link_created_at?: string | null
+          link_last_used?: string | null
+          link_type?: string | null
           name?: string
           nickname?: string | null
           phone?: string | null
+          recurring_meet_code?: string | null
           service_modality_id?: string | null
           session_duration?: number | null
           session_link?: string | null
@@ -471,6 +486,10 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_link_status: {
+        Args: { patient_row: Database["public"]["Tables"]["patients"]["Row"] }
+        Returns: string
+      }
       get_next_day_sessions_for_patient_notifications: {
         Args: { target_date?: string }
         Returns: {
@@ -492,6 +511,10 @@ export type Database = {
           template_lembrete_sessao: string
           timezone: string
         }[]
+      }
+      get_session_link_resolved: {
+        Args: { patient_row: Database["public"]["Tables"]["patients"]["Row"] }
+        Returns: string
       }
     }
     Enums: {
