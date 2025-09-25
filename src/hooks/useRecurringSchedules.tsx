@@ -178,22 +178,23 @@ export const useRecurringSchedules = () => {
     try {
       console.log('Inserindo', sessionsToInsert.length, 'sessões no banco');
       
-      // Usar upsert para evitar duplicação de chaves
+      // Usar insert normal, deixar que a constraint unique handle duplicatas
       const { data, error } = await supabase
         .from('sessions')
-        .upsert(sessionsToInsert, {
-          onConflict: 'schedule_id,scheduled_at',
-          ignoreDuplicates: false
-        });
+        .insert(sessionsToInsert);
 
       if (error) {
         console.error('Erro ao materializar sessões:', error);
-        throw error;
+        // Se for erro de duplicação, ignorar (já existe)
+        if (error.code !== '23505') {
+          throw error;
+        }
       } else {
         console.log('Sessões inseridas com sucesso');
-        // Invalidar queries para forçar atualização
-        queryClient.invalidateQueries({ queryKey: ['sessions'] });
       }
+      
+      // Invalidar queries para forçar atualização
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
     } catch (error) {
       console.error('Erro ao inserir sessões:', error);
     }

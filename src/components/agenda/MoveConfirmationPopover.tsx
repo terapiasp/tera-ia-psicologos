@@ -49,12 +49,24 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
 
   // Sincronizar o estado com os dados do paciente quando o modal abrir
   React.useEffect(() => {
-    if (open && patientData?.session_link) {
-      setSessionLink(patientData.session_link);
+    if (open && patientData) {
+      // Priorizar novos campos de link
+      let resolvedLink = '';
+      
+      if (patientData.link_type === 'recurring_meet' && patientData.recurring_meet_code) {
+        resolvedLink = `https://meet.google.com/${patientData.recurring_meet_code}`;
+      } else if (patientData.link_type === 'external' && patientData.external_session_link) {
+        resolvedLink = patientData.external_session_link;
+      } else if (patientData.session_link) {
+        // Fallback para campo legacy
+        resolvedLink = patientData.session_link;
+      }
+      
+      setSessionLink(resolvedLink);
     } else if (open) {
       setSessionLink('');
     }
-  }, [open, patientData?.session_link]);
+  }, [open, patientData?.link_type, patientData?.recurring_meet_code, patientData?.external_session_link, patientData?.session_link]);
 
   // Early return after all hooks have been called
   if (!session) return null;
@@ -79,11 +91,42 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
     setIsSaving(true);
     try {
       const formattedUrl = formatUrl(sessionLink);
+      
+      // Detectar tipo de link e salvar nos campos corretos
+      let updates: any = {};
+      
+      if (formattedUrl.includes('meet.google.com/')) {
+        // Extract meet code from URL
+        const meetCode = formattedUrl.replace(/^https?:\/\/meet\.google\.com\//, '');
+        updates = {
+          link_type: 'recurring_meet',
+          recurring_meet_code: meetCode,
+          external_session_link: null,
+          link_created_at: new Date().toISOString(),
+          link_last_used: null
+        };
+      } else if (formattedUrl) {
+        // External link
+        updates = {
+          link_type: 'external',
+          external_session_link: formattedUrl,
+          recurring_meet_code: null,
+          link_created_at: new Date().toISOString()
+        };
+      } else {
+        // Clear all link data
+        updates = {
+          link_type: null,
+          recurring_meet_code: null,
+          external_session_link: null,
+          link_created_at: null,
+          link_last_used: null
+        };
+      }
+      
       await updatePatient({
         id: patientData.id,
-        updates: {
-          session_link: formattedUrl,
-        }
+        updates
       });
       
       toast({
