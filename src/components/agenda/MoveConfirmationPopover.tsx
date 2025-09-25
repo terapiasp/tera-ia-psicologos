@@ -315,55 +315,6 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
             </>
           )}
 
-          {/* Link da Sessão */}
-          {(patientData?.session_mode === 'online' || patientData?.session_mode === 'hybrid') && (
-            <>
-              <Separator />
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Video className="h-4 w-4 text-muted-foreground" />
-                  <Label htmlFor="session-link" className="text-sm font-medium">
-                    Link da Sessão
-                  </Label>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    id="session-link"
-                    ref={linkInputRef}
-                    placeholder="https://meet.google.com/abc-def-ghi"
-                    value={sessionLink}
-                    onChange={(e) => setSessionLink(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleSaveSessionLink}
-                    disabled={isSaving}
-                    className="px-3"
-                  >
-                    {isSaving ? (
-                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                {patientData?.session_link && (
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={formatUrl(patientData.session_link)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline flex items-center gap-1"
-                    >
-                      <Video className="h-3 w-3" />
-                      Acessar link atual
-                    </a>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
 
           <Separator />
 
