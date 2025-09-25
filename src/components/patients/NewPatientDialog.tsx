@@ -25,6 +25,7 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
 import { RecurrenceRule, SchedulingData } from "@/types/frequency";
 import { SchedulingSection } from "./SchedulingSection";
+import SessionLinkInput from "./SessionLinkInput";
 import {
   Dialog,
   DialogContent,
@@ -504,11 +505,10 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                               Link Fixo de Sessão
                             </FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="https://meet.google.com/abc-def-ghi" 
-                                type="url"
-                                {...field} 
-                                className="h-12 text-base"
+                              <SessionLinkInput
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                className="w-full"
                               />
                             </FormControl>
                             <FormMessage />
