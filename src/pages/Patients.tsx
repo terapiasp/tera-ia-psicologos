@@ -14,6 +14,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { SessionsCacheProvider } from '@/contexts/SessionsCacheContext';
 import { exportPatientsToCsv } from '@/utils/csvExport';
 import { useToast } from '@/components/ui/use-toast';
+import SessionLinkStatus from '@/components/patients/SessionLinkStatus';
 
 const Patients = () => {
   const { patients, archivedPatients, isLoading, error, archivePatient, unarchivePatient, deletePatient, isArchiving, isUnarchiving, isDeleting } = usePatients();
@@ -234,19 +235,7 @@ const Patients = () => {
                                 <span className="text-sm truncate max-w-[150px]">{patient.email}</span>
                               </div>
                             )}
-                            {patient.session_link && (
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Link da Sessão:</span>
-                                <a 
-                                  href={patient.session_link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-primary hover:underline truncate max-w-[150px]"
-                                >
-                                  Acessar
-                                </a>
-                              </div>
-                            )}
+                            <SessionLinkStatus patient={patient} compact={true} />
                           </div>
                         </CardContent>
                       </Card>

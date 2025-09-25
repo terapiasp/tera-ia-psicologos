@@ -34,13 +34,19 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
   // Verificar se o paciente tem as propriedades necessárias para link de sessão
   const hasLinkData = 'link_type' in patient && 'id' in patient;
   
-  // Se não tem dados de link completos, usar fallback para session_link antigo
+  // Priorizar novos campos de link, mas manter fallback para session_link antigo
   let resolvedLink: string | null = null;
   let linkStatus: SessionLinkStatus = { status: 'none' };
   
   if (hasLinkData) {
     resolvedLink = getResolvedLink(patient as Patient);
     linkStatus = getLinkStatus(patient as Patient);
+    
+    // Se não há link nos novos campos, tentar fallback
+    if (!resolvedLink && patient.session_link) {
+      resolvedLink = patient.session_link;
+      linkStatus = { status: 'active', resolvedLink: patient.session_link };
+    }
   } else if (patient.session_link) {
     resolvedLink = patient.session_link;
     linkStatus = { status: 'active', resolvedLink: patient.session_link };

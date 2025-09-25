@@ -9,6 +9,7 @@ import { RotateCcw, Trash2, Download } from 'lucide-react';
 import { Patient } from '@/hooks/usePatients';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsCompact } from '@/hooks/useIsCompact';
+import SessionLinkStatus from '@/components/patients/SessionLinkStatus';
 
 interface ArchivedPatientsListProps {
   archivedPatients: Patient[];
@@ -172,6 +173,7 @@ export const ArchivedPatientsList: React.FC<ArchivedPatientsListProps> = ({
                             <span className="truncate max-w-[150px]">{patient.whatsapp}</span>
                           </div>
                         )}
+                        <SessionLinkStatus patient={patient} compact={true} />
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Arquivado em:</span>
                           <span>
@@ -214,6 +216,7 @@ export const ArchivedPatientsList: React.FC<ArchivedPatientsListProps> = ({
                 </TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>WhatsApp</TableHead>
+                <TableHead>Link de Sessão</TableHead>
                 <TableHead>Arquivado em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -236,6 +239,9 @@ export const ArchivedPatientsList: React.FC<ArchivedPatientsListProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>{patient.whatsapp}</TableCell>
+                  <TableCell>
+                    <SessionLinkStatus patient={patient} compact={true} />
+                  </TableCell>
                   <TableCell>
                     {patient.archived_at ? new Date(patient.archived_at).toLocaleDateString('pt-BR') : '-'}
                   </TableCell>
