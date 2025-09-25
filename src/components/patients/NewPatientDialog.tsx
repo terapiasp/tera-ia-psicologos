@@ -97,7 +97,11 @@ const createPatientSchema = (existingNames: string[], currentPatientId?: string)
   phone: z.string().optional(),
   birth_date: z.string().optional(),
   address: z.string().optional(),
-  session_link: z.string().optional(),
+  
+  // Campos de link de sessão
+  recurring_meet_code: z.string().optional(),
+  external_session_link: z.string().optional(),
+  link_type: z.enum(['recurring_meet', 'external']).optional(),
 });
 
 type PatientFormData = z.infer<ReturnType<typeof createPatientSchema>>;
@@ -161,7 +165,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         therapy_type: patient.therapy_type || "",
         session_mode: patient.session_mode || "online",
         address: patient.address || "",
-        session_link: patient.session_link || "",
+        recurring_meet_code: patient.recurring_meet_code || "",
+        external_session_link: patient.external_session_link || "",
+        link_type: patient.link_type || undefined,
         session_value: patient.session_value?.toString() || "80",
         session_duration: patient.session_duration?.toString() || "50",
       });
@@ -204,8 +210,24 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       
       const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
       
-      // Format the session link
-      const formattedSessionLink = data.session_link ? formatUrl(data.session_link) : '';
+      // Process session link data
+      const linkData: any = {};
+      if (data.link_type === 'recurring_meet' && data.recurring_meet_code) {
+        linkData.recurring_meet_code = data.recurring_meet_code;
+        linkData.link_type = 'recurring_meet';
+        linkData.link_created_at = new Date().toISOString();
+        linkData.external_session_link = null;
+      } else if (data.link_type === 'external' && data.external_session_link) {
+        linkData.external_session_link = formatUrl(data.external_session_link);
+        linkData.link_type = 'external';
+        linkData.link_created_at = new Date().toISOString();
+        linkData.recurring_meet_code = null;
+      } else {
+        linkData.link_type = null;
+        linkData.recurring_meet_code = null;
+        linkData.external_session_link = null;
+        linkData.link_created_at = null;
+      }
 
       const updates = {
         name: data.name,
@@ -219,7 +241,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         nickname: data.nickname || undefined,
         birth_date: data.birth_date || undefined,
         address: data.address || undefined,
-        session_link: formattedSessionLink || undefined,
+        ...linkData,
       };
 
       updatePatient({ id: patient.id, updates }, {
@@ -281,6 +303,18 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
       const durationMinutes = data.session_duration ? parseInt(data.session_duration) : 50;
       
+      // Process session link data for creation
+      const linkData: any = {};
+      if (data.link_type === 'recurring_meet' && data.recurring_meet_code) {
+        linkData.recurring_meet_code = data.recurring_meet_code;
+        linkData.link_type = 'recurring_meet';
+        linkData.link_created_at = new Date().toISOString();
+      } else if (data.link_type === 'external' && data.external_session_link) {
+        linkData.external_session_link = formatUrl(data.external_session_link);
+        linkData.link_type = 'external';
+        linkData.link_created_at = new Date().toISOString();
+      }
+      
       const patientData: CreatePatientData = {
         name: data.name,
         whatsapp: data.whatsapp,
@@ -295,6 +329,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         birth_date: data.birth_date || undefined,
         address: data.address || undefined,
         frequency_preset_id: schedulingData?.recurrenceRule?.presetId || undefined,
+        ...linkData,
       };
 
       createPatient(patientData, {
@@ -497,22 +532,38 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     <div className="mb-6">
                       <FormField
                         control={form.control}
-                        name="session_link"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-base">
-                              <Video className="h-4 w-4" />
-                              Link Fixo de Sessão
-                            </FormLabel>
-                            <FormControl>
-                              <SessionLinkInput
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                className="w-full"
+                        name="recurring_meet_code"
+                        render={({ field: meetCodeField }) => (
+                          <FormField
+                            control={form.control}
+                            name="external_session_link"
+                            render={({ field: externalLinkField }) => (
+                              <FormField
+                                control={form.control}
+                                name="link_type"
+                                render={({ field: linkTypeField }) => (
+                                  <FormItem>
+                                    <FormLabel className="flex items-center gap-2 text-base">
+                                      <Video className="h-4 w-4" />
+                                      Link de Sessão
+                                    </FormLabel>
+                                    <FormControl>
+                                      <SessionLinkInput
+                                        recurringMeetCode={meetCodeField.value || ""}
+                                        externalSessionLink={externalLinkField.value || ""}
+                                        linkType={linkTypeField.value}
+                                        onRecurringMeetCodeChange={meetCodeField.onChange}
+                                        onExternalLinkChange={externalLinkField.onChange}
+                                        onLinkTypeChange={linkTypeField.onChange}
+                                        className="w-full"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                            )}
+                          />
                         )}
                       />
                     </div>
