@@ -4,13 +4,12 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { User, CreditCard, Bell, Shield, AlertTriangle, Calendar } from "lucide-react";
+import { User, CreditCard, Bell, Shield, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile, type TipoCobranca } from "@/hooks/useProfile";
 import { ProfileSection } from "@/components/settings/ProfileSection";
 import { BillingSection } from "@/components/settings/BillingSection";
 import { NotificationsSection } from "@/components/settings/NotificationsSection";
-import { GoogleCalendarSection } from "@/components/settings/GoogleCalendarSection";
 import { useLocation } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -58,7 +57,7 @@ const Configuracoes = () => {
   // Detectar qual aba abrir baseado no hash da URL
   const getInitialTab = () => {
     const hash = location.hash.substring(1); // Remove o #
-    if (['perfil', 'cobranca', 'notificacoes', 'integracoes', 'conta'].includes(hash)) {
+    if (['perfil', 'cobranca', 'notificacoes', 'conta'].includes(hash)) {
       return hash;
     }
     return 'perfil';
@@ -187,7 +186,7 @@ const Configuracoes = () => {
               </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="perfil" className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Perfil
@@ -199,10 +198,6 @@ const Configuracoes = () => {
                   <TabsTrigger value="notificacoes" className="flex items-center gap-2">
                     <Bell className="h-4 w-4" />
                     Notificações
-                  </TabsTrigger>
-                  <TabsTrigger value="integracoes" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Integrações
                   </TabsTrigger>
                   <TabsTrigger value="conta" className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
@@ -245,11 +240,6 @@ const Configuracoes = () => {
                     onSubmit={handleSubmit}
                     isUpdating={isUpdating}
                   />
-                </TabsContent>
-
-                {/* Aba: Integrações */}
-                <TabsContent value="integracoes" className="space-y-6">
-                  <GoogleCalendarSection />
                 </TabsContent>
 
                 {/* Aba: Conta */}

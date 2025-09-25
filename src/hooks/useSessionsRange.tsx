@@ -41,7 +41,7 @@ export const useSessionsRange = (startDate?: Date, endDate?: Date) => {
     } else {
       setSessions([]);
     }
-  }, [dateFilters, getSessionsForRange]);
+  }, [dateFilters.start, dateFilters.end, getSessionsForRange]);
 
   return {
     sessions,

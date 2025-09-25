@@ -192,11 +192,6 @@ export type Database = {
           created_at: string
           crp_number: string | null
           email: string
-          google_access_token: string | null
-          google_calendar_connected: boolean | null
-          google_calendar_id: string | null
-          google_refresh_token: string | null
-          google_token_expires_at: string | null
           id: string
           metadata: Json
           name: string
@@ -221,11 +216,6 @@ export type Database = {
           created_at?: string
           crp_number?: string | null
           email: string
-          google_access_token?: string | null
-          google_calendar_connected?: boolean | null
-          google_calendar_id?: string | null
-          google_refresh_token?: string | null
-          google_token_expires_at?: string | null
           id?: string
           metadata?: Json
           name: string
@@ -250,11 +240,6 @@ export type Database = {
           created_at?: string
           crp_number?: string | null
           email?: string
-          google_access_token?: string | null
-          google_calendar_connected?: boolean | null
-          google_calendar_id?: string | null
-          google_refresh_token?: string | null
-          google_token_expires_at?: string | null
           id?: string
           metadata?: Json
           name?: string

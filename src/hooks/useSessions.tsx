@@ -5,7 +5,6 @@ import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
 import { useMemo } from 'react';
-import { useSessionSync } from './useSessionSync';
 
 export interface Session {
   id: string;
@@ -43,7 +42,6 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { syncSessionToCalendar } = useSessionSync();
 
   // Memoizar os filtros de data para evitar mudanças desnecessárias
   const dateFilters = useMemo(() => {
@@ -127,34 +125,18 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
           paid: false,
           origin: 'manual'
         })
-        .select(`
-          *,
-          patients!inner (name)
-        `)
+        .select()
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: async (newSession) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       toast({
         title: "Sessão agendada",
         description: "Nova sessão criada com sucesso!",
       });
-
-      // Sync to Google Calendar with session mode
-      if (newSession.patients?.name) {
-        await syncSessionToCalendar({
-          id: newSession.id,
-          scheduled_at: newSession.scheduled_at,
-          duration_minutes: newSession.duration_minutes,
-          patient_name: newSession.patients.name,
-          notes: newSession.notes || '',
-          status: newSession.status,
-          session_mode: newSession.patients.session_mode,
-        }, 'create');
-      }
     },
     onError: (error: any) => {
       toast({
@@ -174,34 +156,18 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id)
-        .select(`
-          *,
-          patients!inner (name)
-        `)
+        .select()
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: async (updatedSession) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       toast({
         title: "Sessão atualizada",
         description: "Informações atualizadas com sucesso!",
       });
-
-      // Sync to Google Calendar with session mode
-      if (updatedSession.patients?.name) {
-        await syncSessionToCalendar({
-          id: updatedSession.id,
-          scheduled_at: updatedSession.scheduled_at,
-          duration_minutes: updatedSession.duration_minutes,
-          patient_name: updatedSession.patients.name,
-          notes: updatedSession.notes || '',
-          status: updatedSession.status,
-          session_mode: updatedSession.patients.session_mode,
-        }, 'update');
-      }
     },
     onError: (error: any) => {
       toast({
@@ -221,34 +187,18 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         .update({ scheduled_at: targetDateTime.toISOString() })
         .eq('id', sessionId)
         .eq('user_id', user.id)
-        .select(`
-          *,
-          patients!inner (name)
-        `)
+        .select()
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: async (movedSession) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       toast({
         title: "Sessão movida",
         description: "Sessão reposicionada com sucesso!",
       });
-
-      // Sync to Google Calendar with session mode
-      if (movedSession.patients?.name) {
-        await syncSessionToCalendar({
-          id: movedSession.id,
-          scheduled_at: movedSession.scheduled_at,
-          duration_minutes: movedSession.duration_minutes,
-          patient_name: movedSession.patients.name,
-          notes: movedSession.notes || '',
-          status: movedSession.status,
-          session_mode: movedSession.patients.session_mode,
-        }, 'update');
-      }
     },
     onError: (error: any) => {
       toast({
@@ -263,17 +213,6 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
     mutationFn: async (id: string) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
-      // Get session data before deletion for Google Calendar sync
-      const { data: sessionToDelete } = await supabase
-        .from('sessions')
-        .select(`
-          *,
-          patients!inner (name)
-        `)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .single();
-
       const { error } = await supabase
         .from('sessions')
         .delete()
@@ -281,27 +220,14 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      return { id, sessionToDelete };
+      return { id };
     },
-    onSuccess: async ({ id, sessionToDelete }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       toast({
         title: 'Sessão excluída',
         description: 'A sessão foi removida com sucesso.'
       });
-
-      // Sync deletion to Google Calendar with session mode
-      if (sessionToDelete?.patients?.name) {
-        await syncSessionToCalendar({
-          id: sessionToDelete.id,
-          scheduled_at: sessionToDelete.scheduled_at,
-          duration_minutes: sessionToDelete.duration_minutes,
-          patient_name: sessionToDelete.patients.name,
-          notes: sessionToDelete.notes || '',
-          status: sessionToDelete.status,
-          session_mode: sessionToDelete.patients.session_mode,
-        }, 'delete');
-      }
     },
     onError: (error: any) => {
       toast({

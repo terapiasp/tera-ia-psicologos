@@ -27,11 +27,6 @@ export interface Profile {
   parametro_cobranca?: number;
   template_lembrete_sessao?: string;
   template_lembrete_pagamento?: string;
-  google_access_token?: string;
-  google_refresh_token?: string;
-  google_token_expires_at?: string;
-  google_calendar_connected?: boolean;
-  google_calendar_id?: string;
   created_at: string;
   updated_at: string;
 }

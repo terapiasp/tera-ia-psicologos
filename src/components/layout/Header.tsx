@@ -35,17 +35,18 @@ export function Header() {
   };
   const handleLogout = async () => {
     try {
-      // Force signOut regardless of session state
-      await supabase.auth.signOut({ scope: 'local' });
-      
+      const {
+        error
+      } = await supabase.auth.signOut();
+      if (error) throw error;
       toast({
         title: "Logout realizado com sucesso!"
       });
     } catch (error: any) {
-      // Even if signOut fails, show success and let AuthProvider handle the redirect
-      console.error('Logout error:', error);
       toast({
-        title: "Logout realizado com sucesso!"
+        title: "Erro",
+        description: "Erro ao fazer logout: " + error.message,
+        variant: "destructive"
       });
     }
   };

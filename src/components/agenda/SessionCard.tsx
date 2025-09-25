@@ -3,8 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { format, addMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Session } from '@/hooks/useSessions';
-import { Video, Calendar } from 'lucide-react';
-import { GoogleCalendarIndicator } from '@/components/ui/GoogleCalendarIndicator';
+import { Video } from 'lucide-react';
 
 interface SessionCardProps {
   session: Session;
@@ -90,12 +89,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onSessionClic
               </a>
             )}
           </div>
-          <div className="flex items-center gap-1">
-            <GoogleCalendarIndicator className="text-xs opacity-75" />
-            <span className="font-medium opacity-90 whitespace-nowrap text-xs">
-              {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
-            </span>
-          </div>
+          <span className="font-medium opacity-90 whitespace-nowrap text-xs">
+            {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
+          </span>
         </div>
       </CardContent>
     </Card>
