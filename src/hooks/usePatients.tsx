@@ -20,7 +20,12 @@ export interface Patient {
   session_duration?: number;
   status: string;
   address?: string;
-  session_link?: string;
+  session_link?: string; // Legacy field - to be removed
+  recurring_meet_code?: string;
+  external_session_link?: string;
+  link_type?: 'recurring_meet' | 'external' | null;
+  link_created_at?: string;
+  link_last_used?: string;
   service_modality_id?: string;
   is_archived: boolean;
   archived_at?: string;
@@ -40,7 +45,11 @@ export interface CreatePatientData {
   custom_frequency?: string;
   session_mode: string;
   address?: string;
-  session_link?: string;
+  session_link?: string; // Legacy field - to be removed
+  recurring_meet_code?: string;
+  external_session_link?: string;
+  link_type?: 'recurring_meet' | 'external' | null;
+  link_created_at?: string;
   frequency_preset_id?: string;
   session_value?: number;
   session_duration?: number;
