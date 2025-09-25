@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -117,6 +117,8 @@ interface NewPatientDialogProps {
 export function NewPatientDialog({ children, patient, isEdit = false, open: controlledOpen, onOpenChange: controlledOnOpenChange }: NewPatientDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [showAdditionalData, setShowAdditionalData] = useState(false);
+  const linkSectionRef = useRef<HTMLDivElement>(null);
+  const sessionLinkInputRef = useRef<HTMLInputElement>(null);
   
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -185,7 +187,41 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
     }
   }, [isEdit, patient, schedules, form, open]);
 
-  // Limpar estados quando dialog fecha
+  // Scroll automático para seção do link quando especificado
+  useEffect(() => {
+    if (open && isEdit) {
+      const scrollToSection = window.sessionStorage.getItem('scrollToSection');
+      if (scrollToSection === 'link') {
+        // Aguardar um tempo para o dialog estar completamente renderizado
+        setTimeout(() => {
+          // Abrir a seção de dados adicionais se ainda não estiver aberta
+          setShowAdditionalData(true);
+          
+          // Scroll para a seção do link
+          setTimeout(() => {
+            if (linkSectionRef.current) {
+              linkSectionRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+              });
+            }
+            
+            // Focar no input após scroll
+            setTimeout(() => {
+              // O input está dentro do SessionLinkInput, então vamos simular um clique
+              const linkInputs = document.querySelectorAll('input[placeholder*="meet.google.com"], input[placeholder*="https://"]');
+              if (linkInputs.length > 0) {
+                (linkInputs[0] as HTMLInputElement).focus();
+              }
+            }, 500);
+          }, 300);
+        }, 500);
+        
+        // Limpar após usar
+        window.sessionStorage.removeItem('scrollToSection');
+      }
+    }
+  }, [open, isEdit]);
   useEffect(() => {
     if (!open) {
       setSchedulingData(undefined);
@@ -529,7 +565,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   </div>
 
                   {(form.watch("session_mode") === "online" || form.watch("session_mode") === "hybrid") && (
-                    <div className="mb-6">
+                    <div className="mb-6" ref={linkSectionRef}>
                       <FormField
                         control={form.control}
                         name="recurring_meet_code"

@@ -28,12 +28,19 @@ const Patients = () => {
   useEffect(() => {
     const pid = searchParams.get('pid');
     const shouldOpen = searchParams.get('open') === '1';
+    const section = searchParams.get('section');
     
     if (pid && shouldOpen && (patients.length > 0 || archivedPatients.length > 0)) {
       const patient = [...patients, ...archivedPatients].find(p => p.id === pid);
       if (patient) {
         setSelectedPatientForDialog(patient);
         setDialogOpen(true);
+        
+        // Se tem seção especificada, guardar para usar no dialog
+        if (section) {
+          // Passar o parâmetro de seção para o dialog via state global ou prop
+          window.sessionStorage.setItem('scrollToSection', section);
+        }
       }
     }
   }, [searchParams, patients, archivedPatients]);
@@ -47,6 +54,8 @@ const Patients = () => {
     newParams.delete('open');
     newParams.delete('section');
     setSearchParams(newParams);
+    // Clear session storage
+    window.sessionStorage.removeItem('scrollToSection');
   };
 
   const getTherapyTypeLabel = (type: string) => {

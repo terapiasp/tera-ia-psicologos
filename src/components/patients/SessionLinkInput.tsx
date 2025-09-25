@@ -15,6 +15,7 @@ interface SessionLinkInputProps {
   onExternalLinkChange: (value: string) => void;
   onLinkTypeChange: (value: 'recurring_meet' | 'external' | null) => void;
   className?: string;
+  autoFocus?: boolean;
 }
 
 const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
@@ -25,6 +26,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
   onExternalLinkChange,
   onLinkTypeChange,
   className,
+  autoFocus = false,
 }) => {
   const [meetCodeInput, setMeetCodeInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
