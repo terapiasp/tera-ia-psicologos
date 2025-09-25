@@ -316,6 +316,57 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
           )}
 
 
+          {/* Link da Sessão */}
+          {(patientData?.session_mode === 'online' || patientData?.session_mode === 'hybrid') && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Video className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Link da Sessão</Label>
+                  </div>
+                  {(() => {
+                    // Obter o link resolvido do paciente
+                    let resolvedLink = '';
+                    let linkStatus = 'none';
+                    
+                    if (patientData?.link_type === 'recurring_meet' && patientData.recurring_meet_code) {
+                      resolvedLink = `https://meet.google.com/${patientData.recurring_meet_code}`;
+                      linkStatus = 'active';
+                    } else if (patientData?.link_type === 'external' && patientData.external_session_link) {
+                      resolvedLink = patientData.external_session_link;
+                      linkStatus = 'active';
+                    } else if (patientData?.session_link) {
+                      resolvedLink = patientData.session_link;
+                      linkStatus = 'active';
+                    }
+
+                    if (resolvedLink) {
+                      return (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(resolvedLink, '_blank', 'noopener,noreferrer')}
+                          className="flex items-center gap-2"
+                        >
+                          <Video className="h-3 w-3" />
+                          Acessar Sessão
+                        </Button>
+                      );
+                    } else {
+                      return (
+                        <Badge variant="secondary" className="text-xs">
+                          Não configurado
+                        </Badge>
+                      );
+                    }
+                  })()}
+                </div>
+              </div>
+            </>
+          )}
+
           <Separator />
 
           <div className="space-y-3">
