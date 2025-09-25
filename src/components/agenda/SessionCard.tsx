@@ -3,7 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { format, addMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Session } from '@/hooks/useSessions';
-import { Video } from 'lucide-react';
+import { SessionLinkButton } from './SessionLinkButton';
 
 interface SessionCardProps {
   session: Session;
@@ -77,16 +77,12 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onSessionClic
                 <span className="opacity-75 ml-1">•</span>
               )}
             </span>
-            {session.patients?.session_link && (session.patients?.session_mode === 'online' || session.patients?.session_mode === 'hybrid') && (
-              <a 
-                href={session.patients.session_link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="text-primary hover:text-primary/80 transition-colors"
-              >
-                <Video className="h-3 w-3" />
-              </a>
+            {session.patients && (
+              <SessionLinkButton 
+                patient={session.patients}
+                size="sm"
+                variant="icon"
+              />
             )}
           </div>
           <span className="font-medium opacity-90 whitespace-nowrap text-xs">
