@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Video, Link, Check, Clock, AlertTriangle, Star } from "lucide-react";
+import { Video, Link, ExternalLink, Star, RefreshCw, Trash2 } from "lucide-react";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
@@ -26,7 +26,8 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
   onLinkTypeChange,
   className,
 }) => {
-  const [meetCodeDisplay, setMeetCodeDisplay] = useState("");
+  const [meetCodeInput, setMeetCodeInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Função para detectar se é código do Google Meet (10 letras/números com hífens)
   const isGoogleMeetCode = (input: string): boolean => {
@@ -46,54 +47,47 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
     return `https://meet.google.com/${formatted}`;
   };
 
-  // Sincronizar o display do código meet
-  useEffect(() => {
-    if (recurringMeetCode) {
-      setMeetCodeDisplay(formatGoogleMeetCode(recurringMeetCode));
-    } else {
-      setMeetCodeDisplay("");
-    }
-  }, [recurringMeetCode]);
-
-  const handleMeetCodeChange = (inputValue: string) => {
-    setMeetCodeDisplay(inputValue);
+  const handleGenerateRecurringLink = async () => {
+    if (!meetCodeInput.trim()) return;
     
-    // Se é um código válido do Google Meet, salvar formatado
-    if (isGoogleMeetCode(inputValue)) {
-      const formatted = formatGoogleMeetCode(inputValue);
+    setIsGenerating(true);
+    
+    // Simular delay de geração
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const cleanCode = meetCodeInput.trim();
+    if (isGoogleMeetCode(cleanCode)) {
+      const formatted = formatGoogleMeetCode(cleanCode);
       onRecurringMeetCodeChange(formatted);
-    } else {
-      onRecurringMeetCodeChange(inputValue);
+      onLinkTypeChange('recurring_meet');
+    }
+    
+    setIsGenerating(false);
+    setMeetCodeInput("");
+  };
+
+  const handlePasteCode = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setMeetCodeInput(text.trim());
+    } catch (err) {
+      // Fallback silencioso se clipboard não funcionar
     }
   };
 
-  const handleMeetCodePaste = () => {
-    navigator.clipboard.readText().then((text) => {
-      const cleanText = text.trim();
-      if (isGoogleMeetCode(cleanText)) {
-        const formatted = formatGoogleMeetCode(cleanText);
-        setMeetCodeDisplay(formatted);
-        onRecurringMeetCodeChange(formatted);
-      } else {
-        setMeetCodeDisplay(cleanText);
-        onRecurringMeetCodeChange(cleanText);
-      }
-    });
+  const handleRemoveRecurringLink = () => {
+    onRecurringMeetCodeChange("");
+    onLinkTypeChange(null);
   };
 
-  const handleLinkTypeChange = (value: string) => {
-    if (value === 'recurring_meet' || value === 'external') {
-      onLinkTypeChange(value);
-      // Limpar o outro campo
-      if (value === 'recurring_meet') {
-        onExternalLinkChange("");
-      } else {
-        onRecurringMeetCodeChange("");
-        setMeetCodeDisplay("");
-      }
-    } else {
-      onLinkTypeChange(null);
-    }
+  const handleSetExternalLink = () => {
+    onLinkTypeChange('external');
+    onRecurringMeetCodeChange("");
+  };
+
+  const handleRemoveExternalLink = () => {
+    onExternalLinkChange("");
+    onLinkTypeChange(null);
   };
 
   const getMeetLinkPreview = () => {
@@ -103,137 +97,223 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
     return null;
   };
 
+  // Se já tem link recorrente ativo, mostrar estado compacto
+  if (linkType === 'recurring_meet' && recurringMeetCode) {
+    const generatedLink = convertMeetCodeToLink(recurringMeetCode);
+    
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Video className="h-4 w-4 text-primary" />
+          Link de Sessão
+          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+            <Star className="h-3 w-3 mr-1" />
+            Recomendado
+          </Badge>
+        </div>
+        
+        <Card className="p-4 bg-primary/5 border-2 border-primary">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-muted-foreground mb-1">
+                💡 Mesmo link sempre ativo. Se usado dentro de 30 dias, permanece indefinidamente.
+              </div>
+              <Button
+                variant="ghost"
+                className="h-auto p-0 text-left justify-start text-primary hover:text-primary/80"
+                onClick={() => window.open(generatedLink, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate font-mono text-sm">{generatedLink}</span>
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRemoveRecurringLink}
+                className="h-8 px-2"
+                title="Remover link recorrente"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSetExternalLink}
+          className="text-xs"
+        >
+          Usar link externo em vez disso
+        </Button>
+      </div>
+    );
+  }
+
+  // Se já tem link externo ativo, mostrar estado compacto
+  if (linkType === 'external' && externalSessionLink) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Link className="h-4 w-4 text-primary" />
+          Link de Sessão
+        </div>
+        
+        <Card className="p-4 bg-primary/5 border-2 border-primary">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-muted-foreground mb-1">Link externo</div>
+              <Button
+                variant="ghost"
+                className="h-auto p-0 text-left justify-start text-primary hover:text-primary/80"
+                onClick={() => window.open(externalSessionLink, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate text-sm">{externalSessionLink}</span>
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRemoveExternalLink}
+                className="h-8 px-2"
+                title="Remover link externo"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onLinkTypeChange(null)}
+          className="text-xs"
+        >
+          Usar Google Meet em vez disso
+        </Button>
+      </div>
+    );
+  }
+
+  // Estado de configuração inicial
   return (
     <div className="space-y-4">
-      <RadioGroup value={linkType || ""} onValueChange={handleLinkTypeChange}>
-        {/* Google Meet - Recomendado */}
-        <Card className={`p-4 border-2 transition-colors ${
-          linkType === 'recurring_meet' 
-            ? 'border-primary bg-primary/5' 
-            : 'border-border hover:border-muted-foreground/30'
-        }`}>
-          <div className="flex items-center space-x-3">
-            <RadioGroupItem value="recurring_meet" id="recurring_meet" />
-            <Label htmlFor="recurring_meet" className="flex-1 cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <Video className="h-4 w-4" />
-                <span className="font-medium">Link Recorrente Google Meet</span>
-                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                  <Star className="h-3 w-3 mr-1" />
-                  Recomendado
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                💡 <strong>Mantenha o mesmo link sempre ativo.</strong> Se usado dentro de 30 dias, permanece indefinidamente.
-              </p>
-            </Label>
-          </div>
-          
-          {linkType === 'recurring_meet' && (
-            <div className="mt-3 space-y-3">
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <Input
-                    value={meetCodeDisplay}
-                    onChange={(e) => handleMeetCodeChange(e.target.value)}
-                    placeholder="ex: abc-def-ghij"
-                    className="h-12 text-base pr-12"
-                  />
-                  
-                  {isGoogleMeetCode(recurringMeetCode) && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                        <Check className="h-3 w-3 mr-1" />
-                        OK
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleMeetCodePaste}
-                  className="h-12 px-3 shrink-0"
-                  title="Colar código do clipboard"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {getMeetLinkPreview() && (
-                <div className="text-sm text-muted-foreground flex items-center gap-2 p-2 bg-blue-50 rounded-md">
-                  <Video className="h-3 w-3" />
-                  <span>Link gerado: </span>
-                  <a 
-                    href={getMeetLinkPreview()!} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline truncate"
-                  >
-                    {getMeetLinkPreview()}
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
-
-        {/* Link Externo */}
-        <Card className={`p-4 border-2 transition-colors ${
-          linkType === 'external' 
-            ? 'border-primary bg-primary/5' 
-            : 'border-border hover:border-muted-foreground/30'
-        }`}>
-          <div className="flex items-center space-x-3">
-            <RadioGroupItem value="external" id="external" />
-            <Label htmlFor="external" className="flex-1 cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <Link className="h-4 w-4" />
-                <span className="font-medium">Link Externo</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Para Zoom, Teams ou outras plataformas (link completo)
-              </p>
-            </Label>
-          </div>
-          
-          {linkType === 'external' && (
-            <div className="mt-3">
-              <Input
-                value={externalSessionLink}
-                onChange={(e) => onExternalLinkChange(e.target.value)}
-                placeholder="https://zoom.us/j/123456789 ou outro link completo"
-                className="h-12 text-base"
-              />
-              
-              {externalSessionLink && externalSessionLink.startsWith('http') && (
-                <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
-                  <Link className="h-3 w-3" />
-                  <span>Link válido:</span>
-                  <a 
-                    href={externalSessionLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline truncate"
-                  >
-                    {externalSessionLink}
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
-
-        {/* Opção sem link */}
-        <div className="flex items-center space-x-3">
-          <RadioGroupItem value="" id="none" />
-          <Label htmlFor="none" className="cursor-pointer text-sm text-muted-foreground">
-            Não usar link de sessão
-          </Label>
+      <div className="text-sm font-medium">Link de Sessão</div>
+      
+      {/* Google Meet - Opção principal */}
+      <Card className="p-4 border-2 border-green-200 bg-green-50/50">
+        <div className="flex items-center gap-2 mb-3">
+          <Video className="h-4 w-4 text-green-700" />
+          <span className="font-medium text-green-900">Google Meet Recorrente</span>
+          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300">
+            <Star className="h-3 w-3 mr-1" />
+            Recomendado
+          </Badge>
         </div>
-      </RadioGroup>
+        
+        <p className="text-sm text-green-700 mb-4">
+          💡 <strong>Mantenha o mesmo link sempre ativo.</strong> Se usado dentro de 30 dias, permanece indefinidamente.
+        </p>
+        
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              value={meetCodeInput}
+              onChange={(e) => setMeetCodeInput(e.target.value)}
+              placeholder="Cole aqui o código: abc-def-ghij"
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && meetCodeInput.trim()) {
+                  handleGenerateRecurringLink();
+                }
+              }}
+            />
+            <Button
+              variant="outline"
+              onClick={handlePasteCode}
+              className="shrink-0"
+              title="Colar do clipboard"
+            >
+              Colar
+            </Button>
+          </div>
+          
+          <Button
+            onClick={handleGenerateRecurringLink}
+            disabled={!meetCodeInput.trim() || isGenerating}
+            className="w-full h-11 bg-green-600 hover:bg-green-700 text-white"
+          >
+            {isGenerating ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Gerando link recorrente...
+              </>
+            ) : (
+              <>
+                <Video className="h-4 w-4 mr-2" />
+                Gerar Link Recorrente
+              </>
+            )}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Link Externo - Opção alternativa */}
+      <div className="text-center">
+        <div className="text-xs text-muted-foreground mb-2">ou</div>
+        <Button
+          variant="outline"
+          onClick={handleSetExternalLink}
+          className="text-sm"
+        >
+          <Link className="h-3 w-3 mr-2" />
+          Usar link externo (Zoom, Teams, etc.)
+        </Button>
+      </div>
+
+      {/* Input para link externo se selecionado */}
+      {linkType === 'external' && (
+        <Card className="p-4 border-2 border-blue-200 bg-blue-50/50">
+          <div className="flex items-center gap-2 mb-3">
+            <Link className="h-4 w-4 text-blue-700" />
+            <span className="font-medium text-blue-900">Link Externo</span>
+          </div>
+          
+          <div className="space-y-3">
+            <Input
+              value={externalSessionLink}
+              onChange={(e) => onExternalLinkChange(e.target.value)}
+              placeholder="https://zoom.us/j/123456789"
+              className="w-full"
+            />
+            
+            <div className="flex gap-2">
+              <Button
+                onClick={() => externalSessionLink && window.open(externalSessionLink, '_blank')}
+                disabled={!externalSessionLink || !externalSessionLink.startsWith('http')}
+                className="flex-1"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Testar Link
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleRemoveExternalLink}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };
