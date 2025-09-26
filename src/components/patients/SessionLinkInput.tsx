@@ -134,9 +134,11 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             
             <div className="flex items-center gap-1">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   navigator.clipboard.writeText(generatedLink);
                   toast({
@@ -203,9 +205,11 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             
             <div className="flex items-center gap-1">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   navigator.clipboard.writeText(externalSessionLink);
                   toast({
