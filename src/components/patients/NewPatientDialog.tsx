@@ -18,8 +18,22 @@ import {
   Mail,
   MapPin,
   Cake,
-  Video
+  Video,
+  X,
+  Save,
+  Archive
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useRecurringSchedules } from "@/hooks/useRecurringSchedules";
@@ -119,6 +133,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const [showAdditionalData, setShowAdditionalData] = useState(false);
   const linkSectionRef = useRef<HTMLDivElement>(null);
   const sessionLinkInputRef = useRef<HTMLInputElement>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { toast } = useToast();
   
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -152,6 +169,15 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       session_duration: patient?.session_duration?.toString() || "50",
     },
   });
+
+  // Monitor form changes
+  const watchedValues = form.watch();
+  useEffect(() => {
+    if (open) {
+      const isDirty = form.formState.isDirty;
+      setHasUnsavedChanges(isDirty);
+    }
+  }, [watchedValues, form.formState.isDirty, open]);
 
   // Carregar dados quando o dialog abre para edição
   useEffect(() => {
@@ -225,9 +251,34 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   useEffect(() => {
     if (!open) {
       setSchedulingData(undefined);
+      setHasUnsavedChanges(false);
       form.reset();
     }
   }, [open, form]);
+
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setShowUnsavedDialog(true);
+    } else {
+      setOpen(false);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setShowUnsavedDialog(false);
+    setOpen(false);
+  };
+
+  const handleSave = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  const handleArchive = () => {
+    if (patient) {
+      archivePatient(patient.id);
+      setOpen(false);
+    }
+  };
 
   // Function to format URL with https://
   const formatUrl = (url: string) => {
@@ -329,7 +380,12 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
           }
           
           form.reset();
+          setHasUnsavedChanges(false);
           setOpen(false);
+          toast({
+            title: "Paciente atualizado",
+            description: "As informações foram salvas com sucesso.",
+          });
         },
       });
     } else {
@@ -400,39 +456,96 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
           
           form.reset();
           setSchedulingData(undefined);
+          setHasUnsavedChanges(false);
           setOpen(false);
+          toast({
+            title: "Paciente criado",
+            description: "O novo paciente foi cadastrado com sucesso.",
+          });
         },
       });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-        <div className="bg-gradient-to-br from-background via-background to-muted/10 p-6">
-          <DialogHeader className="pb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <FileText className="h-6 w-6 text-primary" />
+    <>
+      <Dialog open={open} onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          handleClose();
+        } else {
+          setOpen(newOpen);
+        }
+      }}>
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" onInteractOutside={(e) => e.preventDefault()}>
+          {/* Fixed Header with Action Buttons */}
+          <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-semibold">
+                    {isEdit ? 'Ficha do Paciente' : 'Nova Ficha de Paciente'}
+                  </DialogTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {isEdit ? 'Atualizar informações do paciente' : 'Cadastrar novo paciente no sistema'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <DialogTitle className="text-2xl font-semibold">
-                  {isEdit ? 'Ficha do Paciente' : 'Nova Ficha de Paciente'}
-                </DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {isEdit ? 'Atualizar informações do paciente' : 'Cadastrar novo paciente no sistema'}
-                </p>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                {isEdit && patient && !patient.is_archived && (
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleArchive}
+                    disabled={isArchiving}
+                    className="gap-2"
+                  >
+                    <Archive className="h-4 w-4" />
+                    {isArchiving ? "Arquivando..." : "Arquivar"}
+                  </Button>
+                )}
+                
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isCreating || isUpdating}
+                  size="sm"
+                  className="bg-gradient-primary hover:opacity-90 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isCreating || isUpdating 
+                    ? "Salvando..." 
+                    : isEdit 
+                      ? "Salvar" 
+                      : "Salvar"
+                  }
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClose}
+                  className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </DialogHeader>
-        </div>
+          </div>
 
-        <div className="px-6 pb-6 max-h-[calc(90vh-140px)] overflow-y-auto">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Scrollable Content */}
+          <div className="px-6 pb-6 max-h-[calc(90vh-80px)] overflow-y-auto">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               {/* Dados Básicos */}
               <Card className="border-l-4 border-l-primary shadow-sm">
                 <CardContent className="p-6">
@@ -810,47 +923,31 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 </Card>
               </Collapsible>
 
-              {/* Botões de Ação */}
-              <div className="flex flex-wrap gap-3 justify-end pt-6 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpen(false)}
-                  className="min-w-[100px]"
-                >
-                  Cancelar
-                </Button>
-                {isEdit && patient && !patient.is_archived && (
-                  <Button 
-                    type="button" 
-                    variant="archive" 
-                    onClick={() => {
-                      archivePatient(patient.id);
-                      setOpen(false);
-                    }}
-                    disabled={isArchiving}
-                    className="min-w-[100px]"
-                  >
-                    {isArchiving ? "Arquivando..." : "Arquivar"}
-                  </Button>
-                )}
-                <Button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="bg-gradient-primary hover:opacity-90 min-w-[140px]"
-                >
-                  {isCreating || isUpdating 
-                    ? "Salvando..." 
-                    : isEdit 
-                      ? "Salvar Alterações" 
-                      : "Salvar Paciente"
-                  }
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unsaved Changes Dialog */}
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você fez alterações que ainda não foram salvas. Deseja salvar antes de fechar ou descartar as alterações?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleConfirmClose}>
+              Descartar alterações
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSave} className="bg-gradient-primary hover:opacity-90">
+              Salvar alterações
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
