@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Video, Link, ExternalLink, Star, RefreshCw, Trash2, Check } from "lucide-react";
+import { Video, Link, ExternalLink, Star, RefreshCw, Trash2, Check, Copy } from "lucide-react";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
@@ -134,6 +134,18 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedLink);
+                  // Você pode adicionar um toast aqui se quiser feedback visual
+                }}
+                className="h-8 px-2"
+                title="Copiar link"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRemoveRecurringLink}
                 className="h-8 px-2"
                 title="Remover link recorrente"
@@ -184,6 +196,18 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             </div>
             
             <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(externalSessionLink);
+                  // Você pode adicionar um toast aqui se quiser feedback visual
+                }}
+                className="h-8 px-2"
+                title="Copiar link"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
