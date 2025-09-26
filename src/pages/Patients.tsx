@@ -15,7 +15,6 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { exportPatientsToCsv } from '@/utils/csvExport';
 import { useToast } from '@/components/ui/use-toast';
 import SessionLinkStatus from '@/components/patients/SessionLinkStatus';
-import { FixRecurringButton } from '@/components/patients/FixRecurringButton';
 
 const Patients = () => {
   const { patients, archivedPatients, isLoading, error, archivePatient, unarchivePatient, deletePatient, isArchiving, isUnarchiving, isDeleting } = usePatients();
@@ -155,15 +154,12 @@ const Patients = () => {
                   <TabsTrigger value="active" className="flex-1 sm:flex-none">Ativos ({patients.length})</TabsTrigger>
                   <TabsTrigger value="archived" className="flex-1 sm:flex-none">Arquivados ({archivedPatients.length})</TabsTrigger>
                 </TabsList>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <FixRecurringButton />
-                  <NewPatientDialog>
-                    <Button className="gap-2 w-full sm:w-auto">
-                      <Plus className="h-4 w-4" />
-                      Novo Paciente
-                    </Button>
-                  </NewPatientDialog>
-                </div>
+                <NewPatientDialog>
+                  <Button className="gap-2 w-full sm:w-auto">
+                    <Plus className="h-4 w-4" />
+                    Novo Paciente
+                  </Button>
+                </NewPatientDialog>
               </div>
 
               <TabsContent value="active">
