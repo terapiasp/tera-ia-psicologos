@@ -960,8 +960,23 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar arquivamento</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja arquivar este paciente? O paciente será movido para a lista de arquivados e não aparecerá mais na listagem principal.
+            <AlertDialogDescription className="space-y-4">
+              <p>Tem certeza que deseja arquivar este paciente? As seguintes ações serão realizadas:</p>
+              
+              <div className="space-y-2">
+                <div className="flex items-start gap-2 text-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 flex-shrink-0" />
+                  <span>O paciente será movido para a lista de arquivados</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 flex-shrink-0" />
+                  <span>O link de sessão associado ao paciente será removido</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 flex-shrink-0" />
+                  <span>As sessões agendadas deste paciente serão removidas da agenda</span>
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
