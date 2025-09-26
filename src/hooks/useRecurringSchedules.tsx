@@ -160,8 +160,32 @@ export const useRecurringSchedules = () => {
     
     console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
 
-    // Inserir sessões no banco de dados
-    const sessionsToInsert = sessions.map(sessionDate => ({
+    // Verificar quais sessões já existem para evitar duplicatas
+    const { data: existingSessions } = await supabase
+      .from('sessions')
+      .select('scheduled_at')
+      .eq('schedule_id', schedule.id)
+      .eq('origin', 'recurring')
+      .gte('scheduled_at', new Date().toISOString());
+
+    const existingDates = new Set(
+      existingSessions?.map(s => new Date(s.scheduled_at).toISOString()) || []
+    );
+
+    // Filtrar apenas sessões que não existem
+    const newSessions = sessions.filter(sessionDate => 
+      !existingDates.has(sessionDate.toISOString())
+    );
+
+    console.log('Sessões novas a inserir:', newSessions.length, 'de', sessions.length, 'totais');
+
+    if (newSessions.length === 0) {
+      console.log('Nenhuma sessão nova para inserir');
+      return;
+    }
+
+    // Inserir apenas sessões novas
+    const sessionsToInsert = newSessions.map(sessionDate => ({
       user_id: user.id,
       patient_id: schedule.patient_id,
       schedule_id: schedule.id,
@@ -176,27 +200,24 @@ export const useRecurringSchedules = () => {
     }));
 
     try {
-      console.log('Inserindo', sessionsToInsert.length, 'sessões no banco');
+      console.log('Inserindo', sessionsToInsert.length, 'sessões novas no banco');
       
-      // Usar insert normal, deixar que a constraint unique handle duplicatas
       const { data, error } = await supabase
         .from('sessions')
         .insert(sessionsToInsert);
 
       if (error) {
         console.error('Erro ao materializar sessões:', error);
-        // Se for erro de duplicação, ignorar (já existe)
-        if (error.code !== '23505') {
-          throw error;
-        }
-      } else {
-        console.log('Sessões inseridas com sucesso');
+        throw error;
       }
+      
+      console.log('Sessões inseridas com sucesso:', data?.length || sessionsToInsert.length);
       
       // Invalidar queries para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
     } catch (error) {
       console.error('Erro ao inserir sessões:', error);
+      throw error;
     }
   };
 
@@ -208,17 +229,20 @@ export const useRecurringSchedules = () => {
 
     // Deletar sessões futuras existentes desta recorrência
     const cutoffDate = options?.cutoff || new Date();
-    const { error: deleteError } = await supabase
+    const { data: deletedSessions, error: deleteError } = await supabase
       .from('sessions')
       .delete()
       .eq('schedule_id', schedule.id)
       .eq('origin', 'recurring')
-      .gte('scheduled_at', cutoffDate.toISOString());
+      .gte('scheduled_at', cutoffDate.toISOString())
+      .select('id');
 
     if (deleteError) {
       console.error('Erro ao deletar sessões futuras:', deleteError);
       throw deleteError;
     }
+
+    console.log('Sessões deletadas:', deletedSessions?.length || 0);
 
     // Regenerar sessões
     await materializeSessionsForSchedule(schedule);
@@ -389,6 +413,66 @@ export const useRecurringSchedules = () => {
     queryClient.invalidateQueries({ queryKey: ['sessions'] });
   };
 
+  // Função para forçar regeneração de sessões para um paciente específico
+  const forceRegeneratePatientSessions = async (patientId: string) => {
+    if (!user?.id) return;
+
+    console.log('Forçando regeneração de sessões para paciente:', patientId);
+
+    // Buscar schedule ativo do paciente
+    const schedule = schedules.find(s => s.patient_id === patientId && s.is_active);
+    if (!schedule) {
+      throw new Error('Nenhum agendamento recorrente ativo encontrado para este paciente');
+    }
+
+    // Regenerar sessões
+    await regenerateFutureSessionsForSchedule(schedule);
+    
+    toast({
+      title: "Sessões regeneradas",
+      description: "Sessões futuras foram regeneradas com sucesso!",
+    });
+  };
+
+  // Função para verificar integridade e detectar pacientes com problemas
+  const checkIntegrityAndFix = async () => {
+    if (!user?.id) return;
+
+    console.log('Verificando integridade das sessões recorrentes...');
+
+    // Buscar pacientes ativos com recorrência mas sem sessões futuras
+    const { data: problematicPatients, error } = await supabase
+      .rpc('get_patients_with_missing_sessions', { target_user_id: user.id });
+
+    if (error) {
+      console.error('Erro ao verificar integridade:', error);
+      return;
+    }
+
+    if (problematicPatients?.length > 0) {
+      console.log('Pacientes com problemas encontrados:', problematicPatients);
+      
+      // Tentar regenerar para cada paciente problemático
+      for (const patient of problematicPatients) {
+        try {
+          await forceRegeneratePatientSessions(patient.patient_id);
+        } catch (error) {
+          console.error(`Erro ao regenerar sessões para paciente ${patient.patient_id}:`, error);
+        }
+      }
+      
+      toast({
+        title: "Verificação de integridade",
+        description: `Regeneradas sessões para ${problematicPatients.length} paciente(s)`,
+      });
+    } else {
+      toast({
+        title: "Integridade OK",
+        description: "Todos os pacientes ativos têm sessões futuras configuradas",
+      });
+    }
+  };
+
   return {
     schedules,
     isLoading,
@@ -400,5 +484,7 @@ export const useRecurringSchedules = () => {
     regenerateFutureSessionsForSchedule,
     updateSeriesFromOccurrence,
     moveSingleOccurrence,
+    forceRegeneratePatientSessions,
+    checkIntegrityAndFix,
   };
 };
