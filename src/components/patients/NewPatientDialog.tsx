@@ -504,7 +504,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
               </div>
               
               {/* Action Buttons */}
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {isEdit && patient && !patient.is_archived && (
                   <Button 
                     type="button" 
@@ -512,12 +512,10 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     size="sm"
                     onClick={handleArchive}
                     disabled={isArchiving}
-                    className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                    className="gap-1.5 text-xs sm:text-sm"
                   >
                     <Archive className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden xs:inline">
-                      {isArchiving ? "Arquivando..." : "Arquivar"}
-                    </span>
+                    {isArchiving ? "Arquivando..." : "Arquivar"}
                   </Button>
                 )}
                 
@@ -526,17 +524,15 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   onClick={handleSave}
                   disabled={isCreating || isUpdating}
                   size="sm"
-                  className="bg-gradient-primary hover:opacity-90 gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                  className="bg-gradient-primary hover:opacity-90 gap-1.5 text-xs sm:text-sm"
                 >
                   <Save className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">
-                    {isCreating || isUpdating 
-                      ? "Salvando..." 
-                      : isEdit 
-                        ? "Salvar" 
-                        : "Salvar"
-                    }
-                  </span>
+                  {isCreating || isUpdating 
+                    ? "Salvando..." 
+                    : isEdit 
+                      ? "Salvar" 
+                      : "Salvar"
+                  }
                 </Button>
                 
                 <Button
@@ -544,7 +540,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   variant="ghost"
                   size="sm"
                   onClick={handleClose}
-                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive ml-1"
                 >
                   <X className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
