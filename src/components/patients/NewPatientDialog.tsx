@@ -134,6 +134,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const linkSectionRef = useRef<HTMLDivElement>(null);
   const sessionLinkInputRef = useRef<HTMLInputElement>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { toast } = useToast();
   
@@ -274,8 +275,13 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   };
 
   const handleArchive = () => {
+    setShowArchiveDialog(true);
+  };
+
+  const handleConfirmArchive = () => {
     if (patient) {
       archivePatient(patient.id);
+      setShowArchiveDialog(false);
       setOpen(false);
     }
   };
@@ -944,6 +950,26 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSave} className="bg-gradient-primary hover:opacity-90">
               Salvar alterações
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar arquivamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja arquivar este paciente? O paciente será movido para a lista de arquivados e não aparecerá mais na listagem principal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmArchive} className="bg-orange-600 hover:bg-orange-700">
+              Arquivar paciente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
