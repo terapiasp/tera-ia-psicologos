@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { useSessionsCache } from '@/contexts/SessionsCacheContext';
 
 export interface Patient {
   id: string;
@@ -59,6 +60,7 @@ export const usePatients = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { clearCache } = useSessionsCache();
 
   const { data: allPatients = [], isLoading, error } = useQuery({
     queryKey: ['patients'],
@@ -130,6 +132,7 @@ export const usePatients = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      clearCache(); // Limpar cache de sessões para refletir mudanças
       toast({
         title: "Paciente atualizado",
         description: "Informações atualizadas com sucesso!",
@@ -163,6 +166,7 @@ export const usePatients = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      clearCache(); // Limpar cache de sessões para refletir pacientes arquivados
       toast({
         title: "Paciente arquivado",
         description: "Paciente movido para arquivos com sucesso!",
@@ -194,6 +198,7 @@ export const usePatients = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+      clearCache(); // Limpar cache de sessões para refletir pacientes desarquivados
       toast({
         title: "Paciente reativado",
         description: "Paciente retirado dos arquivos com sucesso!",
