@@ -211,7 +211,7 @@ export const useRecurringSchedules = () => {
         throw error;
       }
       
-      console.log('Sessões inseridas com sucesso:', data?.length || sessionsToInsert.length);
+      console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
       
       // Invalidar queries para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
@@ -242,7 +242,7 @@ export const useRecurringSchedules = () => {
       throw deleteError;
     }
 
-    console.log('Sessões deletadas:', deletedSessions?.length || 0);
+    console.log('Sessões deletadas:', deletedSessions?.length ?? 0);
 
     // Regenerar sessões
     await materializeSessionsForSchedule(schedule);

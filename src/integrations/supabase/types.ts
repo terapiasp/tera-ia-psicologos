@@ -512,6 +512,14 @@ export type Database = {
           timezone: string
         }[]
       }
+      get_patients_with_missing_sessions: {
+        Args: { target_user_id: string }
+        Returns: {
+          patient_id: string
+          patient_name: string
+          schedule_id: string
+        }[]
+      }
       get_session_link_resolved: {
         Args: { patient_row: Database["public"]["Tables"]["patients"]["Row"] }
         Returns: string
