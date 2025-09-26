@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Video, Link, ExternalLink, Star, RefreshCw, Trash2, Check, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
@@ -30,6 +31,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
 }) => {
   const [meetCodeInput, setMeetCodeInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
   // Função para detectar se é código do Google Meet (10 letras/números com hífens)
   const isGoogleMeetCode = (input: string): boolean => {
@@ -134,9 +136,13 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   navigator.clipboard.writeText(generatedLink);
-                  // Você pode adicionar um toast aqui se quiser feedback visual
+                  toast({
+                    title: "Link copiado!",
+                    description: "Link da sessão copiado para área de transferência",
+                  });
                 }}
                 className="h-8 px-2"
                 title="Copiar link"
@@ -199,9 +205,13 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   navigator.clipboard.writeText(externalSessionLink);
-                  // Você pode adicionar um toast aqui se quiser feedback visual
+                  toast({
+                    title: "Link copiado!",
+                    description: "Link da sessão copiado para área de transferência",
+                  });
                 }}
                 className="h-8 px-2"
                 title="Copiar link"
