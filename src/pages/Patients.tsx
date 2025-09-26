@@ -11,7 +11,7 @@ import { NewPatientDialog } from '@/components/patients/NewPatientDialog';
 import { ArchivedPatientsList } from '@/components/patients/ArchivedPatientsList';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { SessionsCacheProvider } from '@/contexts/SessionsCacheContext';
+
 import { exportPatientsToCsv } from '@/utils/csvExport';
 import { useToast } from '@/components/ui/use-toast';
 import SessionLinkStatus from '@/components/patients/SessionLinkStatus';
@@ -136,8 +136,7 @@ const Patients = () => {
   };
 
   return (
-    <SessionsCacheProvider>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -283,8 +282,7 @@ const Patients = () => {
           </NewPatientDialog>
         )}
       </div>
-    </SessionsCacheProvider>
-  );
-};
+    );
+  };
 
 export default Patients;

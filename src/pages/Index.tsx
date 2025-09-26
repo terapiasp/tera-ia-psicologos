@@ -14,7 +14,7 @@ import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SessionsCacheProvider } from '@/contexts/SessionsCacheContext';
+
 
 const Index = () => {
   const navigate = useNavigate();
@@ -96,8 +96,7 @@ const Index = () => {
 
   if (isLoadingProfile) {
     return (
-      <SessionsCacheProvider>
-        <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
           <Header />
           <div className="flex">
             <Sidebar />
@@ -116,12 +115,10 @@ const Index = () => {
             </main>
           </div>
         </div>
-      </SessionsCacheProvider>
-    );
-  }
+      );
+    }
 
-  return (
-    <SessionsCacheProvider>
+    return (
       <div className="min-h-screen bg-background">
         <Header />
         <div className="flex">
@@ -258,8 +255,7 @@ const Index = () => {
           </main>
         </div>
       </div>
-    </SessionsCacheProvider>
-  );
+    );
 };
 
 export default Index;
