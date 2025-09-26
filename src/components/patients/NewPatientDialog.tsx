@@ -488,23 +488,23 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" onInteractOutside={(e) => e.preventDefault()}>
           {/* Fixed Header with Action Buttons */}
           <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <FileText className="h-5 w-5 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 gap-3 sm:gap-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
-                <div>
-                  <DialogTitle className="text-lg font-semibold">
+                <div className="min-w-0 flex-1">
+                  <DialogTitle className="text-base sm:text-lg font-semibold leading-tight">
                     {isEdit ? 'Ficha do Paciente' : 'Nova Ficha de Paciente'}
                   </DialogTitle>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground leading-tight truncate">
                     {isEdit ? 'Atualizar informações do paciente' : 'Cadastrar novo paciente no sistema'}
                   </p>
                 </div>
               </div>
               
               {/* Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 {isEdit && patient && !patient.is_archived && (
                   <Button 
                     type="button" 
@@ -512,10 +512,12 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     size="sm"
                     onClick={handleArchive}
                     disabled={isArchiving}
-                    className="gap-2"
+                    className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <Archive className="h-4 w-4" />
-                    {isArchiving ? "Arquivando..." : "Arquivar"}
+                    <Archive className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">
+                      {isArchiving ? "Arquivando..." : "Arquivar"}
+                    </span>
                   </Button>
                 )}
                 
@@ -524,15 +526,17 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   onClick={handleSave}
                   disabled={isCreating || isUpdating}
                   size="sm"
-                  className="bg-gradient-primary hover:opacity-90 gap-2"
+                  className="bg-gradient-primary hover:opacity-90 gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
                 >
-                  <Save className="h-4 w-4" />
-                  {isCreating || isUpdating 
-                    ? "Salvando..." 
-                    : isEdit 
-                      ? "Salvar" 
-                      : "Salvar"
-                  }
+                  <Save className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">
+                    {isCreating || isUpdating 
+                      ? "Salvando..." 
+                      : isEdit 
+                        ? "Salvar" 
+                        : "Salvar"
+                    }
+                  </span>
                 </Button>
                 
                 <Button
@@ -540,9 +544,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   variant="ghost"
                   size="sm"
                   onClick={handleClose}
-                  className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
