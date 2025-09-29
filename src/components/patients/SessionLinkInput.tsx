@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import googleMeetCopyLink from "@/assets/google-meet-copy-link.png";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
@@ -285,6 +286,14 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 </AlertDescription>
               </Alert>
               
+              <div className="my-4 rounded-lg border-2 border-primary/20 overflow-hidden">
+                <img 
+                  src={googleMeetCopyLink} 
+                  alt="Tela do Google Meet mostrando onde copiar o link"
+                  className="w-full"
+                />
+              </div>
+
               <div className="space-y-3 text-sm">
                 <div className="flex gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
@@ -326,7 +335,9 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               <Alert className="border-green-200 bg-green-50">
                 <Star className="h-4 w-4 text-green-700" />
                 <AlertDescription className="text-sm text-green-800">
-                  <strong>💡 Dica:</strong> Este link ficará sempre ativo. Se você usar a sala dentro de 30 dias, ela permanece indefinidamente!
+                  <strong>💡 Dica:</strong> Chega de enviar um link novo a cada sessão! Salve este link no perfil do paciente em seu Tera IA para reutilizá-lo sempre. Ele se tornará o endereço virtual fixo para as sessões de vocês e será encaminhado automaticamente nos lembretes.
+                  <br />
+                  <em className="text-xs block mt-2">Para garantir que o link não expire, basta utilizá-lo pelo menos uma vez por mês.</em>
                 </AlertDescription>
               </Alert>
             </AlertDialogDescription>
