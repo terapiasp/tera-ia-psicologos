@@ -418,7 +418,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
         </div>
         
         <p className="text-sm text-muted-foreground mb-4">
-          💡 Facilite sua rotina: Ao salvar um link do Google Meet no perfil do paciente, o Tera IA o torna permanente. Isso elimina a necessidade de gerar e enviar novos acessos a cada sessão, automatiza o envio nos lembretes e melhora a adesão.
+          💡 <strong>Facilite sua rotina:</strong> Ao salvar um link do Meet no perfil do paciente, o Tera IA o torna permanente. Isso elimina a necessidade de gerar e enviar novos acessos a cada sessão, automatiza o envio nos lembretes e melhora a adesão.
         </p>
         
         <div className="space-y-3">
