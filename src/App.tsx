@@ -10,7 +10,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Patients from "./pages/Patients";
-
+import Gestao from "./pages/Gestao";
 import Agenda from "./pages/Agenda";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
@@ -50,6 +50,11 @@ const App = () => (
               <Route path="/configuracoes" element={
                 <ProtectedRoute>
                   <Configuracoes />
+                </ProtectedRoute>
+              } />
+              <Route path="/gestao" element={
+                <ProtectedRoute>
+                  <Gestao />
                 </ProtectedRoute>
               } />
               <Route path="/auth" element={<Auth />} />

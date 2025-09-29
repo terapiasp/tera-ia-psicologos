@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { clearEncryptionKey } from '@/utils/encryption';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Limpar chave de criptografia no logout
+        if (event === 'SIGNED_OUT') {
+          clearEncryptionKey();
+        }
       }
     );
 
