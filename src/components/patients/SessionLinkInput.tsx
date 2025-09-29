@@ -5,8 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Video, Link, ExternalLink, Star, RefreshCw, Trash2, Check, Copy } from "lucide-react";
+import { Video, Link, ExternalLink, Star, RefreshCw, Trash2, Check, Copy, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
@@ -31,6 +39,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
 }) => {
   const [meetCodeInput, setMeetCodeInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const { toast } = useToast();
 
   // Função para detectar se é código do Google Meet (10 letras/números com hífens)
@@ -52,7 +61,12 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
   };
 
   const handleGenerateRecurringLink = async () => {
-    if (!meetCodeInput.trim()) return;
+    // Se não tem código, abrir Google Meet e mostrar instruções
+    if (!meetCodeInput.trim()) {
+      window.open('https://meet.google.com/new', '_blank');
+      setShowInstructions(true);
+      return;
+    }
     
     setIsGenerating(true);
     
@@ -249,8 +263,86 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
 
   // Estado de configuração inicial
   return (
-    <div className="space-y-4">
-      <div className="text-sm font-medium">Link de Sessão</div>
+    <>
+      <AlertDialog open={showInstructions} onOpenChange={setShowInstructions}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl">
+              <Video className="h-5 w-5 text-primary" />
+              Como copiar o link da sua sala do Google Meet
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-4">
+              <Alert className="border-primary/20 bg-primary/5">
+                <AlertCircle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-sm">
+                  Uma nova aba foi aberta com sua sala do Google Meet. Siga os passos abaixo:
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-3 text-sm">
+                <div className="flex gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Copie o link da reunião</p>
+                    <p className="text-muted-foreground">
+                      Na tela que abriu, você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Clique no botão de copiar</p>
+                    <p className="text-muted-foreground">
+                      Clique no ícone <Copy className="inline h-3 w-3" /> ao lado do link para copiá-lo
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    3
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Cole o link aqui</p>
+                    <p className="text-muted-foreground">
+                      Volte para esta tela e cole o código no campo abaixo
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Alert className="border-green-200 bg-green-50">
+                <Star className="h-4 w-4 text-green-700" />
+                <AlertDescription className="text-sm text-green-800">
+                  <strong>💡 Dica:</strong> Este link ficará sempre ativo. Se você usar a sala dentro de 30 dias, ela permanece indefinidamente!
+                </AlertDescription>
+              </Alert>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => window.open('https://meet.google.com/new', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Abrir Google Meet novamente
+            </Button>
+            <Button onClick={() => setShowInstructions(false)}>
+              Entendi
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="space-y-4">
+        <div className="text-sm font-medium">Link de Sessão</div>
       
       {/* Google Meet - Opção principal */}
       <Card className="p-4 border-2 border-green-200 bg-green-50/50">
@@ -292,7 +384,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
           
           <Button
             onClick={handleGenerateRecurringLink}
-            disabled={!meetCodeInput.trim() || isGenerating}
+            disabled={isGenerating}
             className="w-full h-11 bg-green-600 hover:bg-green-700 text-white"
           >
             {isGenerating ? (
@@ -300,10 +392,15 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 Gerando link recorrente...
               </>
+            ) : meetCodeInput.trim() ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Confirmar Link Recorrente
+              </>
             ) : (
               <>
                 <Video className="h-4 w-4 mr-2" />
-                Gerar Link Recorrente
+                Criar Nova Sala no Google Meet
               </>
             )}
           </Button>
@@ -358,7 +455,8 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
