@@ -49,6 +49,29 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
     return /^[a-zA-Z0-9]{10}$/.test(cleaned);
   };
 
+  // Função para extrair código de uma URL do Google Meet
+  const extractMeetCodeFromUrl = (input: string): string | null => {
+    const urlPattern = /meet\.google\.com\/([a-zA-Z0-9-]{12})/;
+    const match = input.match(urlPattern);
+    return match ? match[1] : null;
+  };
+
+  // Função para processar input (aceita código ou URL)
+  const processMeetInput = (input: string): string | null => {
+    const trimmed = input.trim();
+    
+    // Tenta extrair de URL primeiro
+    const fromUrl = extractMeetCodeFromUrl(trimmed);
+    if (fromUrl) return fromUrl;
+    
+    // Se não é URL, verifica se é código válido
+    if (isGoogleMeetCode(trimmed)) {
+      return formatGoogleMeetCode(trimmed);
+    }
+    
+    return null;
+  };
+
   // Função para formatar código do Google Meet
   const formatGoogleMeetCode = (code: string): string => {
     const cleaned = code.replace(/[-\s]/g, "");
@@ -76,11 +99,20 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
     // Simular delay de geração
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const cleanCode = meetCodeInput.trim();
-    if (isGoogleMeetCode(cleanCode)) {
-      const formatted = formatGoogleMeetCode(cleanCode);
-      onRecurringMeetCodeChange(formatted);
+    const processedCode = processMeetInput(meetCodeInput);
+    if (processedCode) {
+      onRecurringMeetCodeChange(processedCode);
       onLinkTypeChange('recurring_meet');
+      toast({
+        title: "Link recorrente configurado!",
+        description: "O link do Google Meet foi salvo com sucesso.",
+      });
+    } else {
+      toast({
+        title: "Código inválido",
+        description: "Por favor, cole um código ou link válido do Google Meet.",
+        variant: "destructive",
+      });
     }
     
     setIsGenerating(false);
@@ -394,7 +426,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             <Input
               value={meetCodeInput}
               onChange={(e) => setMeetCodeInput(e.target.value)}
-              placeholder="Cole aqui o código: abc-def-ghij"
+              placeholder="abc-def-ghij ou https://meet.google.com/abc-def-ghij"
               className="flex-1"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && meetCodeInput.trim()) {
