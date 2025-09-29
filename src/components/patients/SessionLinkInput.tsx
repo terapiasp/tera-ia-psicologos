@@ -382,6 +382,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 e.preventDefault();
                 e.stopPropagation();
                 handleOpenGoogleMeet();
+                setShowInstructions(false);
               }}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
