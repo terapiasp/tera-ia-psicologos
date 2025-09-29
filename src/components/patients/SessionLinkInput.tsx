@@ -405,21 +405,20 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       </AlertDialog>
 
       <div className="space-y-4">
-        <div className="text-sm font-medium">Link de Sessão</div>
       
       {/* Google Meet - Opção principal */}
-      <Card className="p-4 border-2 border-green-200 bg-green-50/50">
+      <Card className="p-4 border-2 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
         <div className="flex items-center gap-2 mb-3">
-          <Video className="h-4 w-4 text-green-700" />
-          <span className="font-medium text-green-900">Google Meet Recorrente</span>
-          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300">
+          <Video className="h-4 w-4 text-primary" />
+          <span className="font-medium">Google Meet Recorrente</span>
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
             <Star className="h-3 w-3 mr-1" />
             Recomendado
           </Badge>
         </div>
         
-        <p className="text-sm text-green-700 mb-4">
-          💡 <strong>Mantenha o mesmo link sempre ativo.</strong> Se usado dentro de 30 dias, permanece indefinidamente.
+        <p className="text-sm text-muted-foreground mb-4">
+          💡 Facilite sua rotina: Ao salvar um link do Google Meet no perfil do paciente, o Tera IA o torna permanente. Isso elimina a necessidade de gerar e enviar novos acessos a cada sessão, automatiza o envio nos lembretes e melhora a adesão.
         </p>
         
         <div className="space-y-3">
@@ -455,7 +454,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             type="button"
             onClick={handleGenerateRecurringLink}
             disabled={isGenerating}
-            className="w-full h-11 bg-green-600 hover:bg-green-700 text-white"
+            className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {isGenerating ? (
               <>
