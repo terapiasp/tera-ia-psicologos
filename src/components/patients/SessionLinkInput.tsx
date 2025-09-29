@@ -60,10 +60,12 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
     return `https://meet.google.com/${formatted}`;
   };
 
-  const handleGenerateRecurringLink = async () => {
-    // Se não tem código, abrir Google Meet e mostrar instruções
+  const handleGenerateRecurringLink = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Se não tem código, mostrar instruções PRIMEIRO
     if (!meetCodeInput.trim()) {
-      window.open('https://meet.google.com/new', '_blank');
       setShowInstructions(true);
       return;
     }
@@ -82,6 +84,10 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
     
     setIsGenerating(false);
     setMeetCodeInput("");
+  };
+
+  const handleOpenGoogleMeet = () => {
+    window.open('https://meet.google.com/new', '_blank');
   };
 
   const handlePasteCode = async () => {
@@ -275,7 +281,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               <Alert className="border-primary/20 bg-primary/5">
                 <AlertCircle className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-sm">
-                  Uma nova aba foi aberta com sua sala do Google Meet. Siga os passos abaixo:
+                  Clique no botão abaixo para abrir uma nova sala do Google Meet. Depois, siga os passos:
                 </AlertDescription>
               </Alert>
               
@@ -328,14 +334,27 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
           
           <div className="flex justify-end gap-2 pt-4">
             <Button
-              variant="outline"
-              onClick={() => window.open('https://meet.google.com/new', '_blank')}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleOpenGoogleMeet();
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Abrir Google Meet novamente
+              Abrir Google Meet
             </Button>
-            <Button onClick={() => setShowInstructions(false)}>
-              Entendi
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowInstructions(false);
+              }}
+            >
+              Fechar
             </Button>
           </div>
         </AlertDialogContent>
@@ -368,13 +387,19 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               className="flex-1"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && meetCodeInput.trim()) {
-                  handleGenerateRecurringLink();
+                  e.preventDefault();
+                  handleGenerateRecurringLink(e as any);
                 }
               }}
             />
             <Button
+              type="button"
               variant="outline"
-              onClick={handlePasteCode}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePasteCode();
+              }}
               className="shrink-0"
               title="Colar do clipboard"
             >
@@ -383,6 +408,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
           </div>
           
           <Button
+            type="button"
             onClick={handleGenerateRecurringLink}
             disabled={isGenerating}
             className="w-full h-11 bg-green-600 hover:bg-green-700 text-white"
