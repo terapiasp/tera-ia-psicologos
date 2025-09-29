@@ -407,11 +407,11 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       <div className="space-y-4">
       
       {/* Google Meet - Opção principal */}
-      <Card className="p-4 border-2 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+      <Card className="p-4 border-2 bg-gradient-to-r from-secondary/10 to-accent/5 border-secondary/30">
         <div className="flex items-center gap-2 mb-3">
-          <Video className="h-4 w-4 text-primary" />
+          <Video className="h-4 w-4 text-secondary" />
           <span className="font-medium">Google Meet Recorrente</span>
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+          <Badge variant="secondary" className="bg-secondary/15 text-secondary-foreground border-secondary/30">
             <Star className="h-3 w-3 mr-1" />
             Recomendado
           </Badge>
@@ -454,7 +454,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             type="button"
             onClick={handleGenerateRecurringLink}
             disabled={isGenerating}
-            className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
           >
             {isGenerating ? (
               <>
