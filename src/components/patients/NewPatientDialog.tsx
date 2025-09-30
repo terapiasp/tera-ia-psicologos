@@ -76,6 +76,7 @@ import { SessionValueInput } from "./SessionValueInput";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessions } from "@/hooks/useSessions";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create schema function to have access to context
 const createPatientSchema = (existingNames: string[], currentPatientId?: string) => z.object({
@@ -407,25 +408,45 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       };
 
       updatePatient({ id: patient.id, updates }, {
-        onSuccess: () => {
+        onSuccess: async () => {
           console.log('📋 Verificando mudanças de agendamento...');
           console.log('Dados de agendamento atuais:', schedulingData);
           console.log('Dados de agendamento originais:', originalSchedulingData);
           
-          // Para EDIÇÃO: só atualizar se realmente houver mudanças
+          // 1. Verificar se há mudanças na agenda
           const hasSchedulingChanges = compareSchedulingData(originalSchedulingData, schedulingData);
-          
           console.log('Resultado da comparação - hasSchedulingChanges:', hasSchedulingChanges);
           
-          if (hasSchedulingChanges && schedulingData) {
-            console.log('⚠️ MUDANÇAS NA AGENDA DETECTADAS - Atualizando schedule');
+          // 2. Verificar se tem agenda recorrente ativa
+          const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+          
+          // 3. VERIFICAÇÃO DE INTEGRIDADE: Verificar se tem sessões futuras materializadas
+          let hasFutureSessions = false;
+          if (existingSchedule) {
+            const { data: futureSessions, error } = await supabase
+              .from('sessions')
+              .select('id', { count: 'exact', head: true })
+              .eq('schedule_id', existingSchedule.id)
+              .gte('scheduled_at', new Date().toISOString());
+            
+            hasFutureSessions = (futureSessions as any) !== null && !error;
+            console.log(`🔍 Verificação de integridade: ${hasFutureSessions ? 'Tem' : 'NÃO tem'} sessões futuras`);
+          }
+          
+          // 4. LÓGICA DE SYNC: Regenerar se (tem agenda E não tem sessões) OU (tem agenda E mudou)
+          const needsSync = existingSchedule && (!hasFutureSessions || hasSchedulingChanges);
+          
+          if (needsSync && schedulingData) {
+            if (!hasFutureSessions) {
+              console.log('⚠️ SINCRONIZAÇÃO NECESSÁRIA - Paciente tem agenda mas não tem sessões futuras');
+            }
+            if (hasSchedulingChanges) {
+              console.log('⚠️ MUDANÇAS NA AGENDA DETECTADAS - Atualizando schedule');
+            }
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
-              const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
-              
               if (existingSchedule) {
-                // Atualizar agenda existente APENAS se realmente mudou
-                console.log('Updating existing schedule because it changed');
+                console.log('🔄 Atualizando/Regenerando agenda');
                 updateSchedule({
                   id: existingSchedule.id,
                   updates: {
@@ -436,8 +457,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   }
                 });
               } else {
-                // Criar nova agenda
-                console.log('Creating new schedule');
+                console.log('📝 Criando nova agenda');
                 createSchedule({
                   patient_id: patient.id,
                   rrule_json: schedulingData.recurrenceRule,
@@ -447,7 +467,6 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 });
               }
             } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
-              // Criar sessão única
               const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
               
               createSession({
@@ -460,10 +479,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
               });
             }
             
-            // Limpar cache de sessões para forçar atualização imediata
             clearCache();
           } else {
-            console.log('✅ Nenhuma mudança na agenda detectada - Agendamento NÃO será atualizado');
+            console.log('✅ Agenda sincronizada - Nenhuma ação necessária');
           }
           
           form.reset();
