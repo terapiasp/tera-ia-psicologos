@@ -153,12 +153,18 @@ export const useRecurringSchedules = () => {
   const materializeSessionsForSchedule = async (schedule: RecurringSchedule) => {
     if (!user?.id) return;
 
-    console.log('Materializando sessões para schedule:', schedule.id);
+    console.log('📅 Materializando sessões para schedule:', schedule.id);
+    console.log('📋 Regra:', JSON.stringify(schedule.rrule_json, null, 2));
 
     const rule = schedule.rrule_json;
     const sessions = generateSessionOccurrences(rule, 12); // 12 meses à frente
     
-    console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
+    console.log('🔢 Sessões geradas:', sessions.length);
+    if (sessions.length > 0) {
+      console.log('📆 Primeiras 3 sessões:', sessions.slice(0, 3).map(d => d.toISOString()));
+    } else {
+      console.warn('⚠️  Nenhuma sessão foi gerada! Verificar regra de recorrência.');
+    }
 
     // Verificar quais sessões já existem para evitar duplicatas
     // Usar schedule_id e origin para verificar apenas sessões desta recorrência específica
@@ -234,10 +240,14 @@ export const useRecurringSchedules = () => {
   const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule, options?: { cutoff?: Date }) => {
     if (!user?.id) return;
 
-    console.log('Regenerando sessões futuras para schedule:', schedule.id);
+    console.log('🔄 Regenerando sessões futuras para schedule:', schedule.id);
+    console.log('📋 Regra de recorrência:', schedule.rrule_json);
 
     // Deletar sessões futuras existentes desta recorrência
     const cutoffDate = options?.cutoff || new Date();
+    
+    console.log('🗑️  Deletando sessões a partir de:', cutoffDate.toISOString());
+    
     const { data: deletedSessions, error: deleteError } = await supabase
       .from('sessions')
       .delete()
@@ -247,16 +257,17 @@ export const useRecurringSchedules = () => {
       .select('id');
 
     if (deleteError) {
-      console.error('Erro ao deletar sessões futuras:', deleteError);
+      console.error('❌ Erro ao deletar sessões futuras:', deleteError);
       throw deleteError;
     }
 
-    console.log('Sessões deletadas:', deletedSessions?.length ?? 0);
+    console.log('✅ Sessões deletadas:', deletedSessions?.length ?? 0);
 
     // Regenerar sessões
+    console.log('🔨 Iniciando regeneração de sessões...');
     await materializeSessionsForSchedule(schedule);
     
-    console.log('Sessões regeneradas com sucesso');
+    console.log('✅ Sessões regeneradas com sucesso');
   };
 
   // Função para gerar ocorrências de sessões baseadas na regra

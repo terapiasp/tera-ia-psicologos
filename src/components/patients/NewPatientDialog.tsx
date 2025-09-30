@@ -142,6 +142,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
   const [schedulingData, setSchedulingData] = useState<SchedulingData | undefined>();
+  const [originalSchedulingData, setOriginalSchedulingData] = useState<SchedulingData | undefined>();
   const { patients, createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
@@ -205,10 +206,12 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       if (schedules.length > 0) {
         const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
         if (existingSchedule) {
-          setSchedulingData({
-            type: 'recurring',
+          const schedulingDataValue = {
+            type: 'recurring' as const,
             recurrenceRule: existingSchedule.rrule_json
-          });
+          };
+          setSchedulingData(schedulingDataValue);
+          setOriginalSchedulingData(schedulingDataValue);
         }
       }
     }
@@ -252,6 +255,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   useEffect(() => {
     if (!open) {
       setSchedulingData(undefined);
+      setOriginalSchedulingData(undefined);
       setHasUnsavedChanges(false);
       form.reset();
     }
@@ -339,15 +343,22 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: () => {
-          // Atualizar agenda se há dados de agendamento
-          if (schedulingData) {
+          // Verificar se realmente houve mudança na agenda antes de atualizar
+          const hasSchedulingChanges = schedulingData && JSON.stringify(schedulingData) !== JSON.stringify(originalSchedulingData);
+          
+          console.log('Update patient - hasSchedulingChanges:', hasSchedulingChanges);
+          console.log('schedulingData:', schedulingData);
+          console.log('originalSchedulingData:', originalSchedulingData);
+          
+          if (hasSchedulingChanges && schedulingData) {
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
               const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
               
               if (existingSchedule) {
-                // Atualizar agenda existente
+                // Atualizar agenda existente APENAS se realmente mudou
+                console.log('Updating existing schedule because it changed');
                 updateSchedule({
                   id: existingSchedule.id,
                   updates: {
@@ -359,6 +370,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 });
               } else {
                 // Criar nova agenda
+                console.log('Creating new schedule');
                 createSchedule({
                   patient_id: patient.id,
                   rrule_json: schedulingData.recurrenceRule,
@@ -383,6 +395,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
             
             // Limpar cache de sessões para forçar atualização imediata
             clearCache();
+          } else {
+            console.log('No scheduling changes detected, skipping schedule update');
           }
           
           form.reset();
