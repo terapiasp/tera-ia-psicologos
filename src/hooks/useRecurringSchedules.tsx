@@ -89,8 +89,8 @@ export const useRecurringSchedules = () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       
       toast({
-        title: "Sessões agendadas",
-        description: "Recorrência configurada com sucesso!",
+        title: "Recorrência criada",
+        description: "Agendamento recorrente configurado com sucesso!",
       });
     },
     onError: (error: any) => {
@@ -136,8 +136,8 @@ export const useRecurringSchedules = () => {
       queryClient.removeQueries({ queryKey: ['tomorrow-sessions'] });
       
       toast({
-        title: "Sessões atualizadas", 
-        description: "Recorrência atualizada com sucesso!",
+        title: "Recorrência atualizada",
+        description: "Agendamento recorrente atualizado com sucesso!",
       });
     },
     onError: (error: any) => {
@@ -161,7 +161,6 @@ export const useRecurringSchedules = () => {
     console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
 
     // Verificar quais sessões já existem para evitar duplicatas
-    // Usar schedule_id e origin para verificar apenas sessões desta recorrência específica
     const { data: existingSessions } = await supabase
       .from('sessions')
       .select('scheduled_at')
@@ -208,25 +207,17 @@ export const useRecurringSchedules = () => {
         .insert(sessionsToInsert);
 
       if (error) {
-        // Se o erro for de duplicação, silenciar (sessões já existem)
-        if (error.code === '23505') {
-          console.log('Sessões já existem no banco (constraint violation), continuando...');
-        } else {
-          console.error('Erro ao materializar sessões:', error);
-          throw error;
-        }
-      } else {
-        console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
+        console.error('Erro ao materializar sessões:', error);
+        throw error;
       }
+      
+      console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
       
       // Invalidar queries para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-    } catch (error: any) {
-      // Silenciar erros de duplicação (23505)
-      if (error?.code !== '23505') {
-        console.error('Erro ao inserir sessões:', error);
-        throw error;
-      }
+    } catch (error) {
+      console.error('Erro ao inserir sessões:', error);
+      throw error;
     }
   };
 
