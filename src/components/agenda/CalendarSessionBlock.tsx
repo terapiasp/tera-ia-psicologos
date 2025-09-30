@@ -57,12 +57,21 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
     
     if (sessionMode !== 'online' && sessionMode !== 'hybrid') return null;
     
-    // Usar link_type para determinar qual campo usar
+    // Se link_type está definido, usar ele
     if (patient.link_type === 'recurring_meet' && patient.recurring_meet_code) {
       return `https://meet.google.com/${patient.recurring_meet_code}`;
     }
     
     if (patient.link_type === 'external' && patient.external_session_link) {
+      return patient.external_session_link;
+    }
+    
+    // Se link_type não está definido, tentar inferir pelos campos
+    if (patient.recurring_meet_code) {
+      return `https://meet.google.com/${patient.recurring_meet_code}`;
+    }
+    
+    if (patient.external_session_link) {
       return patient.external_session_link;
     }
     
