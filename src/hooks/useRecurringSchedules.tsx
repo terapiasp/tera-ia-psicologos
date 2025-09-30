@@ -151,11 +151,12 @@ export const useRecurringSchedules = () => {
     console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
 
     // Verificar quais sessões já existem para evitar duplicatas
-    // Usar tanto schedule_id quanto patient_id para garantir unicidade
+    // Usar schedule_id e origin para verificar apenas sessões desta recorrência específica
     const { data: existingSessions } = await supabase
       .from('sessions')
       .select('scheduled_at')
-      .eq('patient_id', schedule.patient_id)
+      .eq('schedule_id', schedule.id)
+      .eq('origin', 'recurring')
       .gte('scheduled_at', new Date().toISOString());
 
     const existingDates = new Set(
