@@ -317,68 +317,34 @@ export const MoveConfirmationPopover: React.FC<MoveConfirmationPopoverProps> = (
 
 
           {/* Link da Sessão */}
-          {(patientData?.session_mode === 'online' || patientData?.session_mode === 'hybrid') && (
-            <>
-              <Separator />
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Video className="h-4 w-4 text-muted-foreground" />
-                    <Label className="text-sm font-medium">Link da Sessão</Label>
-                  </div>
-                  {(() => {
-                    // Obter o link resolvido do paciente
-                    let resolvedLink = '';
-                    let linkStatus = 'none';
-                    
-                    if (patientData?.link_type === 'recurring_meet' && patientData.recurring_meet_code) {
-                      resolvedLink = `https://meet.google.com/${patientData.recurring_meet_code}`;
-                      linkStatus = 'active';
-                    } else if (patientData?.link_type === 'external' && patientData.external_session_link) {
-                      resolvedLink = patientData.external_session_link;
-                      linkStatus = 'active';
-                    } else if (patientData?.session_link) {
-                      resolvedLink = patientData.session_link;
-                      linkStatus = 'active';
-                    }
+          {(patientData?.session_mode === 'online' || patientData?.session_mode === 'hybrid') && (() => {
+            // Obter o link resolvido do paciente
+            let resolvedLink = '';
+            
+            if (patientData?.link_type === 'recurring_meet' && patientData.recurring_meet_code) {
+              resolvedLink = `https://meet.google.com/${patientData.recurring_meet_code}`;
+            } else if (patientData?.link_type === 'external' && patientData.external_session_link) {
+              resolvedLink = patientData.external_session_link;
+            } else if (patientData?.session_link) {
+              resolvedLink = patientData.session_link;
+            }
 
-                    if (resolvedLink) {
-                      return (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(resolvedLink, '_blank', 'noopener,noreferrer')}
-                          className="flex items-center gap-2"
-                        >
-                          <Video className="h-3 w-3" />
-                          Acessar Sessão
-                        </Button>
-                      );
-                    } else {
-                      return (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className="text-xs h-auto p-1"
-                        >
-                          <Link 
-                            to={`/patients?pid=${patientData?.id}&open=1&section=link`}
-                            onClick={() => onOpenChange(false)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80">
-                              Não configurado - Clique para configurar
-                            </Badge>
-                          </Link>
-                        </Button>
-                      );
-                    }
-                  })()}
-                </div>
-              </div>
-            </>
-          )}
+            if (resolvedLink) {
+              return (
+                <>
+                  <Separator />
+                  <Button
+                    onClick={() => window.open(resolvedLink, '_blank', 'noopener,noreferrer')}
+                    className="w-full bg-gradient-to-r from-[hsl(350,85%,60%)] to-[hsl(25,95%,65%)] hover:from-[hsl(350,85%,55%)] hover:to-[hsl(25,95%,60%)] text-white font-medium shadow-md hover:shadow-lg transition-all"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    Acessar Sessão
+                  </Button>
+                </>
+              );
+            }
+            return null;
+          })()}
 
           <Separator />
 

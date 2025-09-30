@@ -51,20 +51,24 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
 
   // Função para extrair código de uma URL do Google Meet
   const extractMeetCodeFromUrl = (input: string): string | null => {
-    const urlPattern = /meet\.google\.com\/([a-zA-Z0-9-]{12})/;
-    const match = input.match(urlPattern);
+    // Remove quebras de linha e espaços extras para facilitar a busca
+    const cleanInput = input.replace(/\s+/g, ' ').trim();
+    
+    // Busca por padrões de URL do Google Meet (com ou sem https://)
+    const urlPattern = /(?:https?:\/\/)?meet\.google\.com\/([a-zA-Z0-9-]{12})/i;
+    const match = cleanInput.match(urlPattern);
     return match ? match[1] : null;
   };
 
-  // Função para processar input (aceita código ou URL)
+  // Função para processar input (aceita código, URL ou texto completo com link)
   const processMeetInput = (input: string): string | null => {
     const trimmed = input.trim();
     
-    // Tenta extrair de URL primeiro
+    // Tenta extrair de URL primeiro (funciona mesmo com texto ao redor)
     const fromUrl = extractMeetCodeFromUrl(trimmed);
     if (fromUrl) return fromUrl;
     
-    // Se não é URL, verifica se é código válido
+    // Se não encontrou URL, verifica se é apenas um código válido
     if (isGoogleMeetCode(trimmed)) {
       return formatGoogleMeetCode(trimmed);
     }
@@ -308,7 +312,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
           <AlertDialogHeader className="text-left">
             <AlertDialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Video className="h-5 w-5 text-primary" />
-              Como copiar o link da sua sala do Google Meet
+              Como salvar o link da sua sala do Google Meet
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 text-left">
               <Alert className="border-primary/20 bg-primary/5">
@@ -332,6 +336,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                     1
                   </div>
                   <div className="flex-1">
+                    <p className="font-medium text-foreground">Copie o link da reunião</p>
                     <p className="text-muted-foreground">
                       Você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
                     </p>
@@ -355,6 +360,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                     3
                   </div>
                   <div className="flex-1">
+                    <p className="font-medium text-foreground">Cole o link no perfil</p>
                     <p className="text-muted-foreground">
                       Clique no botão <strong>Colar</strong> e depois em <strong>Confirmar</strong> para associar o link ao paciente.
                     </p>
@@ -414,7 +420,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
         </div>
         
         <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
-          💡 <strong>Facilite sua rotina:</strong> Link permanente que elimina retrabalho e automatiza lembretes.
+          💡 <strong>Facilite sua rotina:</strong> Torne um um link permanente para eliminar o retrabalho e automatizar lembretes inteligentes.
         </p>
         
         <div className="space-y-2 sm:space-y-3">
@@ -450,22 +456,22 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             type="button"
             onClick={handleGenerateRecurringLink}
             disabled={isGenerating}
-            className="w-full h-10 sm:h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm sm:text-base"
+            className="w-full h-10 sm:h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-xs sm:text-sm px-3"
           >
             {isGenerating ? (
               <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Gerando...
+                <RefreshCw className="h-4 w-4 mr-2 shrink-0 animate-spin" />
+                <span className="truncate">Gerando...</span>
               </>
             ) : meetCodeInput.trim() ? (
               <>
-                <Check className="h-4 w-4 mr-2" />
-                Confirmar Link
+                <Check className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Confirmar Link</span>
               </>
             ) : (
               <>
-                <Video className="h-4 w-4 mr-2" />
-                Criar Nova Sala no Google Meet
+                <Video className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Criar Nova Sala no Meet</span>
               </>
             )}
           </Button>
@@ -473,15 +479,15 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       </Card>
 
       {/* Link Externo - Opção alternativa */}
-      <div className="text-center">
+      <div className="text-center px-2">
         <div className="text-xs text-muted-foreground mb-2">ou</div>
         <Button
           variant="outline"
           onClick={handleSetExternalLink}
-          className="text-sm"
+          className="text-xs sm:text-sm px-3 max-w-full"
         >
-          <Link className="h-3 w-3 mr-2" />
-          Usar link externo (Zoom, Teams, etc.)
+          <Link className="h-3 w-3 mr-2 shrink-0" />
+          <span className="truncate">Usar link externo (Zoom, Teams, etc.)</span>
         </Button>
       </div>
 
@@ -501,18 +507,19 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               className="w-full"
             />
             
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 onClick={() => externalSessionLink && window.open(externalSessionLink, '_blank')}
                 disabled={!externalSessionLink || !externalSessionLink.startsWith('http')}
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Testar Link
+                <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Testar Link</span>
               </Button>
               <Button
                 variant="outline"
                 onClick={handleRemoveExternalLink}
+                className="sm:w-auto text-xs sm:text-sm"
               >
                 Cancelar
               </Button>
