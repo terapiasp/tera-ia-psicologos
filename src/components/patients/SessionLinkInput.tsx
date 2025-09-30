@@ -51,20 +51,24 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
 
   // Função para extrair código de uma URL do Google Meet
   const extractMeetCodeFromUrl = (input: string): string | null => {
-    const urlPattern = /meet\.google\.com\/([a-zA-Z0-9-]{12})/;
-    const match = input.match(urlPattern);
+    // Remove quebras de linha e espaços extras para facilitar a busca
+    const cleanInput = input.replace(/\s+/g, ' ').trim();
+    
+    // Busca por padrões de URL do Google Meet (com ou sem https://)
+    const urlPattern = /(?:https?:\/\/)?meet\.google\.com\/([a-zA-Z0-9-]{12})/i;
+    const match = cleanInput.match(urlPattern);
     return match ? match[1] : null;
   };
 
-  // Função para processar input (aceita código ou URL)
+  // Função para processar input (aceita código, URL ou texto completo com link)
   const processMeetInput = (input: string): string | null => {
     const trimmed = input.trim();
     
-    // Tenta extrair de URL primeiro
+    // Tenta extrair de URL primeiro (funciona mesmo com texto ao redor)
     const fromUrl = extractMeetCodeFromUrl(trimmed);
     if (fromUrl) return fromUrl;
     
-    // Se não é URL, verifica se é código válido
+    // Se não encontrou URL, verifica se é apenas um código válido
     if (isGoogleMeetCode(trimmed)) {
       return formatGoogleMeetCode(trimmed);
     }
