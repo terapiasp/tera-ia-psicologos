@@ -412,14 +412,13 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
           console.log('Dados de agendamento atuais:', schedulingData);
           console.log('Dados de agendamento originais:', originalSchedulingData);
           
-          // Usar função de comparação robusta
+          // Para EDIÇÃO: só atualizar se realmente houver mudanças
           const hasSchedulingChanges = compareSchedulingData(originalSchedulingData, schedulingData);
           
           console.log('Resultado da comparação - hasSchedulingChanges:', hasSchedulingChanges);
           
           if (hasSchedulingChanges && schedulingData) {
             console.log('⚠️ MUDANÇAS NA AGENDA DETECTADAS - Atualizando schedule');
-            const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
               const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
@@ -514,11 +513,15 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       createPatient(patientData, {
         onSuccess: (newPatient: any) => {
-          // Criar agendamento baseado no tipo
+          console.log('✅ Paciente criado:', newPatient.id);
+          
+          // Para CRIAÇÃO: SEMPRE criar as sessões se houver schedulingData
           if (schedulingData && newPatient) {
+            console.log('📅 Criando agendamento para novo paciente');
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
+              console.log('📋 Criando agenda recorrente');
               // Criar agenda recorrente
               createSchedule({
                 patient_id: newPatient.id,
@@ -528,6 +531,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 session_value: sessionValue,
               });
             } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
+              console.log('📋 Criando sessão única');
               // Criar sessão única
               const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
               
@@ -540,6 +544,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 notes: '',
               });
             }
+          } else {
+            console.log('ℹ️ Nenhum agendamento para criar');
           }
           
           form.reset();
