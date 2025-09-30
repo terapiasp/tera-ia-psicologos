@@ -358,7 +358,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                   <div>
                     <p className="font-medium text-foreground">Cole o Link no perfil</p>
                     <p className="text-muted-foreground">
-                      Volte para a tela anterior e clique no botão Colar e depois em Confirmar para associar o link e o paciente
+                      Na tela anterior, clique no botão <strong>Colar</strong> e depois em <strong>Confirmar</strong> para associar o link ao paciente.
                     </p>
                   </div>
                 </div>
