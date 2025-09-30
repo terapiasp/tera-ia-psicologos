@@ -7,8 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Edit, Plus } from 'lucide-react';
 import { usePatients, Patient } from '@/hooks/usePatients';
+import { usePatientFilters } from '@/hooks/usePatientFilters';
 import { NewPatientDialog } from '@/components/patients/NewPatientDialog';
 import { ArchivedPatientsList } from '@/components/patients/ArchivedPatientsList';
+import { PatientFilters } from '@/components/patients/PatientFilters';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 
@@ -22,7 +24,17 @@ const Patients = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPatientForDialog, setSelectedPatientForDialog] = useState<Patient | null>(null);
+  const [activeTab, setActiveTab] = useState('active');
   const { toast } = useToast();
+
+  // Filters for active patients
+  const activeFilters = usePatientFilters(patients);
+  
+  // Filters for archived patients
+  const archivedFilters = usePatientFilters(archivedPatients);
+  
+  // Get the correct filters based on active tab
+  const currentFilters = activeTab === 'active' ? activeFilters : archivedFilters;
 
   // Handle URL params for opening patient dialog
   useEffect(() => {
@@ -148,11 +160,27 @@ const Patients = () => {
               </p>
             </div>
 
-            <Tabs defaultValue="active" className="w-full">
+            {/* Filters Section */}
+            <div className="mb-6">
+              <PatientFilters
+                filters={currentFilters.filters}
+                onSearchChange={currentFilters.handleSearchChange}
+                onFilterChange={currentFilters.updateFilter}
+                onClearFilters={currentFilters.clearFilters}
+                hasActiveFilters={currentFilters.hasActiveFilters}
+                showStatusFilter={activeTab === 'active'}
+              />
+            </div>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="active" className="flex-1 sm:flex-none">Ativos ({patients.length})</TabsTrigger>
-                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">Arquivados ({archivedPatients.length})</TabsTrigger>
+                  <TabsTrigger value="active" className="flex-1 sm:flex-none">
+                    Ativos ({activeFilters.filteredPatients.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">
+                    Arquivados ({archivedFilters.filteredPatients.length})
+                  </TabsTrigger>
                 </TabsList>
                 <NewPatientDialog>
                   <Button className="gap-2 w-full sm:w-auto">
@@ -181,18 +209,20 @@ const Patients = () => {
                       </Card>
                     ))}
                   </div>
-                ) : patients.length === 0 ? (
+                ) : activeFilters.filteredPatients.length === 0 ? (
                   <Card>
                     <CardHeader>
                       <CardTitle>Nenhum paciente encontrado</CardTitle>
                       <CardDescription>
-                        Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.
+                        {activeFilters.hasActiveFilters
+                          ? 'Nenhum paciente corresponde aos filtros aplicados. Tente ajustar os critérios de busca.'
+                          : 'Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.'}
                       </CardDescription>
                     </CardHeader>
                   </Card>
                 ) : (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {patients.map((patient) => (
+                    {activeFilters.filteredPatients.map((patient) => (
                       <Card key={patient.id} className="relative w-full">
                         <CardHeader>
                           <div className="flex justify-between items-start">
@@ -254,7 +284,7 @@ const Patients = () => {
 
               <TabsContent value="archived">
                 <ArchivedPatientsList
-                  archivedPatients={archivedPatients}
+                  archivedPatients={archivedFilters.filteredPatients}
                   selectedPatients={selectedPatients}
                   onSelectPatient={handleSelectPatient}
                   onSelectAll={handleSelectAll}
