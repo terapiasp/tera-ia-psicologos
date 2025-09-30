@@ -57,14 +57,18 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
     
     if (sessionMode !== 'online' && sessionMode !== 'hybrid') return null;
     
-    // Priorizar recurring_meet_code
-    if (patient.recurring_meet_code) {
+    // Usar link_type para determinar qual campo usar
+    if (patient.link_type === 'recurring_meet' && patient.recurring_meet_code) {
       return `https://meet.google.com/${patient.recurring_meet_code}`;
     }
     
-    // Fallback para external_link
-    if (patient.external_link) {
-      return patient.external_link;
+    if (patient.link_type === 'external' && patient.external_session_link) {
+      return patient.external_session_link;
+    }
+    
+    // Fallback para session_link (campo legado)
+    if (patient.session_link) {
+      return patient.session_link;
     }
     
     return null;
