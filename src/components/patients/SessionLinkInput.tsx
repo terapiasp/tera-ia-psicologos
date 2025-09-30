@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import googleMeetCopyLink from "@/assets/google-meet-copy-link.png";
+import googleMeetCopyLink from "@/assets/google-meet-copy-link.gif";
 
 interface SessionLinkInputProps {
   recurringMeetCode?: string;
