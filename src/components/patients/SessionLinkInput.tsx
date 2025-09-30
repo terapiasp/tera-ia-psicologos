@@ -509,7 +509,14 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
-                onClick={() => externalSessionLink && window.open(externalSessionLink, '_blank')}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (externalSessionLink) {
+                    window.open(externalSessionLink, '_blank');
+                  }
+                }}
                 disabled={!externalSessionLink || !externalSessionLink.startsWith('http')}
                 className="flex-1 text-xs sm:text-sm"
               >
