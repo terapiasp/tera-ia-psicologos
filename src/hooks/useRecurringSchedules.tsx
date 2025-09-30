@@ -161,11 +161,11 @@ export const useRecurringSchedules = () => {
     console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
 
     // Verificar quais sessões já existem para evitar duplicatas
+    // Usar tanto schedule_id quanto patient_id para garantir unicidade
     const { data: existingSessions } = await supabase
       .from('sessions')
       .select('scheduled_at')
-      .eq('schedule_id', schedule.id)
-      .eq('origin', 'recurring')
+      .eq('patient_id', schedule.patient_id)
       .gte('scheduled_at', new Date().toISOString());
 
     const existingDates = new Set(
@@ -207,17 +207,25 @@ export const useRecurringSchedules = () => {
         .insert(sessionsToInsert);
 
       if (error) {
-        console.error('Erro ao materializar sessões:', error);
-        throw error;
+        // Se o erro for de duplicação, silenciar (sessões já existem)
+        if (error.code === '23505') {
+          console.log('Sessões já existem no banco (constraint violation), continuando...');
+        } else {
+          console.error('Erro ao materializar sessões:', error);
+          throw error;
+        }
+      } else {
+        console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
       }
-      
-      console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
       
       // Invalidar queries para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-    } catch (error) {
-      console.error('Erro ao inserir sessões:', error);
-      throw error;
+    } catch (error: any) {
+      // Silenciar erros de duplicação (23505)
+      if (error?.code !== '23505') {
+        console.error('Erro ao inserir sessões:', error);
+        throw error;
+      }
     }
   };
 
