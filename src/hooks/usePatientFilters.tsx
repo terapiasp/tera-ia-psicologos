@@ -1,7 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Patient } from './usePatients';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
-export type SortOption = 'alphabetical' | 'created_date' | 'weekday';
+export type SortOption = 'alphabetical' | 'created_date' | 'session_date';
 
 export interface PatientFilters {
   search: string;
@@ -48,8 +51,25 @@ const saveFiltersToStorage = (filters: PatientFilters) => {
 };
 
 export const usePatientFilters = (patients: Patient[]) => {
+  const { user } = useAuth();
   const [filters, setFilters] = useState<PatientFilters>(loadFiltersFromStorage);
   const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
+
+  // Fetch recurring schedules for session date sorting
+  const { data: recurringSchedules = [] } = useQuery({
+    queryKey: ['recurring-schedules'],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('recurring_schedules')
+        .select('patient_id, rrule_json')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 
   // Save filters to sessionStorage whenever they change
   useEffect(() => {
@@ -138,10 +158,31 @@ export const usePatientFilters = (patients: Patient[]) => {
       result.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
     } else if (filters.sortBy === 'created_date') {
       result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (filters.sortBy === 'session_date') {
+      // Build map of patient_id -> first weekday
+      const patientWeekdayMap = new Map<string, number>();
+      recurringSchedules.forEach(schedule => {
+        const rrule = schedule.rrule_json as any;
+        if (rrule?.daysOfWeek && Array.isArray(rrule.daysOfWeek) && rrule.daysOfWeek.length > 0) {
+          // Get first day of week (convert Sunday=0 to Monday=1 format)
+          const firstDay = Math.min(...rrule.daysOfWeek);
+          // Convert: 0(sun)=7, 1(mon)=1, 2(tue)=2, etc
+          const normalizedDay = firstDay === 0 ? 7 : firstDay;
+          patientWeekdayMap.set(schedule.patient_id, normalizedDay);
+        }
+      });
+
+      result.sort((a, b) => {
+        const dayA = patientWeekdayMap.get(a.id) ?? 999; // Patients without schedule go to end
+        const dayB = patientWeekdayMap.get(b.id) ?? 999;
+        if (dayA !== dayB) return dayA - dayB;
+        // If same day or both without schedule, sort alphabetically
+        return a.name.localeCompare(b.name, 'pt-BR');
+      });
     }
 
     return result;
-  }, [patients, debouncedSearch, filters]);
+  }, [patients, debouncedSearch, filters, recurringSchedules]);
 
   const hasActiveFilters = useMemo(() => {
     return debouncedSearch !== '' ||

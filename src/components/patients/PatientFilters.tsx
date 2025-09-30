@@ -64,6 +64,7 @@ const filterOptions = {
 const sortOptions = [
   { value: 'alphabetical' as SortOption, label: 'Ordem Alfabética' },
   { value: 'created_date' as SortOption, label: 'Data de Criação' },
+  { value: 'session_date' as SortOption, label: 'Data de Sessão' },
 ];
 
 export const PatientFilters: React.FC<PatientFiltersProps> = ({
