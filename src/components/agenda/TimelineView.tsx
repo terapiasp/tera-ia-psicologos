@@ -9,6 +9,7 @@ import { useInfiniteSessions } from '@/hooks/useInfiniteSessions';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 import { Session } from '@/hooks/useSessions';
 import { CalendarDays, Clock, User, Loader2 } from 'lucide-react';
+import { SessionLinkButton } from './SessionLinkButton';
 
 interface TimelineViewProps {
   selectedDate?: Date; // Data para rolar automaticamente
@@ -300,6 +301,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSe
                                   <Badge variant="outline" className="text-xs">
                                     Recorrente
                                   </Badge>
+                                )}
+                                {patient && (
+                                  <SessionLinkButton 
+                                    patient={patient}
+                                    size="sm"
+                                    variant="icon"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
                                 )}
                               </div>
                               
