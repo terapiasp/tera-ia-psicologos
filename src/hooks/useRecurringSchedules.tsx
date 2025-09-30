@@ -106,6 +106,9 @@ export const useRecurringSchedules = () => {
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<RecurringSchedule> }) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
+      console.log('🔄 Atualizando schedule:', id);
+      console.log('📋 Updates:', updates);
+
       const updateData = updates.rrule_json 
         ? { ...updates, rrule_json: updates.rrule_json as any }
         : updates;
@@ -118,7 +121,12 @@ export const useRecurringSchedules = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao atualizar schedule:', error);
+        throw error;
+      }
+      
+      console.log('✅ Schedule atualizado com sucesso');
       return data;
     },
     onSuccess: async (updatedSchedule) => {
@@ -159,11 +167,14 @@ export const useRecurringSchedules = () => {
     const rule = schedule.rrule_json;
     const sessions = generateSessionOccurrences(rule, 12); // 12 meses à frente
     
-    console.log('🔢 Sessões geradas:', sessions.length);
+    console.log(`🔢 Total de sessões geradas: ${sessions.length}`);
     if (sessions.length > 0) {
       console.log('📆 Primeiras 3 sessões:', sessions.slice(0, 3).map(d => d.toISOString()));
+      console.log('📆 Últimas 3 sessões:', sessions.slice(-3).map(d => d.toISOString()));
     } else {
-      console.warn('⚠️  Nenhuma sessão foi gerada! Verificar regra de recorrência.');
+      console.error('❌ ERRO CRÍTICO: Nenhuma sessão foi gerada!');
+      console.error('Regra utilizada:', JSON.stringify(rule, null, 2));
+      return;
     }
 
     // Verificar quais sessões já existem para evitar duplicatas
@@ -241,12 +252,22 @@ export const useRecurringSchedules = () => {
     if (!user?.id) return;
 
     console.log('🔄 Regenerando sessões futuras para schedule:', schedule.id);
-    console.log('📋 Regra de recorrência:', schedule.rrule_json);
+    console.log('📋 Regra de recorrência:', JSON.stringify(schedule.rrule_json, null, 2));
 
     // Deletar sessões futuras existentes desta recorrência
     const cutoffDate = options?.cutoff || new Date();
     
-    console.log('🗑️  Deletando sessões a partir de:', cutoffDate.toISOString());
+    console.log('🗑️  Deletando sessões recorrentes a partir de:', cutoffDate.toISOString());
+    
+    // Primeiro contar quantas sessões serão deletadas
+    const { count } = await supabase
+      .from('sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('schedule_id', schedule.id)
+      .eq('origin', 'recurring')
+      .gte('scheduled_at', cutoffDate.toISOString());
+    
+    console.log(`⚠️  Prestes a deletar ${count || 0} sessões futuras`);
     
     const { data: deletedSessions, error: deleteError } = await supabase
       .from('sessions')
@@ -261,13 +282,13 @@ export const useRecurringSchedules = () => {
       throw deleteError;
     }
 
-    console.log('✅ Sessões deletadas:', deletedSessions?.length ?? 0);
+    console.log(`✅ ${deletedSessions?.length ?? 0} sessões deletadas`);
 
     // Regenerar sessões
     console.log('🔨 Iniciando regeneração de sessões...');
     await materializeSessionsForSchedule(schedule);
     
-    console.log('✅ Sessões regeneradas com sucesso');
+    console.log('✅ Regeneração completa');
   };
 
   // Função para gerar ocorrências de sessões baseadas na regra

@@ -143,6 +143,71 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
   const [schedulingData, setSchedulingData] = useState<SchedulingData | undefined>();
   const [originalSchedulingData, setOriginalSchedulingData] = useState<SchedulingData | undefined>();
+  
+  // Função para comparar dados de agendamento de forma robusta
+  const compareSchedulingData = (original: SchedulingData | undefined, current: SchedulingData | undefined): boolean => {
+    if (!original || !current) return false;
+    
+    // Se os tipos são diferentes, houve mudança
+    if (original.type !== current.type) {
+      console.log('🔍 Mudança detectada: tipo de agendamento diferente', { 
+        original: original.type, 
+        current: current.type 
+      });
+      return true;
+    }
+    
+    // Para agendamentos recorrentes
+    if (original.type === 'recurring' && current.type === 'recurring') {
+      const origRule = original.recurrenceRule;
+      const currRule = current.recurrenceRule;
+      
+      if (!origRule || !currRule) return false;
+      
+      // Comparar campos críticos da recorrência
+      const criticalFields: (keyof RecurrenceRule)[] = ['frequency', 'startTime', 'startDate', 'interval'];
+      
+      for (const field of criticalFields) {
+        if (origRule[field] !== currRule[field]) {
+          console.log(`🔍 Mudança detectada em ${field}:`, {
+            original: origRule[field],
+            current: currRule[field]
+          });
+          return true;
+        }
+      }
+      
+      // Comparar daysOfWeek (array)
+      const origDays = (origRule.daysOfWeek || []).slice().sort();
+      const currDays = (currRule.daysOfWeek || []).slice().sort();
+      
+      if (JSON.stringify(origDays) !== JSON.stringify(currDays)) {
+        console.log('🔍 Mudança detectada em daysOfWeek:', {
+          original: origDays,
+          current: currDays
+        });
+        return true;
+      }
+      
+      console.log('✅ Nenhuma mudança detectada na recorrência');
+      return false;
+    }
+    
+    // Para sessões únicas
+    if (original.type === 'single' && current.type === 'single') {
+      const hasChanged = JSON.stringify(original.singleSession) !== JSON.stringify(current.singleSession);
+      if (hasChanged) {
+        console.log('🔍 Mudança detectada na sessão única:', {
+          original: original.singleSession,
+          current: current.singleSession
+        });
+      }
+      return hasChanged;
+    }
+    
+    return false;
+  };
+  
   const { patients, createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
@@ -343,14 +408,17 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: () => {
-          // Verificar se realmente houve mudança na agenda antes de atualizar
-          const hasSchedulingChanges = schedulingData && JSON.stringify(schedulingData) !== JSON.stringify(originalSchedulingData);
+          console.log('📋 Verificando mudanças de agendamento...');
+          console.log('Dados de agendamento atuais:', schedulingData);
+          console.log('Dados de agendamento originais:', originalSchedulingData);
           
-          console.log('Update patient - hasSchedulingChanges:', hasSchedulingChanges);
-          console.log('schedulingData:', schedulingData);
-          console.log('originalSchedulingData:', originalSchedulingData);
+          // Usar função de comparação robusta
+          const hasSchedulingChanges = compareSchedulingData(originalSchedulingData, schedulingData);
+          
+          console.log('Resultado da comparação - hasSchedulingChanges:', hasSchedulingChanges);
           
           if (hasSchedulingChanges && schedulingData) {
+            console.log('⚠️ MUDANÇAS NA AGENDA DETECTADAS - Atualizando schedule');
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
@@ -396,7 +464,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
             // Limpar cache de sessões para forçar atualização imediata
             clearCache();
           } else {
-            console.log('No scheduling changes detected, skipping schedule update');
+            console.log('✅ Nenhuma mudança na agenda detectada - Agendamento NÃO será atualizado');
           }
           
           form.reset();
