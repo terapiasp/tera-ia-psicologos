@@ -304,16 +304,16 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
   return (
     <>
       <AlertDialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-xl">
+        <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader className="text-left">
+            <AlertDialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Video className="h-5 w-5 text-primary" />
               Como copiar o link da sua sala do Google Meet
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-4">
+            <AlertDialogDescription className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 text-left">
               <Alert className="border-primary/20 bg-primary/5">
                 <AlertCircle className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-sm">
+                <AlertDescription className="text-xs sm:text-sm text-left">
                   Clique no botão abaixo para abrir uma nova sala do Google Meet. Depois, siga os passos:
                 </AlertDescription>
               </Alert>
@@ -331,10 +331,9 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     1
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">Copie o link da reunião</p>
+                  <div className="flex-1">
                     <p className="text-muted-foreground">
-                      Clique em Abrir Google Meet no final dessa página. Você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
+                      Você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
                     </p>
                   </div>
                 </div>
@@ -343,7 +342,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     2
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium text-foreground">Clique no botão de copiar</p>
                     <p className="text-muted-foreground">
                       Clique no ícone <Copy className="inline h-3 w-3" /> ao lado do link para copiá-lo
@@ -355,24 +354,23 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     3
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">Cole o Link no perfil</p>
+                  <div className="flex-1">
                     <p className="text-muted-foreground">
-                      Na tela anterior, clique no botão <strong>Colar</strong> e depois em <strong>Confirmar</strong> para associar o link ao paciente.
+                      Clique no botão <strong>Colar</strong> e depois em <strong>Confirmar</strong> para associar o link ao paciente.
                     </p>
                   </div>
                 </div>
               </div>
 
               <Alert className="border-secondary/30 bg-secondary/10">
-                <AlertDescription className="text-sm text-secondary-foreground">
+                <AlertDescription className="text-xs sm:text-sm text-secondary-foreground text-left leading-relaxed">
                   <strong>Como funciona:</strong> Chega de enviar um link novo a cada sessão! Configure um link do Meet uma única vez no perfil do paciente. O Tera IA o torna permanente e cuida do resto: envia automaticamente nos lembretes, elimina retrabalho e garante consistência que melhora a adesão. Mantenha o link ativo realizando ao menos uma sessão a cada 30 dias. Reutilize links da sua agenda ou crie um específico para cada paciente.
                 </AlertDescription>
               </Alert>
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3 sm:pt-4">
             <Button
               type="button"
               onClick={(e) => {
@@ -381,7 +379,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 handleOpenGoogleMeet();
                 setShowInstructions(false);
               }}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white order-2 sm:order-1"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Abrir Google Meet
@@ -394,6 +392,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 e.stopPropagation();
                 setShowInstructions(false);
               }}
+              className="order-1 sm:order-2"
             >
               Fechar
             </Button>
