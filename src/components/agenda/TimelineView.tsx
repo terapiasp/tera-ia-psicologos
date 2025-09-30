@@ -8,8 +8,7 @@ import { usePatients } from '@/hooks/usePatients';
 import { useInfiniteSessions } from '@/hooks/useInfiniteSessions';
 import { MoveConfirmationPopover } from './MoveConfirmationPopover';
 import { Session } from '@/hooks/useSessions';
-import { CalendarDays, Clock, User, Loader2, Repeat } from 'lucide-react';
-import { SessionLinkButton } from './SessionLinkButton';
+import { CalendarDays, Clock, User, Loader2 } from 'lucide-react';
 
 interface TimelineViewProps {
   selectedDate?: Date; // Data para rolar automaticamente
@@ -298,14 +297,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSe
                                   {patient?.nickname || patient?.name || 'Paciente não encontrado'}
                                 </span>
                                 {session.schedule_id && (
-                                  <Repeat className="h-3 w-3 text-primary opacity-75" />
-                                )}
-                                {patient && (
-                                  <SessionLinkButton 
-                                    patient={patient}
-                                    size="sm"
-                                    variant="icon"
-                                  />
+                                  <Badge variant="outline" className="text-xs">
+                                    Recorrente
+                                  </Badge>
                                 )}
                               </div>
                               
