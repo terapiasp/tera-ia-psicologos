@@ -87,6 +87,11 @@ export const useRecurringSchedules = () => {
       
       // Invalidar TODAS as queries de sessions - isso é crítico para atualizar o dashboard
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      
+      toast({
+        title: "Sessões agendadas",
+        description: "Recorrência configurada com sucesso!",
+      });
     },
     onError: (error: any) => {
       toast({
@@ -129,6 +134,11 @@ export const useRecurringSchedules = () => {
       queryClient.removeQueries({ queryKey: ['sessions'] });
       queryClient.removeQueries({ queryKey: ['today-sessions'] });
       queryClient.removeQueries({ queryKey: ['tomorrow-sessions'] });
+      
+      toast({
+        title: "Sessões atualizadas", 
+        description: "Recorrência atualizada com sucesso!",
+      });
     },
     onError: (error: any) => {
       toast({

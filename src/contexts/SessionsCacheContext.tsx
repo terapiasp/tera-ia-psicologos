@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,19 +34,6 @@ export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ ch
   const { user } = useAuth();
   const [cache, setCache] = useState<SessionsCache>({});
   const [loadingMonths, setLoadingMonths] = useState<Set<string>>(new Set());
-  
-  // Use refs to access current state without causing re-renders
-  const cacheRef = useRef(cache);
-  const loadingMonthsRef = useRef(loadingMonths);
-  
-  // Keep refs in sync with state
-  useEffect(() => {
-    cacheRef.current = cache;
-  }, [cache]);
-  
-  useEffect(() => {
-    loadingMonthsRef.current = loadingMonths;
-  }, [loadingMonths]);
 
   // Limpar cache quando mudança de usuário
   React.useEffect(() => {
@@ -111,62 +98,48 @@ export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ ch
 
   const prefetchMonth = useCallback((date: Date) => {
     const monthKey = getMonthKey(date);
-    if (!cacheRef.current[monthKey] && !loadingMonthsRef.current.has(monthKey)) {
+    if (!cache[monthKey] && !loadingMonths.has(monthKey)) {
       fetchMonthData(date);
     }
-  }, [fetchMonthData, getMonthKey]);
+  }, [cache, loadingMonths, fetchMonthData, getMonthKey]);
 
   const getSessionsForRange = useCallback((startDate: Date, endDate: Date): Session[] => {
     const sessions: Session[] = [];
     const current = new Date(startDate);
-    current.setDate(1); // Start from beginning of month
+    current.setDate(1);
 
-    // Get all months that overlap with the date range
     const monthsToLoad: Date[] = [];
     while (current <= endDate) {
       monthsToLoad.push(new Date(current));
       current.setMonth(current.getMonth() + 1);
     }
 
-    // Collect sessions from cache and trigger loads for missing months
     for (const monthDate of monthsToLoad) {
       const monthKey = getMonthKey(monthDate);
       
-      // Use ref to access current cache without dependency
-      if (cacheRef.current[monthKey]) {
-        // Filter sessions for the actual requested range
-        const monthSessions = cacheRef.current[monthKey].filter(session => {
+      if (cache[monthKey]) {
+        const monthSessions = cache[monthKey].filter(session => {
           const sessionDate = new Date(session.scheduled_at);
           return sessionDate >= startDate && sessionDate <= endDate;
         });
         sessions.push(...monthSessions);
-      } else if (!loadingMonthsRef.current.has(monthKey)) {
-        // Trigger fetch for missing month
+      } else if (!loadingMonths.has(monthKey)) {
         fetchMonthData(monthDate);
       }
     }
 
-    // Prefetch adjacent months for smoother navigation
-    if (monthsToLoad.length > 0) {
-      const prevMonth = new Date(monthsToLoad[0]);
-      prevMonth.setMonth(prevMonth.getMonth() - 1);
-      const prevMonthKey = getMonthKey(prevMonth);
-      if (!cacheRef.current[prevMonthKey] && !loadingMonthsRef.current.has(prevMonthKey)) {
-        fetchMonthData(prevMonth);
-      }
+    const prevMonth = new Date(monthsToLoad[0]);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+    prefetchMonth(prevMonth);
 
-      const nextMonth = new Date(monthsToLoad[monthsToLoad.length - 1]);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      const nextMonthKey = getMonthKey(nextMonth);
-      if (!cacheRef.current[nextMonthKey] && !loadingMonthsRef.current.has(nextMonthKey)) {
-        fetchMonthData(nextMonth);
-      }
-    }
+    const nextMonth = new Date(monthsToLoad[monthsToLoad.length - 1]);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    prefetchMonth(nextMonth);
 
     return sessions.sort((a, b) => 
       new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
     );
-  }, [fetchMonthData, getMonthKey]);
+  }, [cache, loadingMonths, fetchMonthData, prefetchMonth, getMonthKey]);
 
   const isMonthLoading = useCallback((date: Date): boolean => {
     const monthKey = getMonthKey(date);

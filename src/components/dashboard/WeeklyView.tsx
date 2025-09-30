@@ -99,6 +99,17 @@ export function WeeklyView({ onDateClick }: WeeklyViewProps) {
     }
   };
 
+  // Ajustar para mostrar a semana atual na inicialização
+  useEffect(() => {
+    const today = new Date();
+    const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+    
+    if (currentStartDate.getTime() !== currentWeekStart.getTime()) {
+      setCurrentStartDate(currentWeekStart);
+    }
+  }, []);
+
+
 
   return (
     <Card className="shadow-soft hover:shadow-medium transition-all duration-200 border-0 bg-gradient-soft">
