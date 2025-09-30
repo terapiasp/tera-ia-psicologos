@@ -530,6 +530,7 @@ export type Database = {
           scheduled_at: string
           scheduled_at_formatted: string
           session_id: string
+          session_link: string
           session_status: string
           session_value: number
           template_lembrete_sessao: string
