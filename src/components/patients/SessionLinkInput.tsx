@@ -308,7 +308,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
           <AlertDialogHeader className="text-left">
             <AlertDialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Video className="h-5 w-5 text-primary" />
-              Como copiar o link da sua sala do Google Meet
+              Como salvar o link da sua sala do Google Meet
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 text-left">
               <Alert className="border-primary/20 bg-primary/5">
@@ -332,6 +332,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                     1
                   </div>
                   <div className="flex-1">
+                    <p className="font-medium text-foreground">Copie o link da reunião</p>
                     <p className="text-muted-foreground">
                       Você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
                     </p>
@@ -355,6 +356,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                     3
                   </div>
                   <div className="flex-1">
+                    <p className="font-medium text-foreground">Cole o link no perfil</p>
                     <p className="text-muted-foreground">
                       Clique no botão <strong>Colar</strong> e depois em <strong>Confirmar</strong> para associar o link ao paciente.
                     </p>
