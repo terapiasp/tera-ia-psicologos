@@ -159,8 +159,8 @@ export const usePatientFilters = (patients: Patient[]) => {
     } else if (filters.sortBy === 'created_date') {
       result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } else if (filters.sortBy === 'session_date') {
-      // Build map of patient_id -> first weekday
-      const patientWeekdayMap = new Map<string, number>();
+      // Build map of patient_id -> {weekday, time}
+      const patientScheduleMap = new Map<string, { weekday: number; time: string }>();
       recurringSchedules.forEach(schedule => {
         const rrule = schedule.rrule_json as any;
         if (rrule?.daysOfWeek && Array.isArray(rrule.daysOfWeek) && rrule.daysOfWeek.length > 0) {
@@ -168,15 +168,31 @@ export const usePatientFilters = (patients: Patient[]) => {
           const firstDay = Math.min(...rrule.daysOfWeek);
           // Convert: 0(sun)=7, 1(mon)=1, 2(tue)=2, etc
           const normalizedDay = firstDay === 0 ? 7 : firstDay;
-          patientWeekdayMap.set(schedule.patient_id, normalizedDay);
+          const time = rrule.startTime || '00:00';
+          patientScheduleMap.set(schedule.patient_id, { weekday: normalizedDay, time });
         }
       });
 
       result.sort((a, b) => {
-        const dayA = patientWeekdayMap.get(a.id) ?? 999; // Patients without schedule go to end
-        const dayB = patientWeekdayMap.get(b.id) ?? 999;
-        if (dayA !== dayB) return dayA - dayB;
-        // If same day or both without schedule, sort alphabetically
+        const scheduleA = patientScheduleMap.get(a.id);
+        const scheduleB = patientScheduleMap.get(b.id);
+        
+        // Patients without schedule go to end
+        if (!scheduleA && !scheduleB) return a.name.localeCompare(b.name, 'pt-BR');
+        if (!scheduleA) return 1;
+        if (!scheduleB) return -1;
+        
+        // First, sort by weekday
+        if (scheduleA.weekday !== scheduleB.weekday) {
+          return scheduleA.weekday - scheduleB.weekday;
+        }
+        
+        // Same weekday, sort by time
+        if (scheduleA.time !== scheduleB.time) {
+          return scheduleA.time.localeCompare(scheduleB.time);
+        }
+        
+        // Same day and time, sort alphabetically
         return a.name.localeCompare(b.name, 'pt-BR');
       });
     }
