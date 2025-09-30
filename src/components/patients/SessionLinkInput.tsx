@@ -356,20 +356,20 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                     3
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">Cole o link aqui</p>
+                    <p className="font-medium text-foreground">Cole o Link no perfil</p>
                     <p className="text-muted-foreground">
-                      Volte para esta tela e cole o código no campo abaixo
+                      Volte para a tela anterior e clique no botão Colar e depois em Confirmar para associar o link e o paciente
                     </p>
                   </div>
                 </div>
               </div>
 
               <Alert className="border-green-200 bg-green-50">
-                <Star className="h-4 w-4 text-green-700" />
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                  <Video className="h-3 w-3" />
+                </div>
                 <AlertDescription className="text-sm text-green-800">
-                  <strong>💡 Dica:</strong> Chega de enviar um link novo a cada sessão! Salve este link no perfil do paciente em seu Tera IA para reutilizá-lo sempre. Ele se tornará o endereço virtual fixo para as sessões de vocês e será encaminhado automaticamente nos lembretes.
-                  <br />
-                  <em className="text-xs block mt-2">Para garantir que o link não expire, basta utilizá-lo pelo menos uma vez por mês.</em>
+                  <strong>Como funciona:</strong> Chega de enviar um link novo a cada sessão! Configure um link do Meet uma única vez no perfil do paciente. O Tera IA o torna permanente e cuida do resto: envia automaticamente nos lembretes, elimina retrabalho e garante consistência que melhora a adesão. Mantenha o link ativo realizando ao menos uma sessão a cada 30 dias. Reutilize links da sua agenda ou crie um específico para cada paciente.
                 </AlertDescription>
               </Alert>
             </AlertDialogDescription>
