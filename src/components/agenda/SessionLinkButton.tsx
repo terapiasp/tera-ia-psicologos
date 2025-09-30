@@ -96,10 +96,8 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
 
   const getIcon = () => {
     const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
-    if (hasLinkData && patient.link_type === 'recurring_meet') {
-      return <Video className={iconSize} />;
-    }
-    return <ExternalLink className={iconSize} />;
+    // Sempre usar ícone de câmera para links de sessão
+    return <Video className={iconSize} />;
   };
 
   if (variant === 'icon') {

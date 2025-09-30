@@ -75,7 +75,7 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
     >
       <CardContent className="p-2 h-full flex flex-col justify-center">
         <div className="flex-1 flex flex-col justify-center min-h-0">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between gap-1 w-full">
             <span className="font-semibold text-sm leading-tight truncate">
               {session.patients?.nickname || session.patients?.name}
               {session.schedule_id && (
@@ -87,6 +87,9 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
                 patient={session.patients}
                 size="sm"
                 variant="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
               />
             )}
           </div>
