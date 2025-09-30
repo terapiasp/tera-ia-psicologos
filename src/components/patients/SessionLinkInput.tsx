@@ -416,7 +416,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
         </div>
         
         <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
-          💡 <strong>Facilite sua rotina:</strong> Link permanente que elimina retrabalho e automatiza lembretes.
+          💡 Facilite sua rotina: Torne um um link permanente para eliminar o retrabalho e automatizar lembretes inteligentes.
         </p>
         
         <div className="space-y-2 sm:space-y-3">
