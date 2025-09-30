@@ -27,14 +27,9 @@ const Patients = () => {
   const [activeTab, setActiveTab] = useState('active');
   const { toast } = useToast();
 
-  // Filters for active patients
-  const activeFilters = usePatientFilters(patients);
-  
-  // Filters for archived patients
-  const archivedFilters = usePatientFilters(archivedPatients);
-  
-  // Get the correct filters based on active tab
-  const currentFilters = activeTab === 'active' ? activeFilters : archivedFilters;
+  // Single persistent filter state - applies to whichever tab is active
+  const allPatients = activeTab === 'active' ? patients : archivedPatients;
+  const sharedFilters = usePatientFilters(allPatients);
 
   // Handle URL params for opening patient dialog
   useEffect(() => {
@@ -163,11 +158,11 @@ const Patients = () => {
             {/* Filters Section */}
             <div className="mb-6">
               <PatientFilters
-                filters={currentFilters.filters}
-                onSearchChange={currentFilters.handleSearchChange}
-                onFilterChange={currentFilters.updateFilter}
-                onClearFilters={currentFilters.clearFilters}
-                hasActiveFilters={currentFilters.hasActiveFilters}
+                filters={sharedFilters.filters}
+                onSearchChange={sharedFilters.handleSearchChange}
+                onFilterChange={sharedFilters.updateFilter}
+                onClearFilters={sharedFilters.clearFilters}
+                hasActiveFilters={sharedFilters.hasActiveFilters}
                 showStatusFilter={activeTab === 'active'}
               />
             </div>
@@ -176,10 +171,10 @@ const Patients = () => {
                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <TabsList className="w-full sm:w-auto">
                   <TabsTrigger value="active" className="flex-1 sm:flex-none">
-                    Ativos ({activeFilters.filteredPatients.length})
+                    Ativos ({activeTab === 'active' ? sharedFilters.filteredPatients.length : patients.length})
                   </TabsTrigger>
                   <TabsTrigger value="archived" className="flex-1 sm:flex-none">
-                    Arquivados ({archivedFilters.filteredPatients.length})
+                    Arquivados ({activeTab === 'archived' ? sharedFilters.filteredPatients.length : archivedPatients.length})
                   </TabsTrigger>
                 </TabsList>
                 <NewPatientDialog>
@@ -209,12 +204,12 @@ const Patients = () => {
                       </Card>
                     ))}
                   </div>
-                ) : activeFilters.filteredPatients.length === 0 ? (
+                ) : sharedFilters.filteredPatients.length === 0 ? (
                   <Card>
                     <CardHeader>
                       <CardTitle>Nenhum paciente encontrado</CardTitle>
                       <CardDescription>
-                        {activeFilters.hasActiveFilters
+                        {sharedFilters.hasActiveFilters
                           ? 'Nenhum paciente corresponde aos filtros aplicados. Tente ajustar os critérios de busca.'
                           : 'Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.'}
                       </CardDescription>
@@ -222,7 +217,7 @@ const Patients = () => {
                   </Card>
                 ) : (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {activeFilters.filteredPatients.map((patient) => (
+                    {sharedFilters.filteredPatients.map((patient) => (
                       <Card key={patient.id} className="relative w-full">
                         <CardHeader>
                           <div className="flex justify-between items-start">
@@ -284,7 +279,7 @@ const Patients = () => {
 
               <TabsContent value="archived">
                 <ArchivedPatientsList
-                  archivedPatients={archivedFilters.filteredPatients}
+                  archivedPatients={sharedFilters.filteredPatients}
                   selectedPatients={selectedPatients}
                   onSelectPatient={handleSelectPatient}
                   onSelectAll={handleSelectAll}
