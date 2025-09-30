@@ -364,11 +364,8 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 </div>
               </div>
 
-              <Alert className="border-green-200 bg-green-50">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                  <Video className="h-3 w-3" />
-                </div>
-                <AlertDescription className="text-sm text-green-800">
+              <Alert className="border-secondary/30 bg-secondary/10">
+                <AlertDescription className="text-sm text-secondary-foreground">
                   <strong>Como funciona:</strong> Chega de enviar um link novo a cada sessão! Configure um link do Meet uma única vez no perfil do paciente. O Tera IA o torna permanente e cuida do resto: envia automaticamente nos lembretes, elimina retrabalho e garante consistência que melhora a adesão. Mantenha o link ativo realizando ao menos uma sessão a cada 30 dias. Reutilize links da sua agenda ou crie um específico para cada paciente.
                 </AlertDescription>
               </Alert>
