@@ -99,15 +99,7 @@ export function WeeklyView({ onDateClick }: WeeklyViewProps) {
     }
   };
 
-  // Ajustar para mostrar a semana atual na inicialização
-  useEffect(() => {
-    const today = new Date();
-    const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
-    
-    if (currentStartDate.getTime() !== currentWeekStart.getTime()) {
-      setCurrentStartDate(currentWeekStart);
-    }
-  }, []);
+  // Removido useEffect problemático - currentStartDate já é inicializado corretamente
 
 
 

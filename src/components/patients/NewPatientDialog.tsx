@@ -423,14 +423,20 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
           // 3. VERIFICAÇÃO DE INTEGRIDADE: Verificar se tem sessões futuras materializadas
           let hasFutureSessions = false;
           if (existingSchedule) {
-            const { data: futureSessions, error } = await supabase
-              .from('sessions')
-              .select('id', { count: 'exact', head: true })
-              .eq('schedule_id', existingSchedule.id)
-              .gte('scheduled_at', new Date().toISOString());
-            
-            hasFutureSessions = (futureSessions as any) !== null && !error;
-            console.log(`🔍 Verificação de integridade: ${hasFutureSessions ? 'Tem' : 'NÃO tem'} sessões futuras`);
+            try {
+              const { count, error } = await supabase
+                .from('sessions')
+                .select('*', { count: 'exact', head: true })
+                .eq('schedule_id', existingSchedule.id)
+                .gte('scheduled_at', new Date().toISOString());
+              
+              if (!error && count !== null) {
+                hasFutureSessions = count > 0;
+                console.log(`🔍 Verificação de integridade: ${count} sessões futuras encontradas`);
+              }
+            } catch (error) {
+              console.error('Erro ao verificar sessões futuras:', error);
+            }
           }
           
           // 4. LÓGICA DE SYNC: Regenerar se (tem agenda E não tem sessões) OU (tem agenda E mudou)
