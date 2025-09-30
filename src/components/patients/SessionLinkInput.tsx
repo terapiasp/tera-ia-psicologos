@@ -334,7 +334,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                   <div>
                     <p className="font-medium text-foreground">Copie o link da reunião</p>
                     <p className="text-muted-foreground">
-                      Na tela que abriu, você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
+                      Clique em Abrir Google Meet no final dessa página. Você verá um link como <span className="font-mono text-xs">meet.google.com/xxx-yyyy-zzz</span>
                     </p>
                   </div>
                 </div>
