@@ -84,7 +84,7 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
   const getStatusColor = () => {
     switch (linkStatus.status) {
       case 'active':
-        return 'text-green-600 hover:text-green-700';
+        return 'text-orange-500 hover:text-orange-600';
       case 'expiring':
         return 'text-yellow-600 hover:text-yellow-700';
       case 'expired':
