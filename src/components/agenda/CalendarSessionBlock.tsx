@@ -3,7 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { format, addMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Session } from '@/hooks/useSessions';
-import { SessionLinkButton } from './SessionLinkButton';
+import { Video } from 'lucide-react';
 
 interface CalendarSessionBlockProps {
   session: Session;
@@ -48,6 +48,39 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
     }
   };
 
+  // Resolver o link da sessão (mesma lógica do useSessionLinks)
+  const getResolvedSessionLink = () => {
+    if (!session.patients) return null;
+    
+    const patient = session.patients as any;
+    const sessionMode = patient.session_mode?.toLowerCase();
+    
+    if (sessionMode !== 'online' && sessionMode !== 'hybrid') return null;
+    
+    // Priorizar recurring_meet_code
+    if (patient.recurring_meet_code) {
+      return `https://meet.google.com/${patient.recurring_meet_code}`;
+    }
+    
+    // Fallback para external_link
+    if (patient.external_link) {
+      return patient.external_link;
+    }
+    
+    return null;
+  };
+
+  const sessionLink = getResolvedSessionLink();
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (sessionLink) {
+      window.open(sessionLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (isDragging) {
     return null;
   }
@@ -67,31 +100,33 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
       {...attributes}
       onClick={handleClick}
       className={`
+        relative
         ${getStatusColor(session.status)}
         shadow-soft hover:shadow-medium transition-all duration-200 cursor-grab active:cursor-grabbing
         hover:scale-[1.02] border-2 mx-1
         ${session.schedule_id ? 'ring-1 ring-primary/30' : ''}
       `}
     >
-      <CardContent className="p-2 h-full flex flex-col justify-center">
+      {/* Avatar/Quadradinho com link da sessão */}
+      {sessionLink && (
+        <div
+          onClick={handleLinkClick}
+          className="absolute top-1 right-1 z-50 w-5 h-5 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:bg-black/60 hover:scale-110 transition-all duration-200 pointer-events-auto"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <Video className="h-3 w-3 text-white" />
+        </div>
+      )}
+      
+      <CardContent className="p-2 h-full flex flex-col justify-center pointer-events-none">
         <div className="flex-1 flex flex-col justify-center min-h-0">
-          <div className="flex items-center justify-between gap-1 w-full">
+          <div className="flex items-center gap-1">
             <span className="font-semibold text-sm leading-tight truncate">
               {session.patients?.nickname || session.patients?.name}
               {session.schedule_id && (
                 <span className="opacity-75 ml-1">•</span>
               )}
             </span>
-            {session.patients && (
-              <SessionLinkButton 
-                patient={session.patients}
-                size="sm"
-                variant="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              />
-            )}
           </div>
           <div className="text-xs opacity-90 mt-1 leading-tight text-left">
             {format(sessionTime, 'HH:mm')}-{format(endTime, 'HH:mm')}
