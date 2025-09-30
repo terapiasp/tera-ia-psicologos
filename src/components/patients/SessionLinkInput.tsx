@@ -404,27 +404,27 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       <div className="space-y-4">
       
       {/* Google Meet - Opção principal */}
-      <Card className="p-4 border-2 bg-gradient-to-r from-secondary/10 to-accent/5 border-secondary/30">
-        <div className="flex items-center gap-2 mb-3">
-          <Video className="h-4 w-4 text-secondary" />
-          <span className="font-medium">Google Meet Recorrente</span>
+      <Card className="p-3 sm:p-4 border-2 bg-gradient-to-r from-secondary/10 to-accent/5 border-secondary/30">
+        <div className="flex items-center gap-2 mb-2 sm:mb-3 flex-wrap">
+          <Video className="h-4 w-4 text-secondary shrink-0" />
+          <span className="font-medium text-sm sm:text-base">Google Meet Recorrente</span>
           <Badge variant="secondary" className="bg-secondary/15 text-secondary-foreground border-secondary/30">
             <Star className="h-3 w-3 mr-1" />
             Recomendado
           </Badge>
         </div>
         
-        <p className="text-sm text-muted-foreground mb-4">
-          💡 <strong>Facilite sua rotina:</strong> Ao salvar um link do Meet no perfil do paciente, o Tera IA o torna permanente. Isso elimina a necessidade de gerar e enviar novos acessos a cada sessão, automatiza o envio nos lembretes e melhora a adesão.
+        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
+          💡 <strong>Facilite sua rotina:</strong> Link permanente que elimina retrabalho e automatiza lembretes.
         </p>
         
-        <div className="space-y-3">
-          <div className="flex gap-2">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               value={meetCodeInput}
               onChange={(e) => setMeetCodeInput(e.target.value)}
-              placeholder="abc-def-ghij ou https://meet.google.com/abc-def-ghij"
-              className="flex-1"
+              placeholder="abc-def-ghij ou link completo"
+              className="flex-1 text-sm"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && meetCodeInput.trim()) {
                   e.preventDefault();
@@ -440,7 +440,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
                 e.stopPropagation();
                 handlePasteCode();
               }}
-              className="shrink-0"
+              className="shrink-0 w-full sm:w-auto"
               title="Colar do clipboard"
             >
               Colar
@@ -451,17 +451,17 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             type="button"
             onClick={handleGenerateRecurringLink}
             disabled={isGenerating}
-            className="w-full h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            className="w-full h-10 sm:h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm sm:text-base"
           >
             {isGenerating ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Gerando link recorrente...
+                Gerando...
               </>
             ) : meetCodeInput.trim() ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Confirmar Link Recorrente
+                Confirmar Link
               </>
             ) : (
               <>
