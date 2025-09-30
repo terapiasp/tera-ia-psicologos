@@ -452,22 +452,22 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             type="button"
             onClick={handleGenerateRecurringLink}
             disabled={isGenerating}
-            className="w-full h-10 sm:h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm sm:text-base"
+            className="w-full h-10 sm:h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-xs sm:text-sm px-3"
           >
             {isGenerating ? (
               <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Gerando...
+                <RefreshCw className="h-4 w-4 mr-2 shrink-0 animate-spin" />
+                <span className="truncate">Gerando...</span>
               </>
             ) : meetCodeInput.trim() ? (
               <>
-                <Check className="h-4 w-4 mr-2" />
-                Confirmar Link
+                <Check className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Confirmar Link</span>
               </>
             ) : (
               <>
-                <Video className="h-4 w-4 mr-2" />
-                Criar Nova Sala no Google Meet
+                <Video className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Criar Nova Sala no Google Meet</span>
               </>
             )}
           </Button>
@@ -475,15 +475,15 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       </Card>
 
       {/* Link Externo - Opção alternativa */}
-      <div className="text-center">
+      <div className="text-center px-2">
         <div className="text-xs text-muted-foreground mb-2">ou</div>
         <Button
           variant="outline"
           onClick={handleSetExternalLink}
-          className="text-sm"
+          className="text-xs sm:text-sm px-3 max-w-full"
         >
-          <Link className="h-3 w-3 mr-2" />
-          Usar link externo (Zoom, Teams, etc.)
+          <Link className="h-3 w-3 mr-2 shrink-0" />
+          <span className="truncate">Usar link externo (Zoom, Teams, etc.)</span>
         </Button>
       </div>
 
@@ -503,18 +503,19 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
               className="w-full"
             />
             
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 onClick={() => externalSessionLink && window.open(externalSessionLink, '_blank')}
                 disabled={!externalSessionLink || !externalSessionLink.startsWith('http')}
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Testar Link
+                <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Testar Link</span>
               </Button>
               <Button
                 variant="outline"
                 onClick={handleRemoveExternalLink}
+                className="sm:w-auto text-xs sm:text-sm"
               >
                 Cancelar
               </Button>
