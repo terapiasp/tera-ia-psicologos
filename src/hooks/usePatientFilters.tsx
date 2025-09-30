@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Patient } from './usePatients';
 
 export interface PatientFilters {
@@ -19,9 +19,38 @@ export const defaultFilters: PatientFilters = {
   linkStatus: [],
 };
 
+const STORAGE_KEY = 'patientFilters';
+
+// Load filters from sessionStorage
+const loadFiltersFromStorage = (): PatientFilters => {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error loading filters from storage:', error);
+  }
+  return defaultFilters;
+};
+
+// Save filters to sessionStorage
+const saveFiltersToStorage = (filters: PatientFilters) => {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+  } catch (error) {
+    console.error('Error saving filters to storage:', error);
+  }
+};
+
 export const usePatientFilters = (patients: Patient[]) => {
-  const [filters, setFilters] = useState<PatientFilters>(defaultFilters);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filters, setFilters] = useState<PatientFilters>(loadFiltersFromStorage);
+  const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
+
+  // Save filters to sessionStorage whenever they change
+  useEffect(() => {
+    saveFiltersToStorage(filters);
+  }, [filters]);
 
   // Debounce search
   const handleSearchChange = useCallback((value: string) => {
@@ -39,6 +68,7 @@ export const usePatientFilters = (patients: Patient[]) => {
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters);
     setDebouncedSearch('');
+    sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const getLinkStatus = (patient: Patient): string => {
