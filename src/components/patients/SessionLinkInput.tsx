@@ -482,8 +482,13 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
       <div className="text-center px-2">
         <div className="text-xs text-muted-foreground mb-2">ou</div>
         <Button
+          type="button"
           variant="outline"
-          onClick={handleSetExternalLink}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSetExternalLink();
+          }}
           className="text-xs sm:text-sm px-3 max-w-full"
         >
           <Link className="h-3 w-3 mr-2 shrink-0" />
