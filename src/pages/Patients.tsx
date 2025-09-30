@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ const Patients = () => {
   const { patients, archivedPatients, isLoading, error, archivePatient, unarchivePatient, deletePatient, isArchiving, isUnarchiving, isDeleting } = usePatients();
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPatientForDialog, setSelectedPatientForDialog] = useState<Patient | null>(null);
   const [activeTab, setActiveTab] = useState('active');
@@ -30,6 +31,27 @@ const Patients = () => {
   // Single persistent filter state - applies to whichever tab is active
   const allPatients = activeTab === 'active' ? patients : archivedPatients;
   const sharedFilters = usePatientFilters(allPatients);
+
+  // Handle navigation state for opening patient dialog (from SessionLinkButton)
+  useEffect(() => {
+    const state = location.state as { openPatientId?: string; scrollToLink?: boolean } | null;
+    
+    if (state?.openPatientId && (patients.length > 0 || archivedPatients.length > 0)) {
+      const patient = [...patients, ...archivedPatients].find(p => p.id === state.openPatientId);
+      if (patient) {
+        setSelectedPatientForDialog(patient);
+        setDialogOpen(true);
+        
+        // Se deve rolar até a seção de link
+        if (state.scrollToLink) {
+          window.sessionStorage.setItem('scrollToSection', 'link');
+        }
+      }
+      
+      // Limpar o state da navegação
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, patients, archivedPatients]);
 
   // Handle URL params for opening patient dialog
   useEffect(() => {

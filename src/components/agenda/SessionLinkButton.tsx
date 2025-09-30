@@ -1,9 +1,10 @@
 import React from 'react';
-import { Video, ExternalLink } from 'lucide-react';
+import { Video, ExternalLink, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSessionLinks, SessionLinkStatus } from '@/hooks/useSessionLinks';
 import { Patient } from '@/hooks/usePatients';
+import { useNavigate } from 'react-router-dom';
 
 interface SessionLinkButtonProps {
   patient: Patient | { 
@@ -30,6 +31,7 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
   onClick
 }) => {
   const { getResolvedLink, getLinkStatus, updateLinkLastUsed } = useSessionLinks();
+  const navigate = useNavigate();
   
   // Verificar se o paciente tem as propriedades necessárias para link de sessão
   const hasLinkData = 'link_type' in patient && 'id' in patient;
@@ -55,14 +57,13 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
     console.log('SessionLinkButton - Only session_link available:', resolvedLink);
   }
 
-  // Só mostrar para sessões online ou híbridas e quando há link configurado
-  if (
-    (!patient.session_mode || (patient.session_mode !== 'online' && patient.session_mode !== 'hybrid')) ||
-    !resolvedLink ||
-    linkStatus.status === 'none'
-  ) {
+  // Só mostrar para sessões online ou híbridas
+  if (!patient.session_mode || (patient.session_mode !== 'online' && patient.session_mode !== 'hybrid')) {
     return null;
   }
+
+  // Verificar se não há link configurado
+  const hasNoLink = !resolvedLink || linkStatus.status === 'none';
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -70,6 +71,19 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
     
     if (onClick) {
       onClick(e);
+    }
+
+    // Se não há link configurado, abrir ficha do paciente com scroll até a seção de link
+    if (hasNoLink) {
+      if (hasLinkData && patient.id) {
+        navigate('/pacientes', { 
+          state: { 
+            openPatientId: patient.id,
+            scrollToLink: true
+          } 
+        });
+      }
+      return;
     }
 
     // Atualizar último uso se for Google Meet e tem ID
@@ -96,6 +110,9 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
 
   const getIcon = () => {
     const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
+    if (hasNoLink) {
+      return <Settings className={iconSize} />;
+    }
     if (hasLinkData && patient.link_type === 'recurring_meet') {
       return <Video className={iconSize} />;
     }
@@ -108,8 +125,9 @@ export const SessionLinkButton: React.FC<SessionLinkButtonProps> = ({
         variant="ghost"
         size="sm"
         onClick={handleClick}
-        className={`p-1 h-auto ${getStatusColor()} transition-colors`}
-        title={`Abrir link de sessão (${linkStatus.status === 'active' ? 'ativo' : 
+        className={`p-1 h-auto ${hasNoLink ? 'text-muted-foreground hover:text-warning' : getStatusColor()} transition-colors`}
+        title={hasNoLink ? 'Configurar link de sessão' : 
+               `Abrir link de sessão (${linkStatus.status === 'active' ? 'ativo' : 
                linkStatus.status === 'expiring' ? 'expirando' : 'expirado'})`}
       >
         {getIcon()}
