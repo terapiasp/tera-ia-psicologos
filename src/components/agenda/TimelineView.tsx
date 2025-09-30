@@ -231,7 +231,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSe
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-2 sm:p-4 overflow-x-hidden">
       {daysWithSessions.map(({ date, sessions: daySessions }, dayIndex) => {
         const isNewMonth = dayIndex > 0 && 
           daysWithSessions[dayIndex - 1].date.getMonth() !== date.getMonth();
@@ -289,16 +289,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSe
                         className={`ml-4 cursor-pointer transition-all hover:scale-[1.02] bg-muted/30 border-border/50 text-foreground border-l-4 ${getWeekAccentColor(date)} ${getWeekHoverEffect(date)}`}
                         onClick={() => handleSessionClick(session)}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-semibold text-foreground">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="font-semibold text-foreground text-sm sm:text-base truncate">
                                   {patient?.nickname || patient?.name || 'Paciente não encontrado'}
                                 </span>
                                 {session.schedule_id && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs flex-shrink-0">
                                     Recorrente
                                   </Badge>
                                 )}
@@ -312,21 +312,21 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSe
                                 )}
                               </div>
                               
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-3 sm:gap-4 text-sm text-muted-foreground flex-wrap">
+                                <div className="flex items-center gap-1 flex-shrink-0">
                                   <Clock className="h-3 w-3" />
-                                  <span>
+                                  <span className="text-xs sm:text-sm">
                                     {format(sessionDate, 'HH:mm')} - {format(endTime, 'HH:mm')}
                                   </span>
                                 </div>
                                 
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-muted-foreground flex-shrink-0">
                                   {session.duration_minutes || 50} min
                                 </span>
                               </div>
                             </div>
 
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center sm:flex-col sm:items-end gap-2 justify-between sm:justify-start flex-shrink-0">
                               <Badge 
                                 variant={session.status === 'confirmado' || session.status === 'confirmed' || session.status === 'scheduled' ? 'default' : 'secondary'}
                                 className="text-xs"
@@ -335,7 +335,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ selectedDate, openSe
                               </Badge>
                               
                               {session.value && (
-                                <span className="text-sm font-medium text-foreground">
+                                <span className="text-sm font-medium text-foreground whitespace-nowrap">
                                   R$ {session.value.toFixed(2)}
                                 </span>
                               )}
