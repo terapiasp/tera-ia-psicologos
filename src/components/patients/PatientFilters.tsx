@@ -11,8 +11,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
-import { PatientFilters as PatientFiltersType } from '@/hooks/usePatientFilters';
+import { Search, Filter, X, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { PatientFilters as PatientFiltersType, SortOption } from '@/hooks/usePatientFilters';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface PatientFiltersProps {
   filters: PatientFiltersType;
@@ -53,6 +60,11 @@ const filterOptions = {
     { value: 'not_configured', label: 'Não configurado' },
   ],
 };
+
+const sortOptions = [
+  { value: 'alphabetical' as SortOption, label: 'Ordem Alfabética' },
+  { value: 'created_date' as SortOption, label: 'Data de Criação' },
+];
 
 export const PatientFilters: React.FC<PatientFiltersProps> = ({
   filters,
@@ -163,12 +175,34 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
         )}
       </div>
 
-      {/* Filters Row */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Filter className="h-4 w-4" />
-          <span className="hidden sm:inline">Filtros:</span>
+      {/* Sort and Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Sort Selector */}
+        <div className="flex items-center gap-2 min-w-[200px]">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={filters.sortBy}
+            onValueChange={(value) => onFilterChange('sortBy', value as SortOption)}
+          >
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filtros:</span>
+          </div>
 
         {showStatusFilter && (
           <FilterPopover
@@ -202,20 +236,21 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
           options={filterOptions.linkStatus}
         />
 
-        {hasActiveFilters && (
-          <>
-            <Separator orientation="vertical" className="h-6" />
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onClearFilters}
-              className="h-9 px-3 lg:px-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
-            >
-              Limpar filtros
-              <X className="ml-2 h-4 w-4" />
-            </Button>
-          </>
-        )}
+          {hasActiveFilters && (
+            <>
+              <Separator orientation="vertical" className="h-6" />
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onClearFilters}
+                className="h-9 px-3 lg:px-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md"
+              >
+                Limpar filtros
+                <X className="ml-2 h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Patient } from './usePatients';
 
+export type SortOption = 'alphabetical' | 'created_date' | 'weekday';
+
 export interface PatientFilters {
   search: string;
   status: string[];
@@ -8,6 +10,7 @@ export interface PatientFilters {
   frequencies: string[];
   sessionModes: string[];
   linkStatus: string[];
+  sortBy: SortOption;
 }
 
 export const defaultFilters: PatientFilters = {
@@ -17,6 +20,7 @@ export const defaultFilters: PatientFilters = {
   frequencies: [],
   sessionModes: [],
   linkStatus: [],
+  sortBy: 'alphabetical',
 };
 
 const STORAGE_KEY = 'patientFilters';
@@ -85,7 +89,7 @@ export const usePatientFilters = (patients: Patient[]) => {
   };
 
   const filteredPatients = useMemo(() => {
-    return patients.filter(patient => {
+    let result = patients.filter(patient => {
       // Search filter
       if (debouncedSearch) {
         const searchLower = debouncedSearch.toLowerCase();
@@ -128,6 +132,15 @@ export const usePatientFilters = (patients: Patient[]) => {
 
       return true;
     });
+
+    // Apply sorting
+    if (filters.sortBy === 'alphabetical') {
+      result.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    } else if (filters.sortBy === 'created_date') {
+      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    return result;
   }, [patients, debouncedSearch, filters]);
 
   const hasActiveFilters = useMemo(() => {
