@@ -120,7 +120,7 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
           onPointerDown={handleLinkPointerDown}
           onMouseDown={handleLinkPointerDown as any}
           onTouchStart={handleLinkPointerDown as any}
-          className="absolute top-1 right-1 z-50 w-6 h-6 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:bg-black/70 hover:scale-125 transition-all duration-200 shadow-lg border border-white/20"
+          className="absolute top-1/2 -translate-y-1/2 right-2 z-50 w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary backdrop-blur-sm flex items-center justify-center cursor-pointer hover:shadow-strong hover:scale-125 transition-all duration-200 shadow-md border border-white/30"
           title="Abrir link da sessão"
         >
           <Video className="h-3.5 w-3.5 text-white" />
