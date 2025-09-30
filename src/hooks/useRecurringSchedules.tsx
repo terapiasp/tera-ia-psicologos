@@ -454,6 +454,72 @@ export const useRecurringSchedules = () => {
     queryClient.invalidateQueries({ queryKey: ['sessions'] });
   };
 
+  // ✨ FUNÇÃO DE CRIAÇÃO DIRETA DE SESSÕES
+  // Esta função SIMPLESMENTE cria sessões. Sem verificações complexas.
+  const createSessionsDirectly = async (patientId: string, rule: RecurrenceRule, sessionValue?: number, durationMinutes: number = 50, sessionType: string = 'individual_adult') => {
+    if (!user?.id) return;
+
+    console.log('🔥 CRIAÇÃO DIRETA DE SESSÕES para paciente:', patientId);
+    console.log('📋 Regra:', JSON.stringify(rule, null, 2));
+
+    // 1. DELETAR todas as sessões futuras recorrentes deste paciente
+    const { data: deletedSessions, error: deleteError } = await supabase
+      .from('sessions')
+      .delete()
+      .eq('patient_id', patientId)
+      .eq('origin', 'recurring')
+      .gte('scheduled_at', new Date().toISOString())
+      .select('id');
+
+    if (deleteError) {
+      console.error('❌ Erro ao deletar sessões futuras:', deleteError);
+      throw deleteError;
+    }
+
+    console.log(`🗑️  ${deletedSessions?.length ?? 0} sessões futuras deletadas`);
+
+    // 2. CALCULAR próximas 50 sessões a partir de hoje
+    const sessions = generateSessionOccurrences(rule, 12); // 12 meses = ~50 sessões
+    
+    console.log(`🔢 ${sessions.length} novas sessões calculadas`);
+    
+    if (sessions.length === 0) {
+      console.error('❌ ERRO: Nenhuma sessão foi gerada!');
+      return;
+    }
+
+    // 3. INSERIR todas as sessões de uma vez
+    const sessionsToInsert = sessions.map(sessionDate => ({
+      user_id: user.id,
+      patient_id: patientId,
+      schedule_id: null, // Será preenchido depois se necessário
+      scheduled_at: sessionDate.toISOString(),
+      duration_minutes: durationMinutes,
+      type: 'therapy',
+      modality: sessionType,
+      value: sessionValue ? Number(sessionValue) : undefined,
+      status: 'scheduled',
+      paid: false,
+      origin: 'recurring'
+    }));
+
+    const { error: insertError } = await supabase
+      .from('sessions')
+      .insert(sessionsToInsert);
+
+    if (insertError) {
+      console.error('❌ Erro ao inserir sessões:', insertError);
+      throw insertError;
+    }
+
+    console.log('✅ Sessões inseridas com sucesso!');
+
+    // 4. INVALIDAR cache
+    queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    queryClient.invalidateQueries({ queryKey: ['today-sessions'] });
+    queryClient.invalidateQueries({ queryKey: ['tomorrow-sessions'] });
+  };
+
   // Função para forçar regeneração de sessões para um paciente específico
   const forceRegeneratePatientSessions = async (patientId: string) => {
     if (!user?.id) return;
@@ -527,5 +593,6 @@ export const useRecurringSchedules = () => {
     moveSingleOccurrence,
     forceRegeneratePatientSessions,
     checkIntegrityAndFix,
+    createSessionsDirectly, // ✨ Nova função de criação direta
   };
 };
