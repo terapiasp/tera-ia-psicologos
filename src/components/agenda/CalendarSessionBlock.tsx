@@ -77,8 +77,14 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
     e.preventDefault();
     
     if (sessionLink) {
+      console.log('Opening session link:', sessionLink, 'for patient:', session.patients?.name);
       window.open(sessionLink, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handleLinkPointerDown = (e: React.PointerEvent) => {
+    // Prevenir que o drag seja iniciado quando clicamos no avatar
+    e.stopPropagation();
   };
 
   if (isDragging) {
@@ -111,14 +117,17 @@ export const CalendarSessionBlock: React.FC<CalendarSessionBlockProps> = ({
       {sessionLink && (
         <div
           onClick={handleLinkClick}
-          className="absolute top-1 right-1 z-50 w-5 h-5 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:bg-black/60 hover:scale-110 transition-all duration-200 pointer-events-auto"
-          style={{ pointerEvents: 'auto' }}
+          onPointerDown={handleLinkPointerDown}
+          onMouseDown={handleLinkPointerDown as any}
+          onTouchStart={handleLinkPointerDown as any}
+          className="absolute top-1 right-1 z-50 w-6 h-6 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:bg-black/70 hover:scale-125 transition-all duration-200 shadow-lg border border-white/20"
+          title="Abrir link da sessão"
         >
-          <Video className="h-3 w-3 text-white" />
+          <Video className="h-3.5 w-3.5 text-white" />
         </div>
       )}
       
-      <CardContent className="p-2 h-full flex flex-col justify-center pointer-events-none">
+      <CardContent className="p-2 h-full flex flex-col justify-center">
         <div className="flex-1 flex flex-col justify-center min-h-0">
           <div className="flex items-center gap-1">
             <span className="font-semibold text-sm leading-tight truncate">
