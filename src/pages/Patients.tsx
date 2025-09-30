@@ -7,10 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Edit, Plus } from 'lucide-react';
 import { usePatients, Patient } from '@/hooks/usePatients';
-import { usePatientFilters } from '@/hooks/usePatientFilters';
 import { NewPatientDialog } from '@/components/patients/NewPatientDialog';
 import { ArchivedPatientsList } from '@/components/patients/ArchivedPatientsList';
-import { PatientFilters } from '@/components/patients/PatientFilters';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 
@@ -24,12 +22,7 @@ const Patients = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPatientForDialog, setSelectedPatientForDialog] = useState<Patient | null>(null);
-  const [activeTab, setActiveTab] = useState('active');
   const { toast } = useToast();
-
-  // Single persistent filter state - applies to whichever tab is active
-  const allPatients = activeTab === 'active' ? patients : archivedPatients;
-  const sharedFilters = usePatientFilters(allPatients);
 
   // Handle URL params for opening patient dialog
   useEffect(() => {
@@ -155,27 +148,11 @@ const Patients = () => {
               </p>
             </div>
 
-            {/* Filters Section */}
-            <div className="mb-6">
-              <PatientFilters
-                filters={sharedFilters.filters}
-                onSearchChange={sharedFilters.handleSearchChange}
-                onFilterChange={sharedFilters.updateFilter}
-                onClearFilters={sharedFilters.clearFilters}
-                hasActiveFilters={sharedFilters.hasActiveFilters}
-                showStatusFilter={activeTab === 'active'}
-              />
-            </div>
-
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue="active" className="w-full">
                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="active" className="flex-1 sm:flex-none">
-                    Ativos ({activeTab === 'active' ? sharedFilters.filteredPatients.length : patients.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">
-                    Arquivados ({activeTab === 'archived' ? sharedFilters.filteredPatients.length : archivedPatients.length})
-                  </TabsTrigger>
+                  <TabsTrigger value="active" className="flex-1 sm:flex-none">Ativos ({patients.length})</TabsTrigger>
+                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">Arquivados ({archivedPatients.length})</TabsTrigger>
                 </TabsList>
                 <NewPatientDialog>
                   <Button className="gap-2 w-full sm:w-auto">
@@ -204,20 +181,18 @@ const Patients = () => {
                       </Card>
                     ))}
                   </div>
-                ) : sharedFilters.filteredPatients.length === 0 ? (
+                ) : patients.length === 0 ? (
                   <Card>
                     <CardHeader>
                       <CardTitle>Nenhum paciente encontrado</CardTitle>
                       <CardDescription>
-                        {sharedFilters.hasActiveFilters
-                          ? 'Nenhum paciente corresponde aos filtros aplicados. Tente ajustar os critérios de busca.'
-                          : 'Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.'}
+                        Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.
                       </CardDescription>
                     </CardHeader>
                   </Card>
                 ) : (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {sharedFilters.filteredPatients.map((patient) => (
+                    {patients.map((patient) => (
                       <Card key={patient.id} className="relative w-full">
                         <CardHeader>
                           <div className="flex justify-between items-start">
@@ -279,7 +254,7 @@ const Patients = () => {
 
               <TabsContent value="archived">
                 <ArchivedPatientsList
-                  archivedPatients={sharedFilters.filteredPatients}
+                  archivedPatients={archivedPatients}
                   selectedPatients={selectedPatients}
                   onSelectPatient={handleSelectPatient}
                   onSelectAll={handleSelectAll}

@@ -89,8 +89,8 @@ export const useRecurringSchedules = () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       
       toast({
-        title: "Sessões agendadas",
-        description: "Recorrência configurada com sucesso!",
+        title: "Recorrência criada",
+        description: "Agendamento recorrente configurado com sucesso!",
       });
     },
     onError: (error: any) => {
@@ -106,9 +106,6 @@ export const useRecurringSchedules = () => {
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<RecurringSchedule> }) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
-      console.log('🔄 Atualizando schedule:', id);
-      console.log('📋 Updates:', updates);
-
       const updateData = updates.rrule_json 
         ? { ...updates, rrule_json: updates.rrule_json as any }
         : updates;
@@ -121,12 +118,7 @@ export const useRecurringSchedules = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Erro ao atualizar schedule:', error);
-        throw error;
-      }
-      
-      console.log('✅ Schedule atualizado com sucesso');
+      if (error) throw error;
       return data;
     },
     onSuccess: async (updatedSchedule) => {
@@ -144,8 +136,8 @@ export const useRecurringSchedules = () => {
       queryClient.removeQueries({ queryKey: ['tomorrow-sessions'] });
       
       toast({
-        title: "Sessões atualizadas", 
-        description: "Recorrência atualizada com sucesso!",
+        title: "Recorrência atualizada",
+        description: "Agendamento recorrente atualizado com sucesso!",
       });
     },
     onError: (error: any) => {
@@ -161,24 +153,14 @@ export const useRecurringSchedules = () => {
   const materializeSessionsForSchedule = async (schedule: RecurringSchedule) => {
     if (!user?.id) return;
 
-    console.log('📅 Materializando sessões para schedule:', schedule.id);
-    console.log('📋 Regra:', JSON.stringify(schedule.rrule_json, null, 2));
+    console.log('Materializando sessões para schedule:', schedule.id);
 
     const rule = schedule.rrule_json;
     const sessions = generateSessionOccurrences(rule, 12); // 12 meses à frente
     
-    console.log(`🔢 Total de sessões geradas: ${sessions.length}`);
-    if (sessions.length > 0) {
-      console.log('📆 Primeiras 3 sessões:', sessions.slice(0, 3).map(d => d.toISOString()));
-      console.log('📆 Últimas 3 sessões:', sessions.slice(-3).map(d => d.toISOString()));
-    } else {
-      console.error('❌ ERRO CRÍTICO: Nenhuma sessão foi gerada!');
-      console.error('Regra utilizada:', JSON.stringify(rule, null, 2));
-      return;
-    }
+    console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
 
     // Verificar quais sessões já existem para evitar duplicatas
-    // Usar schedule_id e origin para verificar apenas sessões desta recorrência específica
     const { data: existingSessions } = await supabase
       .from('sessions')
       .select('scheduled_at')
@@ -225,25 +207,17 @@ export const useRecurringSchedules = () => {
         .insert(sessionsToInsert);
 
       if (error) {
-        // Se o erro for de duplicação, silenciar (sessões já existem)
-        if (error.code === '23505') {
-          console.log('Sessões já existem no banco (constraint violation), continuando...');
-        } else {
-          console.error('Erro ao materializar sessões:', error);
-          throw error;
-        }
-      } else {
-        console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
+        console.error('Erro ao materializar sessões:', error);
+        throw error;
       }
+      
+      console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
       
       // Invalidar queries para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-    } catch (error: any) {
-      // Silenciar erros de duplicação (23505)
-      if (error?.code !== '23505') {
-        console.error('Erro ao inserir sessões:', error);
-        throw error;
-      }
+    } catch (error) {
+      console.error('Erro ao inserir sessões:', error);
+      throw error;
     }
   };
 
@@ -251,24 +225,10 @@ export const useRecurringSchedules = () => {
   const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule, options?: { cutoff?: Date }) => {
     if (!user?.id) return;
 
-    console.log('🔄 Regenerando sessões futuras para schedule:', schedule.id);
-    console.log('📋 Regra de recorrência:', JSON.stringify(schedule.rrule_json, null, 2));
+    console.log('Regenerando sessões futuras para schedule:', schedule.id);
 
     // Deletar sessões futuras existentes desta recorrência
     const cutoffDate = options?.cutoff || new Date();
-    
-    console.log('🗑️  Deletando sessões recorrentes a partir de:', cutoffDate.toISOString());
-    
-    // Primeiro contar quantas sessões serão deletadas
-    const { count } = await supabase
-      .from('sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('schedule_id', schedule.id)
-      .eq('origin', 'recurring')
-      .gte('scheduled_at', cutoffDate.toISOString());
-    
-    console.log(`⚠️  Prestes a deletar ${count || 0} sessões futuras`);
-    
     const { data: deletedSessions, error: deleteError } = await supabase
       .from('sessions')
       .delete()
@@ -278,17 +238,16 @@ export const useRecurringSchedules = () => {
       .select('id');
 
     if (deleteError) {
-      console.error('❌ Erro ao deletar sessões futuras:', deleteError);
+      console.error('Erro ao deletar sessões futuras:', deleteError);
       throw deleteError;
     }
 
-    console.log(`✅ ${deletedSessions?.length ?? 0} sessões deletadas`);
+    console.log('Sessões deletadas:', deletedSessions?.length ?? 0);
 
     // Regenerar sessões
-    console.log('🔨 Iniciando regeneração de sessões...');
     await materializeSessionsForSchedule(schedule);
     
-    console.log('✅ Regeneração completa');
+    console.log('Sessões regeneradas com sucesso');
   };
 
   // Função para gerar ocorrências de sessões baseadas na regra
@@ -454,72 +413,6 @@ export const useRecurringSchedules = () => {
     queryClient.invalidateQueries({ queryKey: ['sessions'] });
   };
 
-  // ✨ FUNÇÃO DE CRIAÇÃO DIRETA DE SESSÕES
-  // Esta função SIMPLESMENTE cria sessões. Sem verificações complexas.
-  const createSessionsDirectly = async (patientId: string, rule: RecurrenceRule, sessionValue?: number, durationMinutes: number = 50, sessionType: string = 'individual_adult') => {
-    if (!user?.id) return;
-
-    console.log('🔥 CRIAÇÃO DIRETA DE SESSÕES para paciente:', patientId);
-    console.log('📋 Regra:', JSON.stringify(rule, null, 2));
-
-    // 1. DELETAR todas as sessões futuras recorrentes deste paciente
-    const { data: deletedSessions, error: deleteError } = await supabase
-      .from('sessions')
-      .delete()
-      .eq('patient_id', patientId)
-      .eq('origin', 'recurring')
-      .gte('scheduled_at', new Date().toISOString())
-      .select('id');
-
-    if (deleteError) {
-      console.error('❌ Erro ao deletar sessões futuras:', deleteError);
-      throw deleteError;
-    }
-
-    console.log(`🗑️  ${deletedSessions?.length ?? 0} sessões futuras deletadas`);
-
-    // 2. CALCULAR próximas 50 sessões a partir de hoje
-    const sessions = generateSessionOccurrences(rule, 12); // 12 meses = ~50 sessões
-    
-    console.log(`🔢 ${sessions.length} novas sessões calculadas`);
-    
-    if (sessions.length === 0) {
-      console.error('❌ ERRO: Nenhuma sessão foi gerada!');
-      return;
-    }
-
-    // 3. INSERIR todas as sessões de uma vez
-    const sessionsToInsert = sessions.map(sessionDate => ({
-      user_id: user.id,
-      patient_id: patientId,
-      schedule_id: null, // Será preenchido depois se necessário
-      scheduled_at: sessionDate.toISOString(),
-      duration_minutes: durationMinutes,
-      type: 'therapy',
-      modality: sessionType,
-      value: sessionValue ? Number(sessionValue) : undefined,
-      status: 'scheduled',
-      paid: false,
-      origin: 'recurring'
-    }));
-
-    const { error: insertError } = await supabase
-      .from('sessions')
-      .insert(sessionsToInsert);
-
-    if (insertError) {
-      console.error('❌ Erro ao inserir sessões:', insertError);
-      throw insertError;
-    }
-
-    console.log('✅ Sessões inseridas com sucesso!');
-
-    // 4. INVALIDAR cache
-    queryClient.invalidateQueries({ queryKey: ['sessions'] });
-    queryClient.invalidateQueries({ queryKey: ['today-sessions'] });
-    queryClient.invalidateQueries({ queryKey: ['tomorrow-sessions'] });
-  };
-
   // Função para forçar regeneração de sessões para um paciente específico
   const forceRegeneratePatientSessions = async (patientId: string) => {
     if (!user?.id) return;
@@ -593,6 +486,5 @@ export const useRecurringSchedules = () => {
     moveSingleOccurrence,
     forceRegeneratePatientSessions,
     checkIntegrityAndFix,
-    createSessionsDirectly, // ✨ Nova função de criação direta
   };
 };

@@ -76,7 +76,6 @@ import { SessionValueInput } from "./SessionValueInput";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessions } from "@/hooks/useSessions";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
-import { supabase } from "@/integrations/supabase/client";
 
 // Create schema function to have access to context
 const createPatientSchema = (existingNames: string[], currentPatientId?: string) => z.object({
@@ -143,74 +142,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? (controlledOnOpenChange || (() => {})) : setInternalOpen;
   const [schedulingData, setSchedulingData] = useState<SchedulingData | undefined>();
-  const [originalSchedulingData, setOriginalSchedulingData] = useState<SchedulingData | undefined>();
-  
-  // Função para comparar dados de agendamento de forma robusta
-  const compareSchedulingData = (original: SchedulingData | undefined, current: SchedulingData | undefined): boolean => {
-    if (!original || !current) return false;
-    
-    // Se os tipos são diferentes, houve mudança
-    if (original.type !== current.type) {
-      console.log('🔍 Mudança detectada: tipo de agendamento diferente', { 
-        original: original.type, 
-        current: current.type 
-      });
-      return true;
-    }
-    
-    // Para agendamentos recorrentes
-    if (original.type === 'recurring' && current.type === 'recurring') {
-      const origRule = original.recurrenceRule;
-      const currRule = current.recurrenceRule;
-      
-      if (!origRule || !currRule) return false;
-      
-      // Comparar campos críticos da recorrência
-      const criticalFields: (keyof RecurrenceRule)[] = ['frequency', 'startTime', 'startDate', 'interval'];
-      
-      for (const field of criticalFields) {
-        if (origRule[field] !== currRule[field]) {
-          console.log(`🔍 Mudança detectada em ${field}:`, {
-            original: origRule[field],
-            current: currRule[field]
-          });
-          return true;
-        }
-      }
-      
-      // Comparar daysOfWeek (array)
-      const origDays = (origRule.daysOfWeek || []).slice().sort();
-      const currDays = (currRule.daysOfWeek || []).slice().sort();
-      
-      if (JSON.stringify(origDays) !== JSON.stringify(currDays)) {
-        console.log('🔍 Mudança detectada em daysOfWeek:', {
-          original: origDays,
-          current: currDays
-        });
-        return true;
-      }
-      
-      console.log('✅ Nenhuma mudança detectada na recorrência');
-      return false;
-    }
-    
-    // Para sessões únicas
-    if (original.type === 'single' && current.type === 'single') {
-      const hasChanged = JSON.stringify(original.singleSession) !== JSON.stringify(current.singleSession);
-      if (hasChanged) {
-        console.log('🔍 Mudança detectada na sessão única:', {
-          original: original.singleSession,
-          current: current.singleSession
-        });
-      }
-      return hasChanged;
-    }
-    
-    return false;
-  };
-  
   const { patients, createPatient, updatePatient, archivePatient, isCreating, isUpdating, isArchiving } = usePatients();
-  const { createSchedule, updateSchedule, schedules, createSessionsDirectly } = useRecurringSchedules();
+  const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
   const { createSession } = useSessions();
 
@@ -272,12 +205,10 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       if (schedules.length > 0) {
         const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
         if (existingSchedule) {
-          const schedulingDataValue = {
-            type: 'recurring' as const,
+          setSchedulingData({
+            type: 'recurring',
             recurrenceRule: existingSchedule.rrule_json
-          };
-          setSchedulingData(schedulingDataValue);
-          setOriginalSchedulingData(schedulingDataValue);
+          });
         }
       }
     }
@@ -321,7 +252,6 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   useEffect(() => {
     if (!open) {
       setSchedulingData(undefined);
-      setOriginalSchedulingData(undefined);
       setHasUnsavedChanges(false);
       form.reset();
     }
@@ -408,80 +338,59 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       };
 
       updatePatient({ id: patient.id, updates }, {
-        onSuccess: async () => {
-          console.log('🔥 CRIAÇÃO DIRETA DE SESSÕES INICIADA');
-          
-          // Buscar schedule ativo do paciente
-          const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
-          
-          // Se tem schedulingData OU schedule ativo -> CRIAR SESSÕES
-          if (schedulingData?.type === 'recurring' && schedulingData.recurrenceRule) {
-            console.log('📋 SchedulingData recorrente detectado - Criando sessões');
+        onSuccess: () => {
+          // Atualizar agenda se há dados de agendamento
+          if (schedulingData) {
+            const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
-            // CRIAR SESSÕES DIRETAMENTE
-            await createSessionsDirectly(
-              patient.id,
-              schedulingData.recurrenceRule,
-              sessionValue,
-              durationMinutes,
-              data.therapy_type
-            );
-            
-            // Atualizar ou criar schedule (apenas para referência)
-            if (existingSchedule) {
-              updateSchedule({
-                id: existingSchedule.id,
-                updates: {
+            if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
+              const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+              
+              if (existingSchedule) {
+                // Atualizar agenda existente
+                updateSchedule({
+                  id: existingSchedule.id,
+                  updates: {
+                    rrule_json: schedulingData.recurrenceRule,
+                    session_type: data.therapy_type,
+                    session_value: sessionValue,
+                    duration_minutes: durationMinutes,
+                  }
+                });
+              } else {
+                // Criar nova agenda
+                createSchedule({
+                  patient_id: patient.id,
                   rrule_json: schedulingData.recurrenceRule,
+                  duration_minutes: durationMinutes,
                   session_type: data.therapy_type,
                   session_value: sessionValue,
-                  duration_minutes: durationMinutes,
-                }
-              });
-            } else {
-              createSchedule({
+                });
+              }
+            } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
+              // Criar sessão única
+              const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
+              
+              createSession({
                 patient_id: patient.id,
-                rrule_json: schedulingData.recurrenceRule,
+                scheduled_at: scheduledAt.toISOString(),
                 duration_minutes: durationMinutes,
-                session_type: data.therapy_type,
-                session_value: sessionValue,
+                modality: 'individual',
+                value: sessionValue,
+                notes: '',
               });
             }
-          } else if (existingSchedule) {
-            console.log('📋 Schedule ativo encontrado sem schedulingData - Criando sessões');
             
-            // CRIAR SESSÕES DIRETAMENTE usando o schedule existente
-            await createSessionsDirectly(
-              patient.id,
-              existingSchedule.rrule_json,
-              existingSchedule.session_value || sessionValue,
-              existingSchedule.duration_minutes,
-              existingSchedule.session_type
-            );
-          } else if (schedulingData?.type === 'single' && schedulingData.singleSession) {
-            console.log('📝 Criando sessão única');
-            const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
-            
-            createSession({
-              patient_id: patient.id,
-              scheduled_at: scheduledAt.toISOString(),
-              duration_minutes: durationMinutes,
-              modality: 'individual',
-              value: sessionValue,
-              notes: '',
-            });
-          } else {
-            console.log('ℹ️ Nenhum schedule e nenhum schedulingData recorrente - Nada a fazer');
+            // Limpar cache de sessões para forçar atualização imediata
+            clearCache();
           }
-          
-          clearCache();
           
           form.reset();
           setHasUnsavedChanges(false);
           setOpen(false);
           toast({
-            title: "Ficha de Paciente atualizada com sucesso",
-            description: "As informações foram salvas.",
+            title: "Paciente atualizado",
+            description: "As informações foram salvas com sucesso.",
           });
         },
       });
@@ -523,15 +432,11 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       createPatient(patientData, {
         onSuccess: (newPatient: any) => {
-          console.log('✅ Paciente criado:', newPatient.id);
-          
-          // Para CRIAÇÃO: SEMPRE criar as sessões se houver schedulingData
+          // Criar agendamento baseado no tipo
           if (schedulingData && newPatient) {
-            console.log('📅 Criando agendamento para novo paciente');
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
-              console.log('📋 Criando agenda recorrente');
               // Criar agenda recorrente
               createSchedule({
                 patient_id: newPatient.id,
@@ -541,7 +446,6 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 session_value: sessionValue,
               });
             } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
-              console.log('📋 Criando sessão única');
               // Criar sessão única
               const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
               
@@ -554,8 +458,6 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 notes: '',
               });
             }
-          } else {
-            console.log('ℹ️ Nenhum agendamento para criar');
           }
           
           form.reset();

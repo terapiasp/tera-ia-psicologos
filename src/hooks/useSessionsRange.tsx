@@ -41,8 +41,7 @@ export const useSessionsRange = (startDate?: Date, endDate?: Date) => {
     } else {
       setSessions([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateFilters.start, dateFilters.end]);
+  }, [dateFilters.start, dateFilters.end, getSessionsForRange]);
 
   return {
     sessions,

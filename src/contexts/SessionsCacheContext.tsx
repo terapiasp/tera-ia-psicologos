@@ -106,28 +106,33 @@ export const SessionsCacheProvider: React.FC<SessionsCacheProviderProps> = ({ ch
   const getSessionsForRange = useCallback((startDate: Date, endDate: Date): Session[] => {
     const sessions: Session[] = [];
     const current = new Date(startDate);
-    current.setDate(1);
+    current.setDate(1); // Start from beginning of month
 
+    // Get all months that overlap with the date range
     const monthsToLoad: Date[] = [];
     while (current <= endDate) {
       monthsToLoad.push(new Date(current));
       current.setMonth(current.getMonth() + 1);
     }
 
+    // Collect sessions from cache and trigger loads for missing months
     for (const monthDate of monthsToLoad) {
       const monthKey = getMonthKey(monthDate);
       
       if (cache[monthKey]) {
+        // Filter sessions for the actual requested range
         const monthSessions = cache[monthKey].filter(session => {
           const sessionDate = new Date(session.scheduled_at);
           return sessionDate >= startDate && sessionDate <= endDate;
         });
         sessions.push(...monthSessions);
       } else if (!loadingMonths.has(monthKey)) {
+        // Trigger fetch for missing month
         fetchMonthData(monthDate);
       }
     }
 
+    // Prefetch adjacent months for smoother navigation
     const prevMonth = new Date(monthsToLoad[0]);
     prevMonth.setMonth(prevMonth.getMonth() - 1);
     prefetchMonth(prevMonth);

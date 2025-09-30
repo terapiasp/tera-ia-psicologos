@@ -14,7 +14,6 @@ import Gestao from "./pages/Gestao";
 import Agenda from "./pages/Agenda";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
-import IntegrityCheck from "./pages/IntegrityCheck";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,11 +55,6 @@ const App = () => (
               <Route path="/gestao" element={
                 <ProtectedRoute>
                   <Gestao />
-                </ProtectedRoute>
-              } />
-              <Route path="/integrity-check" element={
-                <ProtectedRoute>
-                  <IntegrityCheck />
                 </ProtectedRoute>
               } />
               <Route path="/auth" element={<Auth />} />
