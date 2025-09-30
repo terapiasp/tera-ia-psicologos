@@ -467,7 +467,7 @@ const SessionLinkInput: React.FC<SessionLinkInputProps> = ({
             ) : (
               <>
                 <Video className="h-4 w-4 mr-2 shrink-0" />
-                <span className="truncate">Criar Nova Sala Meet</span>
+                <span className="truncate">Criar Nova Sala no Meet</span>
               </>
             )}
           </Button>
