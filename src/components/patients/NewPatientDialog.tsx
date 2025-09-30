@@ -409,47 +409,48 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: async () => {
-          console.log('📋 Verificando mudanças de agendamento...');
-          console.log('Dados de agendamento atuais:', schedulingData);
-          console.log('Dados de agendamento originais:', originalSchedulingData);
+          console.log('🔥 SINCRONIZAÇÃO FORÇADA INICIADA');
           
-          // 1. Verificar se há mudanças na agenda
-          const hasSchedulingChanges = compareSchedulingData(originalSchedulingData, schedulingData);
-          console.log('Resultado da comparação - hasSchedulingChanges:', hasSchedulingChanges);
-          
-          // 2. Verificar se tem agenda recorrente ativa
+          // Buscar schedule ativo do paciente
           const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
           
-          // 🔥 SINCRONIZAÇÃO FORÇADA: SEMPRE sincroniza quando tem schedulingData
-          // Ignora verificações de mudanças ou sessões existentes
-          console.log('🔥 SINCRONIZAÇÃO FORÇADA - Ignorando verificações de mudanças');
-          
-          if (schedulingData) {
-            console.log('📋 SchedulingData presente - Forçando sincronização completa');
+          if (existingSchedule) {
+            console.log('📋 Schedule ativo encontrado - Forçando regeneração TOTAL');
+            console.log('🔄 Schedule ID:', existingSchedule.id);
+            
+            // SEMPRE atualiza o schedule para forçar regeneração
+            // Isso vai deletar TODAS as sessões futuras e recriar tudo
+            const updatedRRule = schedulingData?.type === 'recurring' && schedulingData.recurrenceRule
+              ? schedulingData.recurrenceRule
+              : existingSchedule.rrule_json;
+            
+            console.log('📝 Regra a ser usada:', JSON.stringify(updatedRRule, null, 2));
+            
+            updateSchedule({
+              id: existingSchedule.id,
+              updates: {
+                rrule_json: updatedRRule,
+                session_type: data.therapy_type,
+                session_value: sessionValue,
+                duration_minutes: durationMinutes,
+              }
+            });
+            
+            console.log('✅ Comando de regeneração enviado');
+          } else if (schedulingData) {
+            console.log('📝 Nenhum schedule existente - Criando novo se necessário');
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
-              if (existingSchedule) {
-                console.log('🔄 Atualizando/Regenerando agenda');
-                updateSchedule({
-                  id: existingSchedule.id,
-                  updates: {
-                    rrule_json: schedulingData.recurrenceRule,
-                    session_type: data.therapy_type,
-                    session_value: sessionValue,
-                    duration_minutes: durationMinutes,
-                  }
-                });
-              } else {
-                console.log('📝 Criando nova agenda');
-                createSchedule({
-                  patient_id: patient.id,
-                  rrule_json: schedulingData.recurrenceRule,
-                  duration_minutes: durationMinutes,
-                  session_type: data.therapy_type,
-                  session_value: sessionValue,
-                });
-              }
+              console.log('📝 Criando nova agenda recorrente');
+              createSchedule({
+                patient_id: patient.id,
+                rrule_json: schedulingData.recurrenceRule,
+                duration_minutes: durationMinutes,
+                session_type: data.therapy_type,
+                session_value: sessionValue,
+              });
             } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
+              console.log('📝 Criando sessão única');
               const scheduledAt = new Date(`${schedulingData.singleSession.date}T${schedulingData.singleSession.time}:00`);
               
               createSession({
@@ -461,11 +462,11 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 notes: '',
               });
             }
-            
-            clearCache();
           } else {
-            console.log('✅ Agenda sincronizada - Nenhuma ação necessária');
+            console.log('ℹ️ Nenhum schedule e nenhum schedulingData - Nada a fazer');
           }
+          
+          clearCache();
           
           form.reset();
           setHasUnsavedChanges(false);
