@@ -26,6 +26,8 @@ export interface Session {
     nickname?: string;
     session_link?: string;
     session_mode?: string;
+    recurring_meet_code?: string;
+    external_session_link?: string;
   };
 }
 
@@ -71,7 +73,9 @@ export const useSessions = (startDate?: Date, endDate?: Date) => {
             nickname,
             session_link,
             session_mode,
-            is_archived
+            is_archived,
+            recurring_meet_code,
+            external_session_link
           )
         `)
         .eq('user_id', user.id)
