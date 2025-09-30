@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Plus, Search } from 'lucide-react';
 import { usePatients, Patient } from '@/hooks/usePatients';
 import { NewPatientDialog } from '@/components/patients/NewPatientDialog';
 import { ArchivedPatientsList } from '@/components/patients/ArchivedPatientsList';
@@ -22,6 +24,8 @@ const Patients = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPatientForDialog, setSelectedPatientForDialog] = useState<Patient | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('created_at_desc');
   const { toast } = useToast();
 
   // Handle URL params for opening patient dialog
@@ -135,6 +139,45 @@ const Patients = () => {
     setSelectedPatients(prev => prev.filter(id => id !== patientId));
   };
 
+  // Funções de filtro e ordenação
+  const filterPatients = (patientsList: Patient[], term: string) => {
+    if (!term.trim()) return patientsList;
+    const lowerTerm = term.toLowerCase();
+    return patientsList.filter(patient => 
+      patient.name.toLowerCase().includes(lowerTerm) ||
+      patient.nickname?.toLowerCase().includes(lowerTerm) ||
+      patient.whatsapp?.toLowerCase().includes(lowerTerm) ||
+      patient.email?.toLowerCase().includes(lowerTerm)
+    );
+  };
+
+  const sortPatients = (patientsList: Patient[], option: string) => {
+    const sorted = [...patientsList];
+    switch (option) {
+      case 'created_at_desc':
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case 'created_at_asc':
+        return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case 'name_asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name_desc':
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return sorted;
+    }
+  };
+
+  // Aplicar filtros e ordenação
+  const filteredAndSortedPatients = useMemo(() => {
+    const filtered = filterPatients(patients, searchTerm);
+    return sortPatients(filtered, sortOption);
+  }, [patients, searchTerm, sortOption]);
+
+  const filteredAndSortedArchivedPatients = useMemo(() => {
+    const filtered = filterPatients(archivedPatients, searchTerm);
+    return sortPatients(filtered, sortOption);
+  }, [archivedPatients, searchTerm, sortOption]);
+
   return (
     <div className="min-h-screen bg-background">
         <Header />
@@ -148,11 +191,41 @@ const Patients = () => {
               </p>
             </div>
 
+            {/* Controles de pesquisa e filtro */}
+            <div className="mb-6 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar por nome, nickname, whatsapp ou email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={sortOption} onValueChange={setSortOption}>
+                  <SelectTrigger className="w-full sm:w-[240px]">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at_desc">Mais Recentes</SelectItem>
+                    <SelectItem value="created_at_asc">Mais Antigos</SelectItem>
+                    <SelectItem value="name_asc">A-Z</SelectItem>
+                    <SelectItem value="name_desc">Z-A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <Tabs defaultValue="active" className="w-full">
                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="active" className="flex-1 sm:flex-none">Ativos ({patients.length})</TabsTrigger>
-                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">Arquivados ({archivedPatients.length})</TabsTrigger>
+                  <TabsTrigger value="active" className="flex-1 sm:flex-none">
+                    Ativos ({filteredAndSortedPatients.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">
+                    Arquivados ({filteredAndSortedArchivedPatients.length})
+                  </TabsTrigger>
                 </TabsList>
                 <NewPatientDialog>
                   <Button className="gap-2 w-full sm:w-auto">
@@ -181,18 +254,21 @@ const Patients = () => {
                       </Card>
                     ))}
                   </div>
-                ) : patients.length === 0 ? (
+                ) : filteredAndSortedPatients.length === 0 ? (
                   <Card>
                     <CardHeader>
                       <CardTitle>Nenhum paciente encontrado</CardTitle>
                       <CardDescription>
-                        Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.
+                        {searchTerm 
+                          ? `Nenhum paciente encontrado para "${searchTerm}".`
+                          : 'Você ainda não cadastrou nenhum paciente. Clique em "Novo Paciente" para começar.'
+                        }
                       </CardDescription>
                     </CardHeader>
                   </Card>
                 ) : (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {patients.map((patient) => (
+                    {filteredAndSortedPatients.map((patient) => (
                       <Card key={patient.id} className="relative w-full">
                         <CardHeader>
                           <div className="flex justify-between items-start">
@@ -254,7 +330,7 @@ const Patients = () => {
 
               <TabsContent value="archived">
                 <ArchivedPatientsList
-                  archivedPatients={archivedPatients}
+                  archivedPatients={filteredAndSortedArchivedPatients}
                   selectedPatients={selectedPatients}
                   onSelectPatient={handleSelectPatient}
                   onSelectAll={handleSelectAll}
