@@ -420,35 +420,12 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
           // 2. Verificar se tem agenda recorrente ativa
           const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
           
-          // 3. VERIFICAÇÃO DE INTEGRIDADE: Verificar se tem sessões futuras materializadas
-          let hasFutureSessions = false;
-          if (existingSchedule) {
-            try {
-              const { count, error } = await supabase
-                .from('sessions')
-                .select('*', { count: 'exact', head: true })
-                .eq('schedule_id', existingSchedule.id)
-                .gte('scheduled_at', new Date().toISOString());
-              
-              if (!error && count !== null) {
-                hasFutureSessions = count > 0;
-                console.log(`🔍 Verificação de integridade: ${count} sessões futuras encontradas`);
-              }
-            } catch (error) {
-              console.error('Erro ao verificar sessões futuras:', error);
-            }
-          }
+          // 🔥 SINCRONIZAÇÃO FORÇADA: SEMPRE sincroniza quando tem schedulingData
+          // Ignora verificações de mudanças ou sessões existentes
+          console.log('🔥 SINCRONIZAÇÃO FORÇADA - Ignorando verificações de mudanças');
           
-          // 4. LÓGICA DE SYNC: Regenerar se (tem agenda E não tem sessões) OU (tem agenda E mudou)
-          const needsSync = existingSchedule && (!hasFutureSessions || hasSchedulingChanges);
-          
-          if (needsSync && schedulingData) {
-            if (!hasFutureSessions) {
-              console.log('⚠️ SINCRONIZAÇÃO NECESSÁRIA - Paciente tem agenda mas não tem sessões futuras');
-            }
-            if (hasSchedulingChanges) {
-              console.log('⚠️ MUDANÇAS NA AGENDA DETECTADAS - Atualizando schedule');
-            }
+          if (schedulingData) {
+            console.log('📋 SchedulingData presente - Forçando sincronização completa');
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
               if (existingSchedule) {
