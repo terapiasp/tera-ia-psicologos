@@ -389,8 +389,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
           setHasUnsavedChanges(false);
           setOpen(false);
           toast({
-            title: "Paciente atualizado",
-            description: "As informações foram salvas com sucesso.",
+            title: "Ficha de Paciente atualizada com sucesso",
+            description: "As informações foram salvas.",
           });
         },
       });
