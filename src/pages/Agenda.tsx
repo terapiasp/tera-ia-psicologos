@@ -8,12 +8,13 @@ import { ViewModeToggle } from "@/components/agenda/ViewModeToggle";
 import { WeekendToggle } from "@/components/agenda/WeekendToggle";
 import { startOfWeek } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 
 const Agenda = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   
   // Verificar se há uma data selecionada no state do router ou nos parâmetros da URL
   const selectedDate = location.state?.selectedDate || searchParams.get('date');
@@ -53,9 +54,14 @@ const Agenda = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  // Salvar preferências no localStorage
+  // Salvar preferências no localStorage e atualizar URL
   useEffect(() => {
     localStorage.setItem('agenda-view-mode', viewMode);
+    
+    // Atualizar URL com o modo de visualização
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('view', viewMode);
+    setSearchParams(newParams, { replace: true });
   }, [viewMode]);
 
   useEffect(() => {
