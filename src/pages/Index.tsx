@@ -140,13 +140,13 @@ const Index = () => {
               {isLoadingToday ? (
                 <Skeleton className="h-32" />
               ) : (
-                <StatsCard
-                  title="Sessões hoje"
-                  value={todaySessionsRaw.length}
-                  description={`${todaySessionsRaw.filter(s => s.paid).length} pagas`}
-                  icon={Calendar}
-                  onClick={todaySessionsRaw.length > 0 ? () => navigate('/agenda?view=timeline&date=' + new Date().toISOString().split('T')[0]) : undefined}
-                />
+              <StatsCard
+                title="Sessões hoje"
+                value={todaySessionsRaw.length}
+                description={`${todaySessionsRaw.filter(s => s.paid).length} pagas`}
+                icon={Calendar}
+                onClick={() => navigate('/agenda?view=timeline')}
+              />
               )}
               
               {isLoadingPatients ? (
