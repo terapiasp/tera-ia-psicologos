@@ -165,12 +165,12 @@ const Configuracoes = () => {
       <div className="flex">
         <Sidebar />
         <main className="flex-1 md:ml-64 transition-all duration-300">
-          <div className="p-6">
-            <div className="max-w-6xl mx-auto space-y-6">
-              <div className="flex items-center justify-between">
+          <div className="p-4 md:p-6">
+            <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-                  <p className="text-muted-foreground">
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configurações</h1>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     Gerencie seu perfil e preferências da plataforma
                   </p>
                 </div>
@@ -185,28 +185,29 @@ const Configuracoes = () => {
                 </div>
               </div>
 
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="perfil" className="flex items-center gap-2">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-2 bg-transparent md:bg-muted p-0 md:p-1">
+                  <TabsTrigger value="perfil" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
                     <User className="h-4 w-4" />
-                    Perfil
+                    <span>Perfil</span>
                   </TabsTrigger>
-                  <TabsTrigger value="cobranca" className="flex items-center gap-2">
+                  <TabsTrigger value="cobranca" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
                     <CreditCard className="h-4 w-4" />
-                    Cobrança
+                    <span>Cobrança</span>
                   </TabsTrigger>
-                  <TabsTrigger value="notificacoes" className="flex items-center gap-2">
+                  <TabsTrigger value="notificacoes" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
                     <Bell className="h-4 w-4" />
-                    Notificações
+                    <span className="hidden md:inline">Notificações</span>
+                    <span className="md:hidden">Notif.</span>
                   </TabsTrigger>
-                  <TabsTrigger value="conta" className="flex items-center gap-2">
+                  <TabsTrigger value="conta" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
                     <Shield className="h-4 w-4" />
-                    Conta
+                    <span>Conta</span>
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Aba: Perfil */}
-                <TabsContent value="perfil" className="space-y-6">
+                <TabsContent value="perfil" className="space-y-4 md:space-y-6">
                   <ProfileSection
                     profile={profile}
                     formData={formData}
@@ -217,7 +218,7 @@ const Configuracoes = () => {
                 </TabsContent>
 
                 {/* Aba: Cobrança */}
-                <TabsContent value="cobranca" className="space-y-6">
+                <TabsContent value="cobranca" className="space-y-4 md:space-y-6">
                   <BillingSection
                     formData={{
                       tipo_cobranca: formData.tipo_cobranca,
@@ -230,7 +231,7 @@ const Configuracoes = () => {
                 </TabsContent>
 
                 {/* Aba: Notificações */}
-                <TabsContent value="notificacoes" className="space-y-6">
+                <TabsContent value="notificacoes" className="space-y-4 md:space-y-6">
                   <NotificationsSection
                     formData={{
                       template_lembrete_sessao: formData.template_lembrete_sessao,
@@ -243,17 +244,17 @@ const Configuracoes = () => {
                 </TabsContent>
 
                 {/* Aba: Conta */}
-                <TabsContent value="conta" className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TabsContent value="conta" className="space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     {/* Informações da Conta */}
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                      <CardHeader className="p-4 md:p-6">
+                        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                           <Shield className="h-5 w-5" />
                           Informações da Conta
                         </CardTitle>
                       </CardHeader>
-                       <CardContent className="space-y-4">
+                       <CardContent className="space-y-4 p-4 md:p-6">
                          <div className="space-y-2">
                            <div className="text-sm font-medium">Email</div>
                            <div className="text-sm text-muted-foreground">{profile?.email || ""}</div>
@@ -314,10 +315,10 @@ const Configuracoes = () => {
 
                     {/* Segurança e Privacidade */}
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Segurança e Privacidade</CardTitle>
+                      <CardHeader className="p-4 md:p-6">
+                        <CardTitle className="text-lg md:text-xl">Segurança e Privacidade</CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 p-4 md:p-6">
                         <div className="space-y-3">
                           <div className="flex items-start gap-3">
                             <Shield className="h-5 w-5 text-success mt-0.5" />
