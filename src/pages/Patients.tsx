@@ -147,16 +147,16 @@ const Patients = () => {
         <Header />
         <div className="flex">
           <Sidebar />
-          <main className="flex-1 p-4 md:p-6 md:ml-64 w-full min-w-0">
-            <div className="mb-6">
+          <main className="flex-1 p-4 md:p-6 md:ml-64 w-full min-w-0 space-y-4 md:space-y-6">
+            <div>
               <h1 className="text-2xl md:text-3xl font-bold">Pacientes</h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Gerencie seus pacientes e acompanhe suas informações
               </p>
             </div>
 
             {/* Filters Section */}
-            <div className="mb-6">
+            <div>
               <PatientFilters
                 filters={sharedFilters.filters}
                 onSearchChange={sharedFilters.handleSearchChange}
@@ -168,19 +168,30 @@ const Patients = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="active" className="flex-1 sm:flex-none">
-                    Ativos ({activeTab === 'active' ? sharedFilters.filteredPatients.length : patients.length})
+               <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-4 md:mb-6">
+                <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex h-auto bg-transparent md:bg-muted p-0 md:p-1">
+                  <TabsTrigger 
+                    value="active" 
+                    className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm"
+                  >
+                    <span className="md:hidden">Ativos</span>
+                    <span className="hidden md:inline">Ativos ({activeTab === 'active' ? sharedFilters.filteredPatients.length : patients.length})</span>
+                    <span className="md:hidden text-[10px] text-muted-foreground">({activeTab === 'active' ? sharedFilters.filteredPatients.length : patients.length})</span>
                   </TabsTrigger>
-                  <TabsTrigger value="archived" className="flex-1 sm:flex-none">
-                    Arquivados ({activeTab === 'archived' ? sharedFilters.filteredPatients.length : archivedPatients.length})
+                  <TabsTrigger 
+                    value="archived"
+                    className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm"
+                  >
+                    <span className="md:hidden">Arquiv.</span>
+                    <span className="hidden md:inline">Arquivados ({activeTab === 'archived' ? sharedFilters.filteredPatients.length : archivedPatients.length})</span>
+                    <span className="md:hidden text-[10px] text-muted-foreground">({activeTab === 'archived' ? sharedFilters.filteredPatients.length : archivedPatients.length})</span>
                   </TabsTrigger>
                 </TabsList>
                 <NewPatientDialog>
-                  <Button className="gap-2 w-full sm:w-auto">
+                  <Button className="gap-2 w-full md:w-auto">
                     <Plus className="h-4 w-4" />
-                    Novo Paciente
+                    <span className="md:hidden">Novo</span>
+                    <span className="hidden md:inline">Novo Paciente</span>
                   </Button>
                 </NewPatientDialog>
               </div>
@@ -218,54 +229,54 @@ const Patients = () => {
                 ) : (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {sharedFilters.filteredPatients.map((patient) => (
-                      <Card key={patient.id} className="relative w-full">
-                        <CardHeader>
-                          <div className="flex justify-between items-start">
+                   <Card key={patient.id} className="relative w-full">
+                        <CardHeader className="p-4 md:p-6">
+                          <div className="flex justify-between items-start gap-2">
                             <div className="min-w-0 flex-1">
-                              <CardTitle className="text-lg truncate">{patient.name}</CardTitle>
+                              <CardTitle className="text-base md:text-lg truncate">{patient.name}</CardTitle>
                               {patient.nickname && (
-                                <CardDescription className="truncate">"{patient.nickname}"</CardDescription>
+                                <CardDescription className="text-xs md:text-sm truncate">"{patient.nickname}"</CardDescription>
                               )}
                             </div>
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              className="flex-shrink-0"
+                              className="flex-shrink-0 h-8 w-8 md:h-10 md:w-10"
                               onClick={() => {
                                 setSelectedPatientForDialog(patient);
                                 setDialogOpen(true);
                               }}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-3 w-3 md:h-4 md:w-4" />
                             </Button>
                           </div>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-4 md:p-6 pt-0">
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Tipo:</span>
-                              <span className="text-sm truncate max-w-[150px]">{getTherapyTypeLabel(patient.therapy_type)}</span>
+                            <div className="flex justify-between gap-2">
+                              <span className="text-xs md:text-sm text-muted-foreground">Tipo:</span>
+                              <span className="text-xs md:text-sm truncate max-w-[60%]">{getTherapyTypeLabel(patient.therapy_type)}</span>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Frequência:</span>
-                              <span className="text-sm truncate max-w-[150px]">{getFrequencyLabel(patient.frequency, patient.custom_frequency)}</span>
+                            <div className="flex justify-between gap-2">
+                              <span className="text-xs md:text-sm text-muted-foreground">Frequência:</span>
+                              <span className="text-xs md:text-sm truncate max-w-[60%]">{getFrequencyLabel(patient.frequency, patient.custom_frequency)}</span>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Status:</span>
-                              <Badge variant={patient.status === 'active' ? 'default' : 'secondary'}>
+                            <div className="flex justify-between gap-2">
+                              <span className="text-xs md:text-sm text-muted-foreground">Status:</span>
+                              <Badge variant={patient.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                                 {getStatusLabel(patient.status)}
                               </Badge>
                             </div>
                             {patient.whatsapp && (
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">WhatsApp:</span>
-                                <span className="text-sm truncate max-w-[150px]">{patient.whatsapp}</span>
+                              <div className="flex justify-between gap-2">
+                                <span className="text-xs md:text-sm text-muted-foreground">WhatsApp:</span>
+                                <span className="text-xs md:text-sm truncate max-w-[60%]">{patient.whatsapp}</span>
                               </div>
                             )}
                             {patient.email && (
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Email:</span>
-                                <span className="text-sm truncate max-w-[150px]">{patient.email}</span>
+                              <div className="flex justify-between gap-2">
+                                <span className="text-xs md:text-sm text-muted-foreground">Email:</span>
+                                <span className="text-xs md:text-sm truncate max-w-[60%]">{patient.email}</span>
                               </div>
                             )}
                             <SessionLinkStatus patient={patient} compact={true} />
