@@ -1,4 +1,4 @@
-import { Bell, Calendar, LogOut, Menu, User, ArrowLeft, CreditCard, Shield } from "lucide-react";
+import { Bell, Calendar, LogOut, Menu, User, ArrowLeft, CreditCard, Shield, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Pacientes", href: "/patients", icon: Users },
   { name: "Agenda", href: "/agenda", icon: CalendarDays },
+  { name: "Pagamentos", href: "/pagamentos", icon: DollarSign },
   { name: "Relatórios", href: "/relatorios", icon: FileText },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
