@@ -22,7 +22,8 @@ import {
   X,
   Save,
   Archive,
-  Wallet
+  Wallet,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -143,6 +144,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const { toast } = useToast();
   
   const isControlled = controlledOpen !== undefined;
@@ -374,6 +376,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
               
               if (existingSchedule && hasScheduleChanged) {
                 // Atualizar agenda existente APENAS se mudou
+                setIsSavingSchedule(true);
                 updateSchedule({
                   id: existingSchedule.id,
                   updates: {
@@ -387,15 +390,43 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     deleteBeforeCutoff: startDateChanged,
                     cutoffDate: startDateChanged ? new Date(schedulingData.recurrenceRule.startDate) : undefined
                   }
+                }, {
+                  onSuccess: () => {
+                    setIsSavingSchedule(false);
+                    toast({
+                      title: "Agenda atualizada",
+                      description: "Sessões recriadas com sucesso",
+                    });
+                  },
+                  onError: () => {
+                    setIsSavingSchedule(false);
+                    toast({
+                      variant: "destructive",
+                      title: "Erro ao atualizar agenda",
+                      description: "Tente novamente",
+                    });
+                  }
                 });
               } else if (!existingSchedule) {
                 // Criar nova agenda apenas se não existe
+                setIsSavingSchedule(true);
                 createSchedule({
                   patient_id: patient.id,
                   rrule_json: schedulingData.recurrenceRule,
                   duration_minutes: durationMinutes,
                   session_type: data.therapy_type,
                   session_value: sessionValue,
+                }, {
+                  onSuccess: () => {
+                    setIsSavingSchedule(false);
+                    toast({
+                      title: "Agenda criada",
+                      description: "Sessões geradas com sucesso",
+                    });
+                  },
+                  onError: () => {
+                    setIsSavingSchedule(false);
+                  }
                 });
               }
             } else if (schedulingData.type === 'single' && schedulingData.singleSession) {
@@ -553,18 +584,22 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                   </Button>
                 )}
                 
-                <Button
+                <Button 
                   type="button"
                   onClick={handleSave}
-                  disabled={isCreating || isUpdating}
+                  disabled={isCreating || isUpdating || isSavingSchedule}
                   size="sm"
                   className="bg-gradient-primary hover:opacity-90 gap-1.5 text-xs sm:text-sm"
                 >
-                  <Save className="h-3 w-3 sm:h-4 sm:w-4" />
-                  {isCreating || isUpdating 
-                    ? "Salvando..." 
-                    : isEdit 
-                      ? "Salvar" 
+                  {(isCreating || isUpdating || isSavingSchedule) ? (
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-3 w-3 sm:h-4 sm:w-4" />
+                  )}
+                  {isSavingSchedule 
+                    ? "Atualizando agenda..." 
+                    : isCreating || isUpdating 
+                      ? "Salvando..." 
                       : "Salvar"
                   }
                 </Button>

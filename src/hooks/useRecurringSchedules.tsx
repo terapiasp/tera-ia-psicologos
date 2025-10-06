@@ -157,73 +157,56 @@ export const useRecurringSchedules = () => {
   });
 
   // Função para materializar sessões baseadas em uma regra de recorrência
-  const materializeSessionsForSchedule = async (schedule: RecurringSchedule) => {
+  const materializeSessionsForSchedule = async (schedule: RecurringSchedule, startFrom?: Date) => {
     if (!user?.id) return;
 
-    console.log('Materializando sessões para schedule:', schedule.id);
+    const cutoff = startFrom || new Date();
+    console.log('✨ Materializando sessões a partir de:', cutoff.toISOString());
 
     const rule = schedule.rrule_json;
     const sessions = generateSessionOccurrences(rule, 12); // 12 meses à frente
     
-    console.log('Sessões geradas:', sessions.length, sessions.slice(0, 3));
-
-    // Verificar quais sessões já existem para evitar duplicatas
-    const { data: existingSessions } = await supabase
-      .from('sessions')
-      .select('scheduled_at')
-      .eq('schedule_id', schedule.id)
-      .eq('origin', 'recurring')
-      .gte('scheduled_at', new Date().toISOString());
-
-    const existingDates = new Set(
-      existingSessions?.map(s => new Date(s.scheduled_at).toISOString()) || []
-    );
-
-    // Filtrar apenas sessões que não existem
-    const newSessions = sessions.filter(sessionDate => 
-      !existingDates.has(sessionDate.toISOString())
-    );
-
-    console.log('Sessões novas a inserir:', newSessions.length, 'de', sessions.length, 'totais');
+    // Filtrar apenas sessões >= cutoff
+    const newSessions = sessions.filter(sessionDate => sessionDate >= cutoff);
+    
+    console.log('📅 Sessões a criar:', newSessions.length);
 
     if (newSessions.length === 0) {
-      console.log('Nenhuma sessão nova para inserir');
+      console.log('✅ Nenhuma sessão nova para inserir');
       return;
     }
 
-    // Inserir apenas sessões novas
+    // Inserir todas as sessões (DELETE já limpou anteriores)
     const sessionsToInsert = newSessions.map(sessionDate => ({
       user_id: user.id,
       patient_id: schedule.patient_id,
       schedule_id: schedule.id,
       scheduled_at: sessionDate.toISOString(),
       duration_minutes: schedule.duration_minutes,
-      type: 'therapy', // Sempre therapy agora
-      modality: schedule.session_type, // session_type vira modalidade
-      value: schedule.session_value ? Number(schedule.session_value) : undefined, // Garantir que seja número
+      type: 'therapy',
+      modality: schedule.session_type,
+      value: schedule.session_value ? Number(schedule.session_value) : undefined,
       status: 'scheduled',
       paid: false,
       origin: 'recurring'
     }));
 
     try {
-      console.log('Inserindo', sessionsToInsert.length, 'sessões novas no banco');
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('sessions')
         .insert(sessionsToInsert);
 
       if (error) {
-        console.error('Erro ao materializar sessões:', error);
+        console.error('❌ Erro ao materializar sessões:', error);
         throw error;
       }
       
-      console.log('Sessões inseridas com sucesso:', (data as any)?.length ?? sessionsToInsert.length);
+      console.log('✅ Sessões criadas com sucesso:', sessionsToInsert.length);
       
       // Invalidar queries para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
     } catch (error) {
-      console.error('Erro ao inserir sessões:', error);
+      console.error('❌ Erro ao inserir sessões:', error);
       throw error;
     }
   };
@@ -235,56 +218,40 @@ export const useRecurringSchedules = () => {
   }) => {
     if (!user?.id) return;
 
-    console.log('Regenerando sessões futuras para schedule:', schedule.id);
-
-    // Usar transação manual para evitar race conditions
     const cutoffDate = options?.cutoff || new Date();
     const deleteBeforeCutoff = options?.deleteBeforeCutoff || false;
     
-    // Primeiro, buscar todas as sessões que serão deletadas
-    // Se deleteBeforeCutoff = true, deleta ANTES do cutoff
-    // Se deleteBeforeCutoff = false, deleta DEPOIS do cutoff (comportamento padrão)
-    const { data: sessionsToDelete, error: fetchError } = await supabase
-      .from('sessions')
-      .select('id, scheduled_at')
-      .eq('schedule_id', schedule.id)
-      .eq('origin', 'recurring')
-      [deleteBeforeCutoff ? 'lt' : 'gte']('scheduled_at', cutoffDate.toISOString());
+    console.log('🔄 Regenerando agenda:', {
+      schedule_id: schedule.id,
+      cutoff: cutoffDate.toISOString(),
+      mode: deleteBeforeCutoff ? 'DELETAR ANTES' : 'DELETAR DEPOIS'
+    });
 
-    if (fetchError) {
-      console.error('Erro ao buscar sessões:', fetchError);
-      throw fetchError;
-    }
-
-    console.log(
-      deleteBeforeCutoff 
-        ? `Sessões anteriores a ${cutoffDate.toISOString()} a deletar:` 
-        : 'Sessões futuras a deletar:', 
-      sessionsToDelete?.length ?? 0
-    );
-
-    // Deletar as sessões futuras
-    if (sessionsToDelete && sessionsToDelete.length > 0) {
-      const { error: deleteError } = await supabase
+    try {
+      // PASSO 1: DELETE limpo de todas as sessões
+      const { data: deletedSessions, error: deleteError } = await supabase
         .from('sessions')
         .delete()
-        .in('id', sessionsToDelete.map(s => s.id));
+        .eq('schedule_id', schedule.id)
+        .eq('origin', 'recurring')
+        [deleteBeforeCutoff ? 'lt' : 'gte']('scheduled_at', cutoffDate.toISOString())
+        .select('id');
 
       if (deleteError) {
-        console.error('Erro ao deletar sessões futuras:', deleteError);
+        console.error('❌ Erro ao deletar sessões:', deleteError);
         throw deleteError;
       }
 
-      console.log('Sessões deletadas com sucesso');
+      console.log('🗑️ Sessões deletadas:', deletedSessions?.length ?? 0);
+
+      // PASSO 2: INSERT limpo de novas sessões
+      await materializeSessionsForSchedule(schedule, cutoffDate);
+      
+      console.log('✅ Agenda regenerada com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao regenerar agenda:', error);
+      throw error;
     }
-
-    // Aguardar um momento para garantir que a deleção foi processada
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Regenerar sessões
-    await materializeSessionsForSchedule(schedule);
-    
-    console.log('Sessões regeneradas com sucesso');
   };
 
   // Função para gerar ocorrências de sessões baseadas na regra
