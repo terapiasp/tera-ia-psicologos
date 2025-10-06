@@ -309,7 +309,13 @@ export function PixKeyForm() {
                 <Label htmlFor="pix-type">
                   Tipo de Chave <span className="text-destructive">*</span>
                 </Label>
-                <Select value={keyType} onValueChange={(value) => setKeyType(value as PixKeyType)}>
+                <Select 
+                  value={keyType} 
+                  onValueChange={(value) => {
+                    setKeyType(value as PixKeyType);
+                    setKeyValue(''); // Limpa o campo ao trocar o tipo
+                  }}
+                >
                   <SelectTrigger id="pix-type">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
