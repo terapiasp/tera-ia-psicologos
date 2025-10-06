@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { QrCode, Copy, CheckCircle2, Key, CreditCard, Info, DollarSign } from "lucide-react";
+import { Key, CreditCard, Info } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -13,17 +13,40 @@ import { TipoCobranca } from "@/hooks/useProfile";
 
 type PixKeyType = 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
 
+const BRAZILIAN_BANKS = [
+  { value: "001", label: "Banco do Brasil" },
+  { value: "033", label: "Santander" },
+  { value: "104", label: "Caixa Econômica Federal" },
+  { value: "237", label: "Bradesco" },
+  { value: "341", label: "Itaú" },
+  { value: "077", label: "Banco Inter" },
+  { value: "260", label: "Nubank" },
+  { value: "290", label: "PagSeguro (PagBank)" },
+  { value: "323", label: "Mercado Pago" },
+  { value: "336", label: "C6 Bank" },
+  { value: "422", label: "Banco Safra" },
+  { value: "748", label: "Sicredi" },
+  { value: "756", label: "Sicoob" },
+  { value: "212", label: "Banco Original" },
+  { value: "041", label: "Banrisul" },
+  { value: "outro", label: "Outro" },
+];
+
 export function PixKeyForm() {
   const { profile, updateProfile, isUpdating } = useProfile();
   const { toast } = useToast();
+  const [city, setCity] = useState('');
+  const [bank, setBank] = useState('');
+  const [customBank, setCustomBank] = useState('');
   const [keyType, setKeyType] = useState<PixKeyType>('email');
   const [keyValue, setKeyValue] = useState('');
-  const [copiedCopyPaste, setCopiedCopyPaste] = useState(false);
   const [tipoCobranca, setTipoCobranca] = useState<TipoCobranca>('DIA_FIXO');
   const [parametroCobranca, setParametroCobranca] = useState(10);
 
   useEffect(() => {
     if (profile) {
+      setCity(profile.city || '');
+      setBank(profile.pix_bank_name || '');
       setKeyType((profile.pix_key_type as PixKeyType) || 'email');
       setKeyValue(profile.pix_key_value || '');
       setTipoCobranca((profile.tipo_cobranca as TipoCobranca) || 'DIA_FIXO');
@@ -31,18 +54,138 @@ export function PixKeyForm() {
     }
   }, [profile]);
 
+  const formatPixKey = (value: string, type: PixKeyType): string => {
+    // Remove tudo que não é número ou letra
+    let cleaned = value.replace(/[^\w@.+-]/g, '');
+    
+    switch (type) {
+      case 'cpf':
+        // Remove tudo que não é número
+        cleaned = cleaned.replace(/\D/g, '');
+        // Aplica máscara XXX.XXX.XXX-XX
+        if (cleaned.length <= 11) {
+          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
+          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
+          cleaned = cleaned.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        }
+        return cleaned.slice(0, 14);
+      
+      case 'cnpj':
+        // Remove tudo que não é número
+        cleaned = cleaned.replace(/\D/g, '');
+        // Aplica máscara XX.XXX.XXX/XXXX-XX
+        if (cleaned.length <= 14) {
+          cleaned = cleaned.replace(/(\d{2})(\d)/, '$1.$2');
+          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
+          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1/$2');
+          cleaned = cleaned.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+        }
+        return cleaned.slice(0, 18);
+      
+      case 'telefone':
+        // Remove tudo que não é número
+        cleaned = cleaned.replace(/\D/g, '');
+        // Aplica máscara +55 (XX) XXXXX-XXXX
+        if (cleaned.length <= 13) {
+          if (!cleaned.startsWith('55')) {
+            cleaned = '55' + cleaned;
+          }
+          cleaned = cleaned.replace(/(\d{2})(\d)/, '+$1 ($2');
+          cleaned = cleaned.replace(/(\d{2})\)(\d)/, '$1) $2');
+          cleaned = cleaned.replace(/(\d{5})(\d)/, '$1-$2');
+        }
+        return cleaned.slice(0, 19);
+      
+      case 'email':
+        return value.toLowerCase();
+      
+      case 'random':
+        return value.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
+      
+      default:
+        return value;
+    }
+  };
+
+  const validatePixKey = (value: string, type: PixKeyType): boolean => {
+    switch (type) {
+      case 'cpf':
+        const cpf = value.replace(/\D/g, '');
+        return cpf.length === 11;
+      case 'cnpj':
+        const cnpj = value.replace(/\D/g, '');
+        return cnpj.length === 14;
+      case 'telefone':
+        const phone = value.replace(/\D/g, '');
+        return phone.length === 13;
+      case 'email':
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      case 'random':
+        return value.length >= 32;
+      default:
+        return false;
+    }
+  };
+
+  const handleKeyValueChange = (value: string) => {
+    const formatted = formatPixKey(value, keyType);
+    setKeyValue(formatted);
+  };
+
   const savePixConfig = () => {
-    if (!keyValue || !profile?.name) {
+    // Validação de campos obrigatórios
+    if (!city.trim()) {
       toast({
-        title: "Dados incompletos",
-        description: "Preencha todos os campos antes de salvar a chave PIX",
+        title: "Cidade obrigatória",
+        description: "Por favor, informe a cidade em que reside",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!bank) {
+      toast({
+        title: "Banco obrigatório",
+        description: "Por favor, selecione sua instituição bancária",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (bank === 'outro' && !customBank.trim()) {
+      toast({
+        title: "Nome do banco obrigatório",
+        description: "Por favor, informe o nome da instituição bancária",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!keyValue.trim()) {
+      toast({
+        title: "Chave PIX obrigatória",
+        description: "Por favor, informe sua chave PIX",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação específica do tipo de chave
+    if (!validatePixKey(keyValue, keyType)) {
+      toast({
+        title: "Chave PIX inválida",
+        description: `A chave informada não é válida para o tipo ${keyType}`,
         variant: "destructive",
       });
       return;
     }
 
     try {
+      const bankName = bank === 'outro' ? customBank : BRAZILIAN_BANKS.find(b => b.value === bank)?.label || bank;
+      
       updateProfile({
+        city: city.trim(),
+        pix_bank_name: bankName,
         pix_key_type: keyType,
         pix_key_value: keyValue,
         pix_updated_at: new Date().toISOString(),
@@ -83,17 +226,7 @@ export function PixKeyForm() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedCopyPaste(true);
-    setTimeout(() => setCopiedCopyPaste(false), 2000);
-    toast({
-      title: "Copiado!",
-      description: "Código PIX copiado para a área de transferência",
-    });
-  };
-
-  const getKeyTypeMask = (type: PixKeyType) => {
+  const getKeyPlaceholder = (type: PixKeyType) => {
     switch (type) {
       case 'cpf':
         return '000.000.000-00';
@@ -101,6 +234,10 @@ export function PixKeyForm() {
         return '00.000.000/0000-00';
       case 'telefone':
         return '+55 (00) 00000-0000';
+      case 'email':
+        return 'seu@email.com';
+      case 'random':
+        return 'Chave aleatória (32 caracteres)';
       default:
         return '';
     }
@@ -120,66 +257,94 @@ export function PixKeyForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-4 md:p-6">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="pix-type">Tipo de Chave</Label>
-              <Select value={keyType} onValueChange={(value) => setKeyType(value as PixKeyType)}>
-                <SelectTrigger id="pix-type">
-                  <SelectValue placeholder="Selecione o tipo" />
+              <Label htmlFor="city">
+                Cidade em que reside <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="city"
+                placeholder="Ex: São Paulo"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bank">
+                Instituição Bancária <span className="text-destructive">*</span>
+              </Label>
+              <Select value={bank} onValueChange={setBank}>
+                <SelectTrigger id="bank">
+                  <SelectValue placeholder="Selecione o banco" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="email">E-mail</SelectItem>
-                  <SelectItem value="cpf">CPF</SelectItem>
-                  <SelectItem value="cnpj">CNPJ</SelectItem>
-                  <SelectItem value="telefone">Telefone</SelectItem>
-                  <SelectItem value="random">Chave Aleatória</SelectItem>
+                  {BRAZILIAN_BANKS.map((bankOption) => (
+                    <SelectItem key={bankOption.value} value={bankOption.value}>
+                      {bankOption.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="pix-key">Chave PIX</Label>
-              <Input
-                id="pix-key"
-                placeholder={getKeyTypeMask(keyType) || `Digite sua chave ${keyType}`}
-                value={keyValue}
-                onChange={(e) => setKeyValue(e.target.value)}
-              />
+            {bank === 'outro' && (
+              <div className="space-y-2">
+                <Label htmlFor="custom-bank">
+                  Nome do Banco <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="custom-bank"
+                  placeholder="Digite o nome da instituição"
+                  value={customBank}
+                  onChange={(e) => setCustomBank(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="pix-type">
+                  Tipo de Chave <span className="text-destructive">*</span>
+                </Label>
+                <Select value={keyType} onValueChange={(value) => setKeyType(value as PixKeyType)}>
+                  <SelectTrigger id="pix-type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">E-mail</SelectItem>
+                    <SelectItem value="cpf">CPF</SelectItem>
+                    <SelectItem value="cnpj">CNPJ</SelectItem>
+                    <SelectItem value="telefone">Telefone</SelectItem>
+                    <SelectItem value="random">Chave Aleatória</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pix-key">
+                  Chave PIX <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="pix-key"
+                  placeholder={getKeyPlaceholder(keyType)}
+                  value={keyValue}
+                  onChange={(e) => handleKeyValueChange(e.target.value)}
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          <Button onClick={savePixConfig} disabled={isUpdating || !keyValue} className="w-full">
+          <Button 
+            onClick={savePixConfig} 
+            disabled={isUpdating || !city || !bank || !keyValue || (bank === 'outro' && !customBank)} 
+            className="w-full"
+          >
             {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
           </Button>
-
-          {profile?.pix_key_value && (
-            <div className="border rounded-lg p-4 bg-muted/50">
-              <p className="text-sm text-muted-foreground mb-2">Chave PIX Configurada</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
-                  {profile.pix_key_value}
-                </code>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(profile.pix_key_value || '');
-                    toast({
-                      title: "Copiado!",
-                      description: "Chave PIX copiada para a área de transferência",
-                    });
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              {profile?.pix_updated_at && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
-                </p>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 
