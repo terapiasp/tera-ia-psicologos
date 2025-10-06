@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
-import { Key, CreditCard, Info } from "lucide-react";
+import { Key, CreditCard, Info, Trash2, Eye, Edit, CheckCircle2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,6 +46,9 @@ const BRAZILIAN_BANKS = [
 export function PixKeyForm() {
   const { profile, updateProfile, isUpdating } = useProfile();
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [city, setCity] = useState('');
   const [bank, setBank] = useState('');
   const [customBank, setCustomBank] = useState('');
@@ -51,6 +65,11 @@ export function PixKeyForm() {
       setKeyValue(profile.pix_key_value || '');
       setTipoCobranca((profile.tipo_cobranca as TipoCobranca) || 'DIA_FIXO');
       setParametroCobranca(profile.parametro_cobranca || 10);
+      
+      // Se não tem chave configurada, entra em modo edição
+      if (!profile.pix_key_value) {
+        setIsEditing(true);
+      }
     }
   }, [profile]);
 
@@ -195,11 +214,47 @@ export function PixKeyForm() {
         title: "Chave PIX salva",
         description: "Sua chave PIX foi configurada com sucesso",
       });
+      
+      // Sai do modo edição após salvar
+      setIsEditing(false);
     } catch (error) {
       console.error('Erro ao salvar chave PIX:', error);
       toast({
         title: "Erro",
         description: "Não foi possível salvar a chave PIX. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePixKey = async () => {
+    try {
+      await updateProfile({
+        city: null,
+        pix_bank_name: null,
+        pix_key_type: null,
+        pix_key_value: null,
+        pix_updated_at: null,
+      });
+
+      toast({
+        title: "Chave PIX excluída",
+        description: "Sua configuração PIX foi removida",
+      });
+
+      // Limpa os campos e volta para modo edição
+      setCity('');
+      setBank('');
+      setCustomBank('');
+      setKeyType('email');
+      setKeyValue('');
+      setIsEditing(true);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Erro ao excluir chave PIX:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a chave PIX",
         variant: "destructive",
       });
     }
@@ -256,101 +311,165 @@ export function PixKeyForm() {
             Configure sua chave PIX para receber pagamentos dos seus pacientes
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 p-4 md:p-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="city">
-                Cidade em que reside <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="city"
-                placeholder="Ex: São Paulo"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-              />
+        <CardContent className="p-4 md:p-6">
+          {!isEditing && profile?.pix_key_value ? (
+            // Estado Configurado - View compacto
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between p-4 bg-success/10 border border-success/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-success/20 rounded-full">
+                    <Key className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-foreground">Chave PIX Configurada</h4>
+                      <Badge variant="outline" className="bg-success/20 text-success border-success/30">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Ativa
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {profile.pix_bank_name} • {profile.pix_key_type?.toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowDetailsDialog(true)}
+                    className="h-9 w-9"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsEditing(true)}
+                    className="h-9 w-9"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="h-9 w-9 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bank">
-                Instituição Bancária <span className="text-destructive">*</span>
-              </Label>
-              <Select value={bank} onValueChange={setBank}>
-                <SelectTrigger id="bank">
-                  <SelectValue placeholder="Selecione o banco" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BRAZILIAN_BANKS.map((bankOption) => (
-                    <SelectItem key={bankOption.value} value={bankOption.value}>
-                      {bankOption.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {bank === 'outro' && (
+          ) : (
+            // Estado de Edição - Formulário completo
+            <div className="space-y-4 animate-fade-in">
               <div className="space-y-2">
-                <Label htmlFor="custom-bank">
-                  Nome do Banco <span className="text-destructive">*</span>
+                <Label htmlFor="city">
+                  Cidade em que reside <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  id="custom-bank"
-                  placeholder="Digite o nome da instituição"
-                  value={customBank}
-                  onChange={(e) => setCustomBank(e.target.value)}
+                  id="city"
+                  placeholder="Ex: São Paulo"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
                   required
                 />
               </div>
-            )}
 
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="pix-type">
-                  Tipo de Chave <span className="text-destructive">*</span>
+                <Label htmlFor="bank">
+                  Instituição Bancária <span className="text-destructive">*</span>
                 </Label>
-                <Select 
-                  value={keyType} 
-                  onValueChange={(value) => {
-                    setKeyType(value as PixKeyType);
-                    setKeyValue(''); // Limpa o campo ao trocar o tipo
-                  }}
-                >
-                  <SelectTrigger id="pix-type">
-                    <SelectValue placeholder="Selecione o tipo" />
+                <Select value={bank} onValueChange={setBank}>
+                  <SelectTrigger id="bank">
+                    <SelectValue placeholder="Selecione o banco" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="email">E-mail</SelectItem>
-                    <SelectItem value="cpf">CPF</SelectItem>
-                    <SelectItem value="cnpj">CNPJ</SelectItem>
-                    <SelectItem value="telefone">Telefone</SelectItem>
-                    <SelectItem value="random">Chave Aleatória</SelectItem>
+                    {BRAZILIAN_BANKS.map((bankOption) => (
+                      <SelectItem key={bankOption.value} value={bankOption.value}>
+                        {bankOption.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="pix-key">
-                  Chave PIX <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="pix-key"
-                  placeholder={getKeyPlaceholder(keyType)}
-                  value={keyValue}
-                  onChange={(e) => handleKeyValueChange(e.target.value)}
-                  required
-                />
+              {bank === 'outro' && (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-bank">
+                    Nome do Banco <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="custom-bank"
+                    placeholder="Digite o nome da instituição"
+                    value={customBank}
+                    onChange={(e) => setCustomBank(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="pix-type">
+                    Tipo de Chave <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={keyType} 
+                    onValueChange={(value) => {
+                      setKeyType(value as PixKeyType);
+                      setKeyValue(''); // Limpa o campo ao trocar o tipo
+                    }}
+                  >
+                    <SelectTrigger id="pix-type">
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                      <SelectItem value="telefone">Telefone</SelectItem>
+                      <SelectItem value="random">Chave Aleatória</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pix-key">
+                    Chave PIX <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="pix-key"
+                    placeholder={getKeyPlaceholder(keyType)}
+                    value={keyValue}
+                    onChange={(e) => handleKeyValueChange(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                {profile?.pix_key_value && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                    disabled={isUpdating}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                )}
+                <Button 
+                  onClick={savePixConfig} 
+                  disabled={isUpdating || !city || !bank || !keyValue || (bank === 'outro' && !customBank)} 
+                  className="flex-1"
+                >
+                  {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
+                </Button>
               </div>
             </div>
-          </div>
-
-          <Button 
-            onClick={savePixConfig} 
-            disabled={isUpdating || !city || !bank || !keyValue || (bank === 'outro' && !customBank)} 
-            className="w-full"
-          >
-            {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
-          </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -439,6 +558,87 @@ export function PixKeyForm() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Chave PIX?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir sua configuração PIX? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePixKey}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de Detalhes da Chave PIX */}
+      <AlertDialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Detalhes da Chave PIX
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="text-muted-foreground">Cidade</Label>
+              <p className="font-medium mt-1">{profile?.city || '-'}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Instituição Bancária</Label>
+              <p className="font-medium mt-1">{profile?.pix_bank_name || '-'}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Tipo de Chave</Label>
+              <p className="font-medium mt-1">{profile?.pix_key_type?.toUpperCase() || '-'}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Chave PIX</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded border">
+                  {profile?.pix_key_value || '-'}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile?.pix_key_value || '');
+                    toast({
+                      title: "Copiado!",
+                      description: "Chave PIX copiada para a área de transferência",
+                    });
+                  }}
+                >
+                  <Key className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            {profile?.pix_updated_at && (
+              <div>
+                <Label className="text-muted-foreground">Última Atualização</Label>
+                <p className="text-sm mt-1">
+                  {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
+                </p>
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowDetailsDialog(false)}>
+              Fechar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
