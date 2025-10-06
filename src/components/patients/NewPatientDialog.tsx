@@ -21,7 +21,8 @@ import {
   Video,
   X,
   Save,
-  Archive
+  Archive,
+  Wallet
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -76,6 +77,7 @@ import { SessionValueInput } from "./SessionValueInput";
 import { usePatients, CreatePatientData } from "@/hooks/usePatients";
 import { useSessions } from "@/hooks/useSessions";
 import { useSessionsCache } from "@/contexts/SessionsCacheContext";
+import { useProfile } from "@/hooks/useProfile";
 
 // Create schema function to have access to context
 const createPatientSchema = (existingNames: string[], currentPatientId?: string) => z.object({
@@ -116,6 +118,11 @@ const createPatientSchema = (existingNames: string[], currentPatientId?: string)
   recurring_meet_code: z.string().optional(),
   external_session_link: z.string().optional(),
   link_type: z.enum(['recurring_meet', 'external']).optional(),
+  
+  // Configuração de Pagamento
+  payment_scheme: z.enum(['fixed_day', 'per_period', 'per_session']).optional(),
+  payment_day: z.string().optional(),
+  payment_period_sessions: z.string().optional(),
 });
 
 type PatientFormData = z.infer<ReturnType<typeof createPatientSchema>>;
@@ -146,6 +153,7 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
   const { createSchedule, updateSchedule, schedules } = useRecurringSchedules();
   const { clearCache } = useSessionsCache();
   const { createSession } = useSessions();
+  const { profile } = useProfile();
 
   // Get existing patient names for validation, excluding current patient if editing
   const existingNames = patients
@@ -168,6 +176,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
       address: patient?.address || "",
       session_value: patient?.session_value?.toString() || "80",
       session_duration: patient?.session_duration?.toString() || "50",
+      payment_scheme: patient?.payment_scheme || profile?.default_payment_scheme || "fixed_day",
+      payment_day: patient?.payment_day?.toString() || profile?.default_payment_day?.toString() || "10",
+      payment_period_sessions: patient?.payment_period_sessions?.toString() || profile?.default_payment_period_sessions?.toString() || "4",
     },
   });
 
@@ -199,6 +210,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         link_type: patient.link_type || undefined,
         session_value: patient.session_value?.toString() || "80",
         session_duration: patient.session_duration?.toString() || "50",
+        payment_scheme: patient.payment_scheme || profile?.default_payment_scheme || "fixed_day",
+        payment_day: patient.payment_day?.toString() || profile?.default_payment_day?.toString() || "10",
+        payment_period_sessions: patient.payment_period_sessions?.toString() || profile?.default_payment_period_sessions?.toString() || "4",
       });
 
       // Carregar agenda existente
@@ -334,6 +348,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         nickname: data.nickname || undefined,
         birth_date: data.birth_date || undefined,
         address: data.address || undefined,
+        payment_scheme: data.payment_scheme || 'fixed_day',
+        payment_day: data.payment_day ? parseInt(data.payment_day) : 10,
+        payment_period_sessions: data.payment_period_sessions ? parseInt(data.payment_period_sessions) : 4,
         ...linkData,
       };
 
@@ -427,6 +444,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
         birth_date: data.birth_date || undefined,
         address: data.address || undefined,
         frequency_preset_id: schedulingData?.recurrenceRule?.presetId || undefined,
+        payment_scheme: data.payment_scheme || 'fixed_day',
+        payment_day: data.payment_day ? parseInt(data.payment_day) : 10,
+        payment_period_sessions: data.payment_period_sessions ? parseInt(data.payment_period_sessions) : 4,
         ...linkData,
       };
 
@@ -772,6 +792,103 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Configuração de Pagamento */}
+                  <div className="space-y-4 pt-2 pb-6 border-b">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Wallet className="h-4 w-4 text-blue-500" />
+                      <h4 className="font-medium">Configuração de Pagamento</h4>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="payment_scheme"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 text-base">
+                            <DollarSign className="h-4 w-4" />
+                            Esquema de Pagamento
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecione o esquema" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="fixed_day">📅 Dia Fixo do Mês</SelectItem>
+                              <SelectItem value="per_period">🔄 Por Período (a cada X sessões)</SelectItem>
+                              <SelectItem value="per_session">💳 Por Sessão</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {field.value === 'fixed_day' && 'Pagamento mensal no dia especificado'}
+                            {field.value === 'per_period' && 'Cobrança após realizar X sessões'}
+                            {field.value === 'per_session' && 'Pagamento individual por sessão realizada'}
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch("payment_scheme") === "fixed_day" && (
+                      <FormField
+                        control={form.control}
+                        name="payment_day"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2 text-base">
+                              <Calendar className="h-4 w-4" />
+                              Dia de Vencimento
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="31"
+                                placeholder="10"
+                                {...field}
+                                className="h-12 text-base"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Escolha o dia do mês (1-31) para vencimento do pagamento
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {form.watch("payment_scheme") === "per_period" && (
+                      <FormField
+                        control={form.control}
+                        name="payment_period_sessions"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2 text-base">
+                              <Calendar className="h-4 w-4" />
+                              Cobrar a cada quantas sessões?
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="10"
+                                placeholder="4"
+                                {...field}
+                                className="h-12 text-base"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Número de sessões para gerar cobrança (ex: a cada 4 sessões)
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
 
                   {/* Agendamento */}

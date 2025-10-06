@@ -113,6 +113,9 @@ export type Database = {
           link_type: string | null
           name: string
           nickname: string | null
+          payment_day: number | null
+          payment_period_sessions: number | null
+          payment_scheme: string | null
           phone: string | null
           recurring_meet_code: string | null
           service_modality_id: string | null
@@ -143,6 +146,9 @@ export type Database = {
           link_type?: string | null
           name: string
           nickname?: string | null
+          payment_day?: number | null
+          payment_period_sessions?: number | null
+          payment_scheme?: string | null
           phone?: string | null
           recurring_meet_code?: string | null
           service_modality_id?: string | null
@@ -173,6 +179,9 @@ export type Database = {
           link_type?: string | null
           name?: string
           nickname?: string | null
+          payment_day?: number | null
+          payment_period_sessions?: number | null
+          payment_scheme?: string | null
           phone?: string | null
           recurring_meet_code?: string | null
           service_modality_id?: string | null
@@ -206,6 +215,9 @@ export type Database = {
           country: string | null
           created_at: string
           crp_number: string | null
+          default_payment_day: number | null
+          default_payment_period_sessions: number | null
+          default_payment_scheme: string | null
           email: string
           id: string
           metadata: Json
@@ -230,6 +242,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           crp_number?: string | null
+          default_payment_day?: number | null
+          default_payment_period_sessions?: number | null
+          default_payment_scheme?: string | null
           email: string
           id?: string
           metadata?: Json
@@ -254,6 +269,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           crp_number?: string | null
+          default_payment_day?: number | null
+          default_payment_period_sessions?: number | null
+          default_payment_scheme?: string | null
           email?: string
           id?: string
           metadata?: Json

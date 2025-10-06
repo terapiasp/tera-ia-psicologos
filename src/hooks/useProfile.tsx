@@ -27,6 +27,9 @@ export interface Profile {
   parametro_cobranca?: number;
   template_lembrete_sessao?: string;
   template_lembrete_pagamento?: string;
+  default_payment_scheme?: 'fixed_day' | 'per_period' | 'per_session';
+  default_payment_day?: number;
+  default_payment_period_sessions?: number;
   created_at: string;
   updated_at: string;
 }
