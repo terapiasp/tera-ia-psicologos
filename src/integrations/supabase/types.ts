@@ -290,10 +290,9 @@ export type Database = {
           onboarding_completed: boolean | null
           parametro_cobranca: number | null
           phone: string | null
-          pix_copy_paste: string | null
+          pix_bank_name: string | null
           pix_key_type: string | null
           pix_key_value: string | null
-          pix_qr_code: string | null
           pix_updated_at: string | null
           state: string | null
           template_lembrete_pagamento: string | null
@@ -322,10 +321,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           parametro_cobranca?: number | null
           phone?: string | null
-          pix_copy_paste?: string | null
+          pix_bank_name?: string | null
           pix_key_type?: string | null
           pix_key_value?: string | null
-          pix_qr_code?: string | null
           pix_updated_at?: string | null
           state?: string | null
           template_lembrete_pagamento?: string | null
@@ -354,10 +352,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           parametro_cobranca?: number | null
           phone?: string | null
-          pix_copy_paste?: string | null
+          pix_bank_name?: string | null
           pix_key_type?: string | null
           pix_key_value?: string | null
-          pix_qr_code?: string | null
           pix_updated_at?: string | null
           state?: string | null
           template_lembrete_pagamento?: string | null
