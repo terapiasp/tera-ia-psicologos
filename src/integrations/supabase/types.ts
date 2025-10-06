@@ -290,6 +290,8 @@ export type Database = {
           onboarding_completed: boolean | null
           parametro_cobranca: number | null
           phone: string | null
+          pix_allows_dynamic_value: boolean | null
+          pix_bank_name: string | null
           pix_copy_paste: string | null
           pix_key_type: string | null
           pix_key_value: string | null
@@ -322,6 +324,8 @@ export type Database = {
           onboarding_completed?: boolean | null
           parametro_cobranca?: number | null
           phone?: string | null
+          pix_allows_dynamic_value?: boolean | null
+          pix_bank_name?: string | null
           pix_copy_paste?: string | null
           pix_key_type?: string | null
           pix_key_value?: string | null
@@ -354,6 +358,8 @@ export type Database = {
           onboarding_completed?: boolean | null
           parametro_cobranca?: number | null
           phone?: string | null
+          pix_allows_dynamic_value?: boolean | null
+          pix_bank_name?: string | null
           pix_copy_paste?: string | null
           pix_key_type?: string | null
           pix_key_value?: string | null
