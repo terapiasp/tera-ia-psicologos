@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
+import { createStaticPix, hasError } from "pix-utils";
 
 type PixKeyType = 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
 
@@ -24,7 +25,7 @@ export function PixKeyForm() {
     }
   }, [profile]);
 
-  const generatePixCode = () => {
+  const generatePixCode = async () => {
     if (!keyValue || !profile?.name) {
       toast({
         title: "Dados incompletos",
@@ -35,17 +36,26 @@ export function PixKeyForm() {
     }
 
     try {
-      // Gera payload PIX manualmente seguindo o padrão EMV
-      const pixPayload = `000201010212${keyValue.length.toString().padStart(2, '0')}${keyValue}52040000530398654${profile.name.length.toString().padStart(2, '0')}${profile.name}5802BR5914${(profile.city || 'Sao Paulo').length.toString().padStart(2, '0')}${profile.city || 'Sao Paulo'}6304`;
-      
-      // Gera QR Code data URL (SVG simplificado)
-      const pixQrCodeSvg = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12">PIX QR Code</text></svg>`)}`;
+      const pix = createStaticPix({
+        merchantName: profile.name,
+        merchantCity: profile.city || 'Sao Paulo',
+        pixKey: keyValue,
+        infoAdicional: 'Terapia SP',
+        transactionAmount: 0, // Static PIX without predefined amount
+      });
+
+      if (hasError(pix)) {
+        throw new Error('Erro ao gerar código PIX');
+      }
+
+      const brCode = pix.toBRCode();
+      const qrCodeDataUrl = await pix.toImage();
 
       updateProfile({
         pix_key_type: keyType,
         pix_key_value: keyValue,
-        pix_copy_paste: pixPayload,
-        pix_qr_code: pixQrCodeSvg,
+        pix_copy_paste: brCode,
+        pix_qr_code: qrCodeDataUrl,
         pix_updated_at: new Date().toISOString(),
       });
     } catch (error) {
