@@ -358,25 +358,33 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: () => {
-          // Atualizar agenda APENAS se há mudanças reais no agendamento
+          // 💾 SOLUÇÃO RADICAL: SEMPRE regenerar agenda ao salvar
           if (schedulingData) {
+            console.log('💾 SAVE PACIENTE:', {
+              patient_id: patient.id,
+              patient_name: data.name,
+              scheduling_type: schedulingData.type
+            });
+
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
             const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
             
+            console.log('📋 Schedule status:', {
+              tem_schedule_existente: !!existingSchedule,
+              vai_atualizar: !!existingSchedule,
+              vai_criar: !existingSchedule
+            });
+            
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
-              // Verificar se houve mudança real na regra de recorrência
+              // Verificar se a data de início mudou (caso especial)
               const startDateChanged = existingSchedule && 
                 existingSchedule.rrule_json.startDate !== schedulingData.recurrenceRule.startDate;
               
-              const hasScheduleChanged = !existingSchedule || 
-                JSON.stringify(existingSchedule.rrule_json) !== JSON.stringify(schedulingData.recurrenceRule) ||
-                existingSchedule.session_value !== sessionValue ||
-                existingSchedule.duration_minutes !== durationMinutes ||
-                existingSchedule.session_type !== data.therapy_type;
-              
-              if (existingSchedule && hasScheduleChanged) {
-                // Atualizar agenda existente APENAS se mudou
+              if (existingSchedule) {
+                // ✅ SEMPRE atualizar se existe, independente de mudanças
                 setIsSavingSchedule(true);
+                console.log('🔄 Atualizando agenda existente (FORÇA BRUTA)');
+                
                 updateSchedule({
                   id: existingSchedule.id,
                   updates: {
@@ -386,20 +394,23 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     duration_minutes: durationMinutes,
                   },
                   options: {
-                    // Se a data de início mudou, deletar eventos antigos
+                    // Se startDate mudou: deletar sessões ANTIGAS (< novo startDate)
+                    // Se não mudou: deletar sessões FUTURAS (>= NOW) e recriar
                     deleteBeforeCutoff: startDateChanged,
                     cutoffDate: startDateChanged ? new Date(schedulingData.recurrenceRule.startDate) : undefined
                   }
                 }, {
                   onSuccess: () => {
                     setIsSavingSchedule(false);
+                    console.log('✅ Agenda atualizada com sucesso');
                     toast({
                       title: "Agenda atualizada",
-                      description: "Sessões recriadas com sucesso",
+                      description: "Todas as sessões foram regeneradas",
                     });
                   },
-                  onError: () => {
+                  onError: (error) => {
                     setIsSavingSchedule(false);
+                    console.error('❌ Erro ao atualizar agenda:', error);
                     toast({
                       variant: "destructive",
                       title: "Erro ao atualizar agenda",
@@ -407,9 +418,11 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     });
                   }
                 });
-              } else if (!existingSchedule) {
-                // Criar nova agenda apenas se não existe
+              } else {
+                // ✅ Criar nova agenda se não existe
                 setIsSavingSchedule(true);
+                console.log('✨ Criando nova agenda');
+                
                 createSchedule({
                   patient_id: patient.id,
                   rrule_json: schedulingData.recurrenceRule,
@@ -419,13 +432,20 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                 }, {
                   onSuccess: () => {
                     setIsSavingSchedule(false);
+                    console.log('✅ Agenda criada com sucesso');
                     toast({
                       title: "Agenda criada",
                       description: "Sessões geradas com sucesso",
                     });
                   },
-                  onError: () => {
+                  onError: (error) => {
                     setIsSavingSchedule(false);
+                    console.error('❌ Erro ao criar agenda:', error);
+                    toast({
+                      variant: "destructive",
+                      title: "Erro ao criar agenda",
+                      description: "Tente novamente",
+                    });
                   }
                 });
               }

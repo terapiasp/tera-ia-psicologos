@@ -126,9 +126,9 @@ export const useRecurringSchedules = () => {
       return { data, options };
     },
     onSuccess: async ({ data: updatedSchedule, options }) => {
-      queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
+      console.log('✅ Schedule updated na DB, iniciando regeneração...');
       
-      // Regenerar sessões futuras
+      // Regenerar sessões futuras (DELETE + INSERT)
       await regenerateFutureSessionsForSchedule({
         ...updatedSchedule,
         rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule
@@ -137,10 +137,17 @@ export const useRecurringSchedules = () => {
         deleteBeforeCutoff: options?.deleteBeforeCutoff 
       });
       
-      // Forçar invalidação completa do cache de sessões
+      // 💥 INVALIDAÇÃO AGRESSIVA: Remover TUDO do cache
+      console.log('💥 Invalidando cache agressivamente...');
       queryClient.removeQueries({ queryKey: ['sessions'] });
       queryClient.removeQueries({ queryKey: ['today-sessions'] });
       queryClient.removeQueries({ queryKey: ['tomorrow-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
+      
+      // Forçar refetch imediato
+      await queryClient.refetchQueries({ queryKey: ['sessions'] });
+      
+      console.log('✅ Cache limpo e refetchado');
       
       toast({
         title: "Recorrência atualizada",
@@ -211,43 +218,55 @@ export const useRecurringSchedules = () => {
     }
   };
 
-  // Função para regenerar sessões futuras quando uma regra é alterada
+  // 🔥 SOLUÇÃO RADICAL: DELETE ALL → INSERT ALL (força bruta)
   const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule, options?: { 
     cutoff?: Date; 
     deleteBeforeCutoff?: boolean 
   }) => {
     if (!user?.id) return;
 
+    // SEMPRE usar NOW() como cutoff, exceto se explicitamente passado
     const cutoffDate = options?.cutoff || new Date();
     const deleteBeforeCutoff = options?.deleteBeforeCutoff || false;
     
-    console.log('🔄 Regenerando agenda:', {
+    console.log('🔥 REGENERAÇÃO RADICAL:', {
       schedule_id: schedule.id,
+      patient_id: schedule.patient_id,
       cutoff: cutoffDate.toISOString(),
-      mode: deleteBeforeCutoff ? 'DELETAR ANTES' : 'DELETAR DEPOIS'
+      mode: deleteBeforeCutoff ? '🗑️ DELETAR ANTES DO CUTOFF' : '🗑️ DELETAR DEPOIS DO CUTOFF (>= NOW)'
     });
 
     try {
-      // PASSO 1: DELETE limpo de todas as sessões
-      const { data: deletedSessions, error: deleteError } = await supabase
+      // 🗑️ PASSO 1: DELETE BRUTAL - Apagar tudo conforme modo
+      const deleteQuery = supabase
         .from('sessions')
         .delete()
         .eq('schedule_id', schedule.id)
-        .eq('origin', 'recurring')
-        [deleteBeforeCutoff ? 'lt' : 'gte']('scheduled_at', cutoffDate.toISOString())
-        .select('id');
+        .eq('origin', 'recurring');
+
+      // Se deleteBeforeCutoff = true: deletar < cutoff (sessões antigas)
+      // Se deleteBeforeCutoff = false: deletar >= cutoff (sessões futuras a partir de NOW)
+      const { data: deletedSessions, error: deleteError } = await (
+        deleteBeforeCutoff 
+          ? deleteQuery.lt('scheduled_at', cutoffDate.toISOString())
+          : deleteQuery.gte('scheduled_at', cutoffDate.toISOString())
+      ).select('id');
 
       if (deleteError) {
-        console.error('❌ Erro ao deletar sessões:', deleteError);
+        console.error('❌ ERRO no DELETE:', deleteError);
         throw deleteError;
       }
 
-      console.log('🗑️ Sessões deletadas:', deletedSessions?.length ?? 0);
+      console.log('🗑️ Sessões DELETADAS:', {
+        quantidade: deletedSessions?.length ?? 0,
+        ids: deletedSessions?.map(s => s.id)
+      });
 
-      // PASSO 2: INSERT limpo de novas sessões
+      // ✨ PASSO 2: INSERT BRUTAL - Criar tudo do zero
+      console.log('✨ Iniciando INSERT de novas sessões...');
       await materializeSessionsForSchedule(schedule, cutoffDate);
       
-      console.log('✅ Agenda regenerada com sucesso');
+      console.log('✅ REGENERAÇÃO CONCLUÍDA COM SUCESSO');
     } catch (error) {
       console.error('❌ Erro ao regenerar agenda:', error);
       throw error;
