@@ -23,126 +23,30 @@ interface BillingSectionProps {
 export const BillingSection = ({ formData, onInputChange, onSubmit, isUpdating }: BillingSectionProps) => {
   const { modalities, isLoading: modalitiesLoading } = useServiceModalities();
 
-  const calculateMonthlyEstimate = () => {
-    const totalValue = modalities.reduce((sum, mod) => sum + (mod.session_value || 0), 0);
-    const avgSessionsPerWeek = 20; // Estimativa baseada em dados típicos
-    const weeksPerMonth = 4.33;
-    
-    switch (formData.tipo_cobranca) {
-      case "DIA_FIXO":
-        return totalValue * avgSessionsPerWeek * weeksPerMonth;
-      case "POR_SESSAO":
-        return totalValue * avgSessionsPerWeek * weeksPerMonth;
-      case "PACOTE_SESSOES":
-        return totalValue * formData.parametro_cobranca;
-      default:
-        return 0;
-    }
-  };
-
-  const terapiaSPCommission = modalities.find(mod => mod.type === "terapia_sp");
-
   return (
     <div className="space-y-6">
-      {/* Configuração de Cobrança */}
+      {/* Placeholder para Configurações Futuras */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Preferências de Cobrança
+            Configuração de Pagamentos
           </CardTitle>
           <CardDescription>
-            Configure como deseja gerenciar os pagamentos dos seus pacientes
+            Configurações de cobrança e repasses da plataforma
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tipo_cobranca" className="flex items-center gap-2">
-                Tipo de Cobrança
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Escolha como seus pacientes serão cobrados</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <Select 
-                value={formData.tipo_cobranca} 
-                onValueChange={(value: TipoCobranca) => onInputChange("tipo_cobranca", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DIA_FIXO">Dia Fixo do Mês</SelectItem>
-                  <SelectItem value="POR_SESSAO">Por Sessão</SelectItem>
-                  <SelectItem value="PACOTE_SESSOES">Pacote de Sessões</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="parametro_cobranca">
-                {formData.tipo_cobranca === "DIA_FIXO" && "Dia do Vencimento"}
-                {formData.tipo_cobranca === "PACOTE_SESSOES" && "Quantidade de Sessões"}
-                {formData.tipo_cobranca === "POR_SESSAO" && "Dias de Antecedência"}
-              </Label>
-              <Input
-                id="parametro_cobranca"
-                type="number"
-                value={formData.parametro_cobranca}
-                onChange={(e) => onInputChange("parametro_cobranca", Number(e.target.value))}
-                placeholder="10"
-                min="1"
-                max={formData.tipo_cobranca === "DIA_FIXO" ? "31" : "365"}
-              />
-            </div>
-          </div>
-          
-          <div className="bg-gradient-subtle p-4 rounded-lg border">
-            <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Info className="h-4 w-4" />
-              Como funciona:
-            </h4>
-            <div className="text-sm text-muted-foreground">
-              {formData.tipo_cobranca === "DIA_FIXO" && (
-                <p>Os pacientes serão cobrados todo dia {formData.parametro_cobranca} do mês, independente da quantidade de sessões.</p>
-              )}
-              {formData.tipo_cobranca === "POR_SESSAO" && (
-                <p>Uma cobrança será gerada {formData.parametro_cobranca} dias antes de cada sessão agendada.</p>
-              )}
-              {formData.tipo_cobranca === "PACOTE_SESSOES" && (
-                <p>Os pacientes pagam por pacotes de {formData.parametro_cobranca} sessões antecipadamente.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Estimativa de Receita */}
-          <div className="bg-success/5 border border-success/20 p-4 rounded-lg">
-            <h4 className="font-medium mb-2 flex items-center gap-2 text-success">
-              <DollarSign className="h-4 w-4" />
-              Estimativa de Receita Mensal
-            </h4>
-            <p className="text-2xl font-bold text-success">
-              R$ {calculateMonthlyEstimate().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          <div className="bg-gradient-subtle p-8 rounded-lg border text-center">
+            <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">Em Breve</h3>
+            <p className="text-muted-foreground">
+              Aqui ficará a configuração de pagamento pela plataforma TERA IA e repasse de pacientes Terapia SP.
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Baseado nas suas modalidades de serviço e frequência média
+            <p className="text-sm text-muted-foreground mt-4">
+              Configure suas preferências de recebimento em <strong>Pagamentos → Configurações PIX</strong>
             </p>
           </div>
-
-          <Button 
-            onClick={onSubmit}
-            disabled={isUpdating}
-            className="bg-gradient-primary hover:opacity-90"
-          >
-            {isUpdating ? "Salvando..." : "Salvar Preferências"}
-          </Button>
         </CardContent>
       </Card>
 
@@ -203,7 +107,7 @@ export const BillingSection = ({ formData, onInputChange, onSubmit, isUpdating }
           )}
 
           {/* Informações sobre Terapia SP */}
-          {terapiaSPCommission && (
+          {modalities.find(mod => mod.type === "terapia_sp") && (
             <>
               <Separator className="my-4" />
               <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg">
