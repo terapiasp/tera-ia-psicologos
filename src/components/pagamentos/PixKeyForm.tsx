@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { QrCode, Copy, CheckCircle2, Key, CreditCard, Info, DollarSign, Loader2, AlertTriangle } from "lucide-react";
+import { QrCode, Copy, CheckCircle2, Key, CreditCard, Info, DollarSign } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,117 +7,44 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { TipoCobranca } from "@/hooks/useProfile";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 
 type PixKeyType = 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
 
 export function PixKeyForm() {
   const { profile, updateProfile, isUpdating } = useProfile();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [keyType, setKeyType] = useState<PixKeyType>('email');
   const [keyValue, setKeyValue] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [customBankName, setCustomBankName] = useState('');
-  const [pixCity, setPixCity] = useState('');
   const [copiedCopyPaste, setCopiedCopyPaste] = useState(false);
   const [tipoCobranca, setTipoCobranca] = useState<TipoCobranca>('DIA_FIXO');
   const [parametroCobranca, setParametroCobranca] = useState(10);
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const mainBanks = [
-    'Nubank',
-    'Banco do Brasil',
-    'Bradesco',
-    'Itaú',
-    'Caixa Econômica Federal',
-    'Santander',
-    'Inter',
-    'BTG Pactual',
-    'Banco Original',
-    'Neon',
-    'C6 Bank',
-    'PagBank',
-    'Mercado Pago',
-    'Banco Safra',
-    'Sicredi',
-  ];
 
   useEffect(() => {
     if (profile) {
       setKeyType((profile.pix_key_type as PixKeyType) || 'email');
       setKeyValue(profile.pix_key_value || '');
-      const savedBank = profile.pix_bank_name || '';
-      if (mainBanks.includes(savedBank)) {
-        setBankName(savedBank);
-        setCustomBankName('');
-      } else if (savedBank) {
-        setBankName('Outros');
-        setCustomBankName(savedBank);
-      } else {
-        setBankName('');
-        setCustomBankName('');
-      }
-      setPixCity(profile.city || '');
       setTipoCobranca((profile.tipo_cobranca as TipoCobranca) || 'DIA_FIXO');
       setParametroCobranca(profile.parametro_cobranca || 10);
     }
   }, [profile]);
 
-  const formatPixKey = (value: string, type: PixKeyType): string => {
-    if (type === 'cpf') {
-      return value
-        .replace(/\D/g, '')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-        .substring(0, 14);
-    }
-    
-    if (type === 'cnpj') {
-      return value
-        .replace(/\D/g, '')
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1/$2')
-        .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
-        .substring(0, 18);
-    }
-    
-    if (type === 'telefone') {
-      return value
-        .replace(/\D/g, '')
-        .replace(/^(\d{2})(\d)/, '+55 ($1) $2')
-        .replace(/(\d{5})(\d{1,4})$/, '$1-$2')
-        .substring(0, 20);
-    }
-    
-    return value;
-  };
-
   const savePixConfig = () => {
-    if (!keyValue || !profile?.name || !pixCity) {
+    if (!keyValue || !profile?.name) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha chave PIX, nome e cidade antes de salvar",
+        description: "Preencha todos os campos antes de salvar a chave PIX",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const cleanedValue = keyValue.replace(/\D/g, '');
-      const finalBankName = bankName === 'Outros' ? customBankName : bankName;
       updateProfile({
         pix_key_type: keyType,
-        pix_key_value: keyType === 'email' || keyType === 'random' ? keyValue : cleanedValue,
-        pix_bank_name: finalBankName,
-        city: pixCity,
+        pix_key_value: keyValue,
         pix_updated_at: new Date().toISOString(),
       });
 
@@ -132,55 +59,6 @@ export function PixKeyForm() {
         description: "Não foi possível salvar a chave PIX. Tente novamente.",
         variant: "destructive",
       });
-    }
-  };
-
-  const generatePixCode = async () => {
-    if (!profile?.name || !pixCity) {
-      toast({
-        title: "Dados incompletos",
-        description: "Preencha nome e cidade antes de gerar o código PIX",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!profile?.pix_key_value) {
-      toast({
-        title: "Chave PIX não configurada",
-        description: "Configure sua chave PIX antes de gerar o código",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGenerating(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-pix', {
-        body: {
-          profileId: profile.id,
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Código PIX gerado!",
-        description: "Seu código PIX está pronto para uso",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-
-    } catch (error: any) {
-      console.error('Erro ao gerar código PIX:', error);
-      toast({
-        title: "Erro ao gerar código",
-        description: error.message || "Tente novamente em alguns instantes",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -265,213 +143,42 @@ export function PixKeyForm() {
                 id="pix-key"
                 placeholder={getKeyTypeMask(keyType) || `Digite sua chave ${keyType}`}
                 value={keyValue}
-                onChange={(e) => {
-                  const formatted = formatPixKey(e.target.value, keyType);
-                  setKeyValue(formatted);
-                }}
+                onChange={(e) => setKeyValue(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="bank-name">
-                Instituição Bancária
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="ml-1">
-                      <Info className="h-4 w-4 text-muted-foreground inline" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Nome do seu banco</p>
-                      <p className="text-xs mt-1">Útil para verificação de pagamentos</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <Select value={bankName} onValueChange={setBankName}>
-                <SelectTrigger id="bank-name">
-                  <SelectValue placeholder="Selecione seu banco" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  {mainBanks.map((bank) => (
-                    <SelectItem key={bank} value={bank}>
-                      {bank}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="Outros">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {bankName === 'Outros' && (
-                <Input
-                  placeholder="Digite o nome do banco"
-                  value={customBankName}
-                  onChange={(e) => setCustomBankName(e.target.value)}
-                  className="mt-2"
-                />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="pix-city">
-                Cidade <span className="text-destructive">*</span>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="ml-1">
-                      <Info className="h-4 w-4 text-muted-foreground inline" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cidade que aparecerá no código PIX (obrigatório BACEN)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <Input
-                id="pix-city"
-                placeholder="Ex: São Paulo"
-                value={pixCity}
-                onChange={(e) => setPixCity(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <Button onClick={savePixConfig} disabled={isUpdating || !keyValue || !pixCity} className="w-full">
-            {isUpdating ? "Salvando..." : "Salvar Configuração PIX"}
+          <Button onClick={savePixConfig} disabled={isUpdating || !keyValue} className="w-full">
+            {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
           </Button>
 
           {profile?.pix_key_value && (
-            <>
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <p className="text-sm text-muted-foreground mb-2">Chave PIX Configurada</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
-                    {profile.pix_key_value}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      navigator.clipboard.writeText(profile.pix_key_value || '');
-                      toast({
-                        title: "Copiado!",
-                        description: "Chave PIX copiada para a área de transferência",
-                      });
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                {profile?.pix_updated_at && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
-                  </p>
-                )}
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <p className="text-sm text-muted-foreground mb-2">Chave PIX Configurada</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                  {profile.pix_key_value}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile.pix_key_value || '');
+                    toast({
+                      title: "Copiado!",
+                      description: "Chave PIX copiada para a área de transferência",
+                    });
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
-
-              <Separator className="my-4" />
-
-              <Card className="border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <QrCode className="h-5 w-5" />
-                    Gerar Código PIX
-                  </CardTitle>
-                  <CardDescription>
-                    Gere um código PIX copia-e-cola válido para receber pagamentos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button 
-                    onClick={generatePixCode} 
-                    disabled={isGenerating || !profile?.name || !pixCity}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Gerando código...
-                      </>
-                    ) : (
-                      <>
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Gerar Código PIX
-                      </>
-                    )}
-                  </Button>
-
-                  {(!profile?.name || !pixCity) && (
-                    <Alert>
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        {!profile?.name && "Complete seu nome nas Configurações. "}
-                        {!pixCity && "Informe a cidade no formulário acima."}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
-
-              {profile?.pix_copy_paste && (
-                <Card className="border-success/50 bg-success/5">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-success">
-                      <CheckCircle2 className="h-5 w-5" />
-                      Código PIX Gerado
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {profile?.pix_qr_code && (
-                      <div className="flex justify-center">
-                        <img 
-                          src={profile.pix_qr_code} 
-                          alt="QR Code PIX" 
-                          className="w-64 h-64 border-2 border-border rounded-lg"
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label>Código Copia e Cola</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={profile.pix_copy_paste}
-                          readOnly
-                          className="font-mono text-xs"
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(profile.pix_copy_paste!)}
-                        >
-                          {copiedCopyPaste ? (
-                            <CheckCircle2 className="h-4 w-4 text-success" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        ✅ Este código não expira e aceita qualquer valor<br />
-                        📱 Compartilhe com seus pacientes para receber pagamentos
-                      </AlertDescription>
-                    </Alert>
-
-                    {profile?.pix_updated_at && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        Gerado em: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+              {profile?.pix_updated_at && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
+                </p>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
