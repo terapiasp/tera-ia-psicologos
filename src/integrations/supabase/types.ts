@@ -205,6 +205,71 @@ export type Database = {
           },
         ]
       }
+      payment_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          patient_id: string | null
+          receiver_bank: string | null
+          receiver_name: string | null
+          reference: string | null
+          sender_bank: string | null
+          sender_name: string | null
+          transfer_date: string
+          updated_at: string
+          user_id: string
+          validation_method: string | null
+          validation_notes: string | null
+          validation_status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          patient_id?: string | null
+          receiver_bank?: string | null
+          receiver_name?: string | null
+          reference?: string | null
+          sender_bank?: string | null
+          sender_name?: string | null
+          transfer_date: string
+          updated_at?: string
+          user_id: string
+          validation_method?: string | null
+          validation_notes?: string | null
+          validation_status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          patient_id?: string | null
+          receiver_bank?: string | null
+          receiver_name?: string | null
+          reference?: string | null
+          sender_bank?: string | null
+          sender_name?: string | null
+          transfer_date?: string
+          updated_at?: string
+          user_id?: string
+          validation_method?: string | null
+          validation_notes?: string | null
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transfers_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -225,6 +290,11 @@ export type Database = {
           onboarding_completed: boolean | null
           parametro_cobranca: number | null
           phone: string | null
+          pix_copy_paste: string | null
+          pix_key_type: string | null
+          pix_key_value: string | null
+          pix_qr_code: string | null
+          pix_updated_at: string | null
           state: string | null
           template_lembrete_pagamento: string | null
           template_lembrete_sessao: string | null
@@ -252,6 +322,11 @@ export type Database = {
           onboarding_completed?: boolean | null
           parametro_cobranca?: number | null
           phone?: string | null
+          pix_copy_paste?: string | null
+          pix_key_type?: string | null
+          pix_key_value?: string | null
+          pix_qr_code?: string | null
+          pix_updated_at?: string | null
           state?: string | null
           template_lembrete_pagamento?: string | null
           template_lembrete_sessao?: string | null
@@ -279,6 +354,11 @@ export type Database = {
           onboarding_completed?: boolean | null
           parametro_cobranca?: number | null
           phone?: string | null
+          pix_copy_paste?: string | null
+          pix_key_type?: string | null
+          pix_key_value?: string | null
+          pix_qr_code?: string | null
+          pix_updated_at?: string | null
           state?: string | null
           template_lembrete_pagamento?: string | null
           template_lembrete_sessao?: string | null
