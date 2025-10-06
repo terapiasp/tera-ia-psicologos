@@ -10,7 +10,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { TipoCobranca } from "@/hooks/useProfile";
-import { supabase } from "@/integrations/supabase/client";
 
 type PixKeyType = 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
 
@@ -32,50 +31,32 @@ export function PixKeyForm() {
     }
   }, [profile]);
 
-  const savePixConfig = async () => {
-    if (!keyValue) {
+  const savePixConfig = () => {
+    if (!keyValue || !profile?.name) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha a chave PIX antes de salvar",
+        description: "Preencha todos os campos antes de salvar a chave PIX",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // 1. Salvar chave PIX no perfil
       updateProfile({
         pix_key_type: keyType,
         pix_key_value: keyValue,
         pix_updated_at: new Date().toISOString(),
       });
 
-      // 2. Gerar código PIX via Edge Function
-      const { data, error } = await supabase.functions.invoke('generate-pix', {
-        body: {
-          profileId: profile?.id,
-        }
-      });
-
-      if (error) {
-        console.error('Erro ao gerar código PIX:', error);
-        toast({
-          title: "Aviso",
-          description: "Chave salva, mas houve erro ao gerar código PIX. Tente novamente.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       toast({
-        title: "Chave PIX configurada",
-        description: "Código copia-e-cola e QR Code gerados com sucesso!",
+        title: "Chave PIX salva",
+        description: "Sua chave PIX foi configurada com sucesso",
       });
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro ao salvar chave PIX:', error);
       toast({
         title: "Erro",
-        description: "Erro ao configurar chave PIX",
+        description: "Não foi possível salvar a chave PIX. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -171,53 +152,32 @@ export function PixKeyForm() {
             {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
           </Button>
 
-          {profile?.pix_copy_paste && (
-            <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
-              <div>
-                <p className="text-sm font-medium mb-2">Código Copia e Cola</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 text-xs font-mono bg-background px-3 py-2 rounded border break-all">
-                    {profile.pix_copy_paste}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      navigator.clipboard.writeText(profile.pix_copy_paste || '');
-                      setCopiedCopyPaste(true);
-                      setTimeout(() => setCopiedCopyPaste(false), 2000);
-                      toast({
-                        title: "Copiado!",
-                        description: "Código PIX copiado para a área de transferência",
-                      });
-                    }}
-                  >
-                    {copiedCopyPaste ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
+          {profile?.pix_key_value && (
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <p className="text-sm text-muted-foreground mb-2">Chave PIX Configurada</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                  {profile.pix_key_value}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile.pix_key_value || '');
+                    toast({
+                      title: "Copiado!",
+                      description: "Chave PIX copiada para a área de transferência",
+                    });
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
-
-              {profile?.pix_qr_code && (
-                <div>
-                  <p className="text-sm font-medium mb-2">QR Code</p>
-                  <div className="flex justify-center">
-                    <img 
-                      src={profile.pix_qr_code} 
-                      alt="QR Code PIX" 
-                      className="w-64 h-64 border rounded-lg"
-                    />
-                  </div>
-                </div>
+              {profile?.pix_updated_at && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
+                </p>
               )}
-
-              <div className="text-xs text-muted-foreground">
-                <p className="font-medium">Chave PIX: {profile.pix_key_value}</p>
-                {profile?.pix_updated_at && (
-                  <p className="mt-1">
-                    Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
-                  </p>
-                )}
-              </div>
             </div>
           )}
         </CardContent>
