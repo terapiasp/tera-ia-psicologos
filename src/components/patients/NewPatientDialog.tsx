@@ -356,15 +356,21 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
 
       updatePatient({ id: patient.id, updates }, {
         onSuccess: () => {
-          // Atualizar agenda se há dados de agendamento
+          // Atualizar agenda APENAS se há mudanças reais no agendamento
           if (schedulingData) {
             const sessionValue = data.session_value ? parseFloat(data.session_value) : 80;
+            const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
-              const existingSchedule = schedules.find(s => s.patient_id === patient.id && s.is_active);
+              // Verificar se houve mudança real na regra de recorrência
+              const hasScheduleChanged = !existingSchedule || 
+                JSON.stringify(existingSchedule.rrule_json) !== JSON.stringify(schedulingData.recurrenceRule) ||
+                existingSchedule.session_value !== sessionValue ||
+                existingSchedule.duration_minutes !== durationMinutes ||
+                existingSchedule.session_type !== data.therapy_type;
               
-              if (existingSchedule) {
-                // Atualizar agenda existente
+              if (existingSchedule && hasScheduleChanged) {
+                // Atualizar agenda existente APENAS se mudou
                 updateSchedule({
                   id: existingSchedule.id,
                   updates: {
@@ -374,8 +380,8 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     duration_minutes: durationMinutes,
                   }
                 });
-              } else {
-                // Criar nova agenda
+              } else if (!existingSchedule) {
+                // Criar nova agenda apenas se não existe
                 createSchedule({
                   patient_id: patient.id,
                   rrule_json: schedulingData.recurrenceRule,

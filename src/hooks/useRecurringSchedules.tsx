@@ -227,22 +227,41 @@ export const useRecurringSchedules = () => {
 
     console.log('Regenerando sessões futuras para schedule:', schedule.id);
 
-    // Deletar sessões futuras existentes desta recorrência
+    // Usar transação manual para evitar race conditions
     const cutoffDate = options?.cutoff || new Date();
-    const { data: deletedSessions, error: deleteError } = await supabase
+    
+    // Primeiro, buscar todas as sessões futuras que serão deletadas
+    const { data: sessionsToDelete, error: fetchError } = await supabase
       .from('sessions')
-      .delete()
+      .select('id, scheduled_at')
       .eq('schedule_id', schedule.id)
       .eq('origin', 'recurring')
-      .gte('scheduled_at', cutoffDate.toISOString())
-      .select('id');
+      .gte('scheduled_at', cutoffDate.toISOString());
 
-    if (deleteError) {
-      console.error('Erro ao deletar sessões futuras:', deleteError);
-      throw deleteError;
+    if (fetchError) {
+      console.error('Erro ao buscar sessões futuras:', fetchError);
+      throw fetchError;
     }
 
-    console.log('Sessões deletadas:', deletedSessions?.length ?? 0);
+    console.log('Sessões a deletar:', sessionsToDelete?.length ?? 0);
+
+    // Deletar as sessões futuras
+    if (sessionsToDelete && sessionsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('sessions')
+        .delete()
+        .in('id', sessionsToDelete.map(s => s.id));
+
+      if (deleteError) {
+        console.error('Erro ao deletar sessões futuras:', deleteError);
+        throw deleteError;
+      }
+
+      console.log('Sessões deletadas com sucesso');
+    }
+
+    // Aguardar um momento para garantir que a deleção foi processada
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Regenerar sessões
     await materializeSessionsForSchedule(schedule);
