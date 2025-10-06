@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { AgendaCard } from '@/components/dashboard/AgendaCard';
 import { WeeklyView } from '@/components/dashboard/WeeklyView';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { FinanceiroSheet } from '@/components/financeiro/FinanceiroSheet';
 import { useTodaySessions, useTomorrowSessions } from '@/hooks/useSessions';
 import { usePatients } from '@/hooks/usePatients';
 import { useProfile } from '@/hooks/useProfile';
@@ -18,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const navigate = useNavigate();
+  const [financeiroSheetOpen, setFinanceiroSheetOpen] = useState(false);
   const { profile, isLoading: isLoadingProfile } = useProfile();
   const { sessions: todaySessionsRaw, isLoading: isLoadingToday } = useTodaySessions();
   const { sessions: tomorrowSessionsRaw, isLoading: isLoadingTomorrow } = useTomorrowSessions();
@@ -175,6 +177,7 @@ const Index = () => {
                     maximumFractionDigits: 2 
                   })} recebido`}
                   icon={DollarSign}
+                  onClick={() => setFinanceiroSheetOpen(true)}
                 />
               )}
               
@@ -254,6 +257,12 @@ const Index = () => {
             </div>
           </main>
         </div>
+        
+        {/* Sheet de Financeiro */}
+        <FinanceiroSheet 
+          open={financeiroSheetOpen} 
+          onOpenChange={setFinanceiroSheetOpen} 
+        />
       </div>
     );
 };

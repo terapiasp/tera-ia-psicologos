@@ -30,6 +30,9 @@ export interface Patient {
   service_modality_id?: string;
   is_archived: boolean;
   archived_at?: string;
+  payment_scheme?: 'fixed_day' | 'per_period' | 'per_session';
+  payment_day?: number;
+  payment_period_sessions?: number;
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +57,9 @@ export interface CreatePatientData {
   frequency_preset_id?: string;
   session_value?: number;
   session_duration?: number;
+  payment_scheme?: 'fixed_day' | 'per_period' | 'per_session';
+  payment_day?: number;
+  payment_period_sessions?: number;
 }
 
 export const usePatients = () => {
