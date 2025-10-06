@@ -363,6 +363,9 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
             
             if (schedulingData.type === 'recurring' && schedulingData.recurrenceRule) {
               // Verificar se houve mudança real na regra de recorrência
+              const startDateChanged = existingSchedule && 
+                existingSchedule.rrule_json.startDate !== schedulingData.recurrenceRule.startDate;
+              
               const hasScheduleChanged = !existingSchedule || 
                 JSON.stringify(existingSchedule.rrule_json) !== JSON.stringify(schedulingData.recurrenceRule) ||
                 existingSchedule.session_value !== sessionValue ||
@@ -378,6 +381,11 @@ export function NewPatientDialog({ children, patient, isEdit = false, open: cont
                     session_type: data.therapy_type,
                     session_value: sessionValue,
                     duration_minutes: durationMinutes,
+                  },
+                  options: {
+                    // Se a data de início mudou, deletar eventos antigos
+                    deleteBeforeCutoff: startDateChanged,
+                    cutoffDate: startDateChanged ? new Date(schedulingData.recurrenceRule.startDate) : undefined
                   }
                 });
               } else if (!existingSchedule) {

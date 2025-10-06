@@ -103,7 +103,11 @@ export const useRecurringSchedules = () => {
   });
 
   const updateScheduleMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<RecurringSchedule> }) => {
+    mutationFn: async ({ id, updates, options }: { 
+      id: string; 
+      updates: Partial<RecurringSchedule>;
+      options?: { deleteBeforeCutoff?: boolean; cutoffDate?: Date };
+    }) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
       const updateData = updates.rrule_json 
@@ -119,15 +123,18 @@ export const useRecurringSchedules = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, options };
     },
-    onSuccess: async (updatedSchedule) => {
+    onSuccess: async ({ data: updatedSchedule, options }) => {
       queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
       
       // Regenerar sessões futuras
       await regenerateFutureSessionsForSchedule({
         ...updatedSchedule,
         rrule_json: updatedSchedule.rrule_json as unknown as RecurrenceRule
+      }, { 
+        cutoff: options?.cutoffDate,
+        deleteBeforeCutoff: options?.deleteBeforeCutoff 
       });
       
       // Forçar invalidação completa do cache de sessões
@@ -222,28 +229,39 @@ export const useRecurringSchedules = () => {
   };
 
   // Função para regenerar sessões futuras quando uma regra é alterada
-  const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule, options?: { cutoff?: Date }) => {
+  const regenerateFutureSessionsForSchedule = async (schedule: RecurringSchedule, options?: { 
+    cutoff?: Date; 
+    deleteBeforeCutoff?: boolean 
+  }) => {
     if (!user?.id) return;
 
     console.log('Regenerando sessões futuras para schedule:', schedule.id);
 
     // Usar transação manual para evitar race conditions
     const cutoffDate = options?.cutoff || new Date();
+    const deleteBeforeCutoff = options?.deleteBeforeCutoff || false;
     
-    // Primeiro, buscar todas as sessões futuras que serão deletadas
+    // Primeiro, buscar todas as sessões que serão deletadas
+    // Se deleteBeforeCutoff = true, deleta ANTES do cutoff
+    // Se deleteBeforeCutoff = false, deleta DEPOIS do cutoff (comportamento padrão)
     const { data: sessionsToDelete, error: fetchError } = await supabase
       .from('sessions')
       .select('id, scheduled_at')
       .eq('schedule_id', schedule.id)
       .eq('origin', 'recurring')
-      .gte('scheduled_at', cutoffDate.toISOString());
+      [deleteBeforeCutoff ? 'lt' : 'gte']('scheduled_at', cutoffDate.toISOString());
 
     if (fetchError) {
-      console.error('Erro ao buscar sessões futuras:', fetchError);
+      console.error('Erro ao buscar sessões:', fetchError);
       throw fetchError;
     }
 
-    console.log('Sessões a deletar:', sessionsToDelete?.length ?? 0);
+    console.log(
+      deleteBeforeCutoff 
+        ? `Sessões anteriores a ${cutoffDate.toISOString()} a deletar:` 
+        : 'Sessões futuras a deletar:', 
+      sessionsToDelete?.length ?? 0
+    );
 
     // Deletar as sessões futuras
     if (sessionsToDelete && sessionsToDelete.length > 0) {
