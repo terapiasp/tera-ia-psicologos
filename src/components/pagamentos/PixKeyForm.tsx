@@ -23,17 +23,46 @@ export function PixKeyForm() {
   const [keyType, setKeyType] = useState<PixKeyType>('email');
   const [keyValue, setKeyValue] = useState('');
   const [bankName, setBankName] = useState('');
+  const [customBankName, setCustomBankName] = useState('');
   const [pixCity, setPixCity] = useState('');
   const [copiedCopyPaste, setCopiedCopyPaste] = useState(false);
   const [tipoCobranca, setTipoCobranca] = useState<TipoCobranca>('DIA_FIXO');
   const [parametroCobranca, setParametroCobranca] = useState(10);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const mainBanks = [
+    'Nubank',
+    'Banco do Brasil',
+    'Bradesco',
+    'Itaú',
+    'Caixa Econômica Federal',
+    'Santander',
+    'Inter',
+    'BTG Pactual',
+    'Banco Original',
+    'Neon',
+    'C6 Bank',
+    'PagBank',
+    'Mercado Pago',
+    'Banco Safra',
+    'Sicredi',
+  ];
+
   useEffect(() => {
     if (profile) {
       setKeyType((profile.pix_key_type as PixKeyType) || 'email');
       setKeyValue(profile.pix_key_value || '');
-      setBankName(profile.pix_bank_name || '');
+      const savedBank = profile.pix_bank_name || '';
+      if (mainBanks.includes(savedBank)) {
+        setBankName(savedBank);
+        setCustomBankName('');
+      } else if (savedBank) {
+        setBankName('Outros');
+        setCustomBankName(savedBank);
+      } else {
+        setBankName('');
+        setCustomBankName('');
+      }
       setPixCity(profile.city || '');
       setTipoCobranca((profile.tipo_cobranca as TipoCobranca) || 'DIA_FIXO');
       setParametroCobranca(profile.parametro_cobranca || 10);
@@ -83,10 +112,11 @@ export function PixKeyForm() {
 
     try {
       const cleanedValue = keyValue.replace(/\D/g, '');
+      const finalBankName = bankName === 'Outros' ? customBankName : bankName;
       updateProfile({
         pix_key_type: keyType,
         pix_key_value: keyType === 'email' || keyType === 'random' ? keyValue : cleanedValue,
-        pix_bank_name: bankName,
+        pix_bank_name: finalBankName,
         city: pixCity,
         pix_updated_at: new Date().toISOString(),
       });
@@ -253,18 +283,34 @@ export function PixKeyForm() {
                       <Info className="h-4 w-4 text-muted-foreground inline" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Nome do seu banco (ex: Nubank, Banco do Brasil)</p>
+                      <p>Nome do seu banco</p>
                       <p className="text-xs mt-1">Útil para verificação de pagamentos</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </Label>
-              <Input
-                id="bank-name"
-                placeholder="Ex: Nubank"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-              />
+              <Select value={bankName} onValueChange={setBankName}>
+                <SelectTrigger id="bank-name">
+                  <SelectValue placeholder="Selecione seu banco" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {mainBanks.map((bank) => (
+                    <SelectItem key={bank} value={bank}>
+                      {bank}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="Outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {bankName === 'Outros' && (
+                <Input
+                  placeholder="Digite o nome do banco"
+                  value={customBankName}
+                  onChange={(e) => setCustomBankName(e.target.value)}
+                  className="mt-2"
+                />
+              )}
             </div>
 
             <div className="space-y-2">
