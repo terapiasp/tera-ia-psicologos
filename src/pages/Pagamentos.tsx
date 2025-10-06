@@ -151,37 +151,39 @@ export default function Pagamentos() {
       <Sidebar />
       
       <div className="md:pl-64 pt-16">
-        <main className="p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Pagamentos</h1>
-            <p className="text-muted-foreground">
+        <main className="p-4 md:p-8">
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Pagamentos</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Gerencie cobranças, transferências e configure suas preferências de recebimento
             </p>
           </div>
 
-          <Tabs defaultValue="cobrancas" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="dashboard">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Dashboard
+          <Tabs defaultValue="cobrancas" className="space-y-4 md:space-y-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-2 bg-transparent md:bg-muted p-0 md:p-1">
+              <TabsTrigger value="dashboard" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden md:inline">Dashboard</span>
               </TabsTrigger>
-              <TabsTrigger value="cobrancas">
-                <Receipt className="h-4 w-4 mr-2" />
-                Cobranças
+              <TabsTrigger value="cobrancas" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
+                <Receipt className="h-4 w-4" />
+                <span>Cobranças</span>
               </TabsTrigger>
-              <TabsTrigger value="transferencias">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Transferências
+              <TabsTrigger value="transferencias" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
+                <DollarSign className="h-4 w-4" />
+                <span className="hidden md:inline">Transferências</span>
+                <span className="md:hidden">Transfer.</span>
               </TabsTrigger>
-              <TabsTrigger value="configuracoes">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Configurações PIX
+              <TabsTrigger value="configuracoes" className="flex-col md:flex-row gap-1 md:gap-2 py-2 md:py-1.5 text-xs md:text-sm">
+                <AlertCircle className="h-4 w-4" />
+                <span className="hidden md:inline">Configurações PIX</span>
+                <span className="md:hidden">PIX</span>
               </TabsTrigger>
             </TabsList>
 
             {/* Dashboard Tab */}
-            <TabsContent value="dashboard" className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-3">
+            <TabsContent value="dashboard" className="space-y-4 md:space-y-6">
+              <div className="grid gap-3 md:gap-4 md:grid-cols-3">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -233,21 +235,22 @@ export default function Pagamentos() {
             </TabsContent>
 
             {/* Cobranças Tab */}
-            <TabsContent value="cobrancas" className="space-y-6">
+            <TabsContent value="cobrancas" className="space-y-4 md:space-y-6">
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+                <CardHeader className="p-4 md:p-6">
+                  <div className="space-y-4">
                     <div>
-                      <CardTitle>Cobranças de {format(currentMonth, "MMMM", { locale: ptBR })}</CardTitle>
-                      <CardDescription>
+                      <CardTitle className="text-lg md:text-xl">Cobranças de {format(currentMonth, "MMMM", { locale: ptBR })}</CardTitle>
+                      <CardDescription className="text-sm">
                         Gerencie os pagamentos das sessões realizadas
                       </CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant={filter === 'all' ? 'default' : 'outline'}
                         onClick={() => setFilter('all')}
+                        className="flex-1 md:flex-none"
                       >
                         Todos
                       </Button>
@@ -255,6 +258,7 @@ export default function Pagamentos() {
                         size="sm"
                         variant={filter === 'pending' ? 'default' : 'outline'}
                         onClick={() => setFilter('pending')}
+                        className="flex-1 md:flex-none"
                       >
                         Pendentes
                       </Button>
@@ -262,13 +266,14 @@ export default function Pagamentos() {
                         size="sm"
                         variant={filter === 'paid' ? 'default' : 'outline'}
                         onClick={() => setFilter('paid')}
+                        className="flex-1 md:flex-none"
                       >
                         Pagos
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                   {isLoading ? (
                     <div className="text-center py-8 text-muted-foreground">
                       Carregando...
@@ -295,10 +300,10 @@ export default function Pagamentos() {
                               const totalValue = patientSessions.reduce((sum, s) => sum + Number(s.value || 0), 0);
                               
                               return (
-                                <div key={patient.id} className="border rounded-lg p-4 space-y-2">
-                                  <div className="flex items-start justify-between">
+                                <div key={patient.id} className="border rounded-lg p-3 md:p-4 space-y-2">
+                                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-start gap-2">
                                         <Checkbox
                                           checked={allPaid}
                                           onCheckedChange={() => 
@@ -307,17 +312,18 @@ export default function Pagamentos() {
                                               allPaid
                                             )
                                           }
+                                          className="mt-0.5"
                                         />
-                                        <div>
-                                          <p className="font-medium">{patient.name}</p>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-sm md:text-base truncate">{patient.name}</p>
                                           <p className="text-xs text-muted-foreground">
                                             Vencimento: dia {patient.payment_day} • {patientSessions.length} sessões
                                           </p>
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="text-right space-y-1">
-                                      <p className="font-semibold">
+                                    <div className="flex items-center justify-between md:flex-col md:items-end md:text-right gap-2 md:space-y-1">
+                                      <p className="font-semibold text-sm md:text-base">
                                         R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                       </p>
                                       {getStatusBadge(allPaid)}
@@ -351,10 +357,10 @@ export default function Pagamentos() {
                               const periodInfo = `${patientSessions.length}/${patient.payment_period_sessions} sessões`;
                               
                               return (
-                                <div key={patient.id} className="border rounded-lg p-4 space-y-2">
-                                  <div className="flex items-start justify-between">
+                                <div key={patient.id} className="border rounded-lg p-3 md:p-4 space-y-2">
+                                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-start gap-2">
                                         <Checkbox
                                           checked={allPaid}
                                           onCheckedChange={() => 
@@ -363,17 +369,18 @@ export default function Pagamentos() {
                                               allPaid
                                             )
                                           }
+                                          className="mt-0.5"
                                         />
-                                        <div>
-                                          <p className="font-medium">{patient.name}</p>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-sm md:text-base truncate">{patient.name}</p>
                                           <p className="text-xs text-muted-foreground">
                                             {periodInfo} • A cada {patient.payment_period_sessions} sessões
                                           </p>
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="text-right space-y-1">
-                                      <p className="font-semibold">
+                                    <div className="flex items-center justify-between md:flex-col md:items-end md:text-right gap-2 md:space-y-1">
+                                      <p className="font-semibold text-sm md:text-base">
                                         R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                       </p>
                                       {getStatusBadge(allPaid)}

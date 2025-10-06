@@ -56,9 +56,9 @@ export function TransfersTable() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -110,25 +110,26 @@ export function TransfersTable() {
 
       {/* Main Table */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Transferências de {format(currentMonth, "MMMM", { locale: ptBR })}</CardTitle>
-              <CardDescription>
-                Histórico de transferências PIX recebidas
-              </CardDescription>
+        <CardHeader className="p-4 md:p-6">
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <CardTitle className="text-lg md:text-xl">Transferências de {format(currentMonth, "MMMM", { locale: ptBR })}</CardTitle>
+                <CardDescription className="text-sm">
+                  Histórico de transferências PIX recebidas
+                </CardDescription>
+              </div>
+              <Button className="w-full md:w-auto" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                <span className="hidden md:inline">Registrar Transferência</span>
+                <span className="md:hidden">Registrar</span>
+              </Button>
             </div>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Registrar Transferência
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-4 mt-4">
-            <div className="relative flex-1">
+            
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por paciente, origem ou referência..."
+                placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -136,7 +137,7 @@ export function TransfersTable() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Carregando transferências...
@@ -150,16 +151,16 @@ export function TransfersTable() {
               </p>
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border md:border-0 overflow-x-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="hidden md:table-header-group">
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Referência</TableHead>
-                    <TableHead>Origem</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Data</TableHead>
+                    <TableHead className="whitespace-nowrap">Paciente</TableHead>
+                    <TableHead className="whitespace-nowrap">Referência</TableHead>
+                    <TableHead className="whitespace-nowrap">Origem</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Valor</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -167,26 +168,34 @@ export function TransfersTable() {
                     const patient = patients.find(p => p.id === transfer.patient_id);
                     
                     return (
-                      <TableRow key={transfer.id}>
-                        <TableCell className="font-medium">
+                      <TableRow key={transfer.id} className="flex flex-col md:table-row border-b md:border-b-0 py-3 md:py-0">
+                        <TableCell className="font-medium flex justify-between md:table-cell before:content-['Data:'] before:font-semibold before:mr-2 md:before:content-none">
+                          <span className="md:hidden font-semibold text-muted-foreground">Data:</span>
                           {format(new Date(transfer.transfer_date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                         </TableCell>
-                        <TableCell>{patient?.name || '-'}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
+                        <TableCell className="flex justify-between md:table-cell">
+                          <span className="md:hidden font-semibold text-muted-foreground">Paciente:</span>
+                          {patient?.name || '-'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm flex justify-between md:table-cell">
+                          <span className="md:hidden font-semibold text-foreground">Referência:</span>
                           {transfer.reference || '-'}
                         </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
+                        <TableCell className="flex justify-between md:table-cell">
+                          <span className="md:hidden font-semibold text-muted-foreground">Origem:</span>
+                          <div className="text-sm text-right md:text-left">
                             <p className="font-medium">{transfer.sender_name || '-'}</p>
                             {transfer.sender_bank && (
                               <p className="text-xs text-muted-foreground">{transfer.sender_bank}</p>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-semibold">
+                        <TableCell className="font-semibold flex justify-between md:table-cell md:text-right">
+                          <span className="md:hidden font-semibold text-muted-foreground">Valor:</span>
                           R$ {Number(transfer.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="flex justify-between md:table-cell">
+                          <span className="md:hidden font-semibold text-muted-foreground">Status:</span>
                           {getStatusBadge(transfer.validation_status)}
                         </TableCell>
                       </TableRow>

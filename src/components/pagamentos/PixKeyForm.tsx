@@ -78,19 +78,19 @@ export function PixKeyForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
             <Key className="h-5 w-5" />
             Configurar Chave PIX
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Configure sua chave PIX para receber pagamentos. O QR Code será gerado automaticamente.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <CardContent className="space-y-4 p-4 md:p-6">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="pix-type">Tipo de Chave</Label>
               <Select value={keyType} onValueChange={(value) => setKeyType(value as PixKeyType)}>
