@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SortOption } from '@/hooks/usePatientFilters';
 
 import { exportPatientsToCsv } from '@/utils/csvExport';
@@ -81,12 +80,6 @@ const Patients = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [openFilterPopover, setOpenFilterPopover] = useState(false);
   const { toast } = useToast();
-  
-  // Estados para controlar expansão dos cards do mosaico
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [isSortExpanded, setIsSortExpanded] = useState(false);
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [isArchivedExpanded, setIsArchivedExpanded] = useState(false);
 
   // Single persistent filter state
   const allPatients = showArchived ? archivedPatients : patients;
@@ -238,96 +231,87 @@ const Patients = () => {
           {/* Mosaico de Controles */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {/* 1. Busca */}
-            <Collapsible open={isSearchExpanded} onOpenChange={setIsSearchExpanded}>
-              <Card className="col-span-2 md:col-span-1">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <CardTitle className="text-sm md:text-base">Buscar</CardTitle>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="p-4 pt-0">
-                    <div className="relative">
-                      <Input
-                        placeholder="Nome, apelido..."
-                        value={sharedFilters.filters.search}
-                        onChange={(e) => sharedFilters.handleSearchChange(e.target.value)}
-                        className="h-9 text-sm pr-8"
-                      />
-                      {sharedFilters.filters.search && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-9 w-8"
-                          onClick={() => sharedFilters.handleSearchChange('')}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader className="p-4">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <CardTitle className="text-sm md:text-base">Buscar</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="relative">
+                  <Input
+                    placeholder="Nome, apelido..."
+                    value={sharedFilters.filters.search}
+                    onChange={(e) => sharedFilters.handleSearchChange(e.target.value)}
+                    className="h-9 text-sm pr-8"
+                  />
+                  {sharedFilters.filters.search && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-9 w-8"
+                      onClick={() => sharedFilters.handleSearchChange('')}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* 2. Ordenar */}
-            <Collapsible open={isSortExpanded} onOpenChange={setIsSortExpanded}>
-              <Card className="col-span-2 md:col-span-1">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <CardTitle className="text-sm md:text-base">Ordenar</CardTitle>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="p-4 pt-0">
-                    <Select
-                      value={sharedFilters.filters.sortBy}
-                      onValueChange={(value) => sharedFilters.updateFilter('sortBy', value as SortOption)}
-                    >
-                      <SelectTrigger className="h-9 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sortOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader className="p-4">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <CardTitle className="text-sm md:text-base">Ordenar</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <Select
+                  value={sharedFilters.filters.sortBy}
+                  onValueChange={(value) => sharedFilters.updateFilter('sortBy', value as SortOption)}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
 
             {/* 3. Filtros */}
-            <Collapsible open={isFilterExpanded} onOpenChange={setIsFilterExpanded}>
-              <Card className="col-span-2 md:col-span-1">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2 justify-between">
-                      <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <CardTitle className="text-sm md:text-base">Filtros</CardTitle>
-                      </div>
-                      {totalActiveFilters > 0 && (
-                        <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                          {totalActiveFilters}
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="p-4 pt-0">
-                    <ScrollArea className="max-h-[400px] pr-4">
-                      <div className="p-2 space-y-4">
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader className="p-4">
+                <div className="flex items-center gap-2 justify-between">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <CardTitle className="text-sm md:text-base">Filtros</CardTitle>
+                  </div>
+                  {totalActiveFilters > 0 && (
+                    <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                      {totalActiveFilters}
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <Popover open={openFilterPopover} onOpenChange={setOpenFilterPopover}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full h-9 text-sm justify-start">
+                      {totalActiveFilters > 0 ? `${totalActiveFilters} ativo(s)` : 'Selecionar...'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0" align="start">
+                    <ScrollArea className="h-[400px]">
+                      <div className="p-4 space-y-4">
                         {/* Status Filter */}
                         {!showArchived && (
                           <div className="space-y-2">
@@ -461,6 +445,7 @@ const Patients = () => {
                             size="sm"
                             onClick={() => {
                               sharedFilters.clearFilters();
+                              setOpenFilterPopover(false);
                             }}
                             className="w-full"
                           >
@@ -469,43 +454,37 @@ const Patients = () => {
                         )}
                       </div>
                     </ScrollArea>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
 
             {/* 4. Arquivados */}
-            <Collapsible open={isArchivedExpanded} onOpenChange={setIsArchivedExpanded}>
-              <Card className="col-span-2 md:col-span-1">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Archive className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <CardTitle className="text-sm md:text-base">Arquivados</CardTitle>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="p-4 pt-0">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="show-archived" className="text-sm cursor-pointer">
-                        {showArchived ? 'Mostrando' : 'Ocultos'}
-                      </Label>
-                      <Switch
-                        id="show-archived"
-                        checked={showArchived}
-                        onCheckedChange={setShowArchived}
-                      />
-                    </div>
-                    {showArchived && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {archivedPatients.length} arquivado(s)
-                      </p>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader className="p-4">
+                <div className="flex items-center gap-2">
+                  <Archive className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <CardTitle className="text-sm md:text-base">Arquivados</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-archived" className="text-sm cursor-pointer">
+                    {showArchived ? 'Mostrando' : 'Ocultos'}
+                  </Label>
+                  <Switch
+                    id="show-archived"
+                    checked={showArchived}
+                    onCheckedChange={setShowArchived}
+                  />
+                </div>
+                {showArchived && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {archivedPatients.length} arquivado(s)
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Botão Novo Paciente */}
