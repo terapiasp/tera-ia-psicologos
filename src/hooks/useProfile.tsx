@@ -30,6 +30,11 @@ export interface Profile {
   default_payment_scheme?: 'fixed_day' | 'per_period' | 'per_session';
   default_payment_day?: number;
   default_payment_period_sessions?: number;
+  pix_key_type?: 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
+  pix_key_value?: string;
+  pix_qr_code?: string;
+  pix_copy_paste?: string;
+  pix_updated_at?: string;
   created_at: string;
   updated_at: string;
 }

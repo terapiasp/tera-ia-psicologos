@@ -29,6 +29,8 @@ import { usePatients } from "@/hooks/usePatients";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PixKeyForm } from "@/components/pagamentos/PixKeyForm";
+import { TransfersTable } from "@/components/pagamentos/TransfersTable";
 
 type FilterType = 'all' | 'pending' | 'paid';
 
@@ -434,38 +436,12 @@ export default function Pagamentos() {
 
             {/* Transferências Tab */}
             <TabsContent value="transferencias">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transferências Recebidas</CardTitle>
-                  <CardDescription>
-                    Visualize e gerencie as transferências PIX recebidas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Em breve: Registro de transferências recebidas</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <TransfersTable />
             </TabsContent>
 
             {/* Configurações PIX Tab */}
             <TabsContent value="configuracoes">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Configurações de Recebimento</CardTitle>
-                  <CardDescription>
-                    Configure sua chave PIX e gere códigos de pagamento
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Em breve: Configuração de chave PIX e geração de QR Codes</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <PixKeyForm />
             </TabsContent>
           </Tabs>
         </main>
