@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
-import { createStaticPix, hasError } from "pix-utils";
-
 type PixKeyType = 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
 
 export function PixKeyForm() {
@@ -25,43 +23,32 @@ export function PixKeyForm() {
     }
   }, [profile]);
 
-  const generatePixCode = async () => {
+  const generatePixCode = () => {
     if (!keyValue || !profile?.name) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha sua chave PIX e certifique-se de ter um nome cadastrado no perfil",
+        description: "Preencha todos os campos antes de salvar a chave PIX",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const pix = createStaticPix({
-        merchantName: profile.name,
-        merchantCity: profile.city || 'Sao Paulo',
-        pixKey: keyValue,
-        infoAdicional: 'Terapia SP',
-        transactionAmount: 0, // Static PIX without predefined amount
-      });
-
-      if (hasError(pix)) {
-        throw new Error('Erro ao gerar código PIX');
-      }
-
-      const brCode = pix.toBRCode();
-      const qrCodeDataUrl = await pix.toImage();
-
       updateProfile({
         pix_key_type: keyType,
         pix_key_value: keyValue,
-        pix_copy_paste: brCode,
-        pix_qr_code: qrCodeDataUrl,
         pix_updated_at: new Date().toISOString(),
       });
-    } catch (error) {
+
       toast({
-        title: "Erro ao gerar código PIX",
-        description: "Verifique se os dados estão corretos",
+        title: "Chave PIX salva",
+        description: "Sua chave PIX foi configurada com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar chave PIX:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a chave PIX. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -131,67 +118,40 @@ export function PixKeyForm() {
             </div>
           </div>
 
-          <Button onClick={generatePixCode} disabled={isUpdating || !keyValue}>
-            {isUpdating ? "Gerando..." : "Gerar Código PIX"}
+          <Button onClick={generatePixCode} disabled={isUpdating || !keyValue} className="w-full">
+            {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
           </Button>
 
-          {profile?.pix_updated_at && (
-            <p className="text-xs text-muted-foreground">
-              Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
-            </p>
+          {profile?.pix_key_value && (
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <p className="text-sm text-muted-foreground mb-2">Chave PIX Configurada</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                  {profile.pix_key_value}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile.pix_key_value || '');
+                    toast({
+                      title: "Copiado!",
+                      description: "Chave PIX copiada para a área de transferência",
+                    });
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              {profile?.pix_updated_at && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Última atualização: {new Date(profile.pix_updated_at).toLocaleString('pt-BR')}
+                </p>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
-
-      {profile?.pix_copy_paste && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Código PIX Gerado
-            </CardTitle>
-            <CardDescription>
-              Use este código para receber pagamentos
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {profile.pix_qr_code && (
-              <div className="flex justify-center p-4 bg-muted rounded-lg">
-                <img 
-                  src={profile.pix_qr_code} 
-                  alt="QR Code PIX" 
-                  className="w-64 h-64"
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>PIX Copia e Cola</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={profile.pix_copy_paste}
-                  readOnly
-                  className="font-mono text-xs"
-                />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => copyToClipboard(profile.pix_copy_paste!)}
-                >
-                  {copiedCopyPaste ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Compartilhe este código com seus pacientes para receberem pagamentos
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

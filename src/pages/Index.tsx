@@ -177,7 +177,7 @@ const Index = () => {
                     maximumFractionDigits: 2 
                   })} recebido`}
                   icon={DollarSign}
-                  onClick={() => setFinanceiroSheetOpen(true)}
+                  onClick={() => navigate('/pagamentos')}
                 />
               )}
               
