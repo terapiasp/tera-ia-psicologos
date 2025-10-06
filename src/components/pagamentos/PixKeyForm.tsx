@@ -23,6 +23,7 @@ export function PixKeyForm() {
   const [keyType, setKeyType] = useState<PixKeyType>('email');
   const [keyValue, setKeyValue] = useState('');
   const [bankName, setBankName] = useState('');
+  const [pixCity, setPixCity] = useState('');
   const [copiedCopyPaste, setCopiedCopyPaste] = useState(false);
   const [tipoCobranca, setTipoCobranca] = useState<TipoCobranca>('DIA_FIXO');
   const [parametroCobranca, setParametroCobranca] = useState(10);
@@ -33,6 +34,7 @@ export function PixKeyForm() {
       setKeyType((profile.pix_key_type as PixKeyType) || 'email');
       setKeyValue(profile.pix_key_value || '');
       setBankName(profile.pix_bank_name || '');
+      setPixCity(profile.city || '');
       setTipoCobranca((profile.tipo_cobranca as TipoCobranca) || 'DIA_FIXO');
       setParametroCobranca(profile.parametro_cobranca || 10);
     }
@@ -70,10 +72,10 @@ export function PixKeyForm() {
   };
 
   const savePixConfig = () => {
-    if (!keyValue || !profile?.name) {
+    if (!keyValue || !profile?.name || !pixCity) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha todos os campos antes de salvar a chave PIX",
+        description: "Preencha chave PIX, nome e cidade antes de salvar",
         variant: "destructive",
       });
       return;
@@ -85,6 +87,7 @@ export function PixKeyForm() {
         pix_key_type: keyType,
         pix_key_value: keyType === 'email' || keyType === 'random' ? keyValue : cleanedValue,
         pix_bank_name: bankName,
+        city: pixCity,
         pix_updated_at: new Date().toISOString(),
       });
 
@@ -103,10 +106,10 @@ export function PixKeyForm() {
   };
 
   const generatePixCode = async () => {
-    if (!profile?.name || !profile?.city) {
+    if (!profile?.name || !pixCity) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha seu nome e cidade nas Configurações antes de gerar o código PIX",
+        description: "Preencha nome e cidade antes de gerar o código PIX",
         variant: "destructive",
       });
       return;
@@ -240,31 +243,56 @@ export function PixKeyForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="bank-name">
-              Instituição Bancária
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger className="ml-1">
-                    <Info className="h-4 w-4 text-muted-foreground inline" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Nome do seu banco (ex: Nubank, Banco do Brasil)</p>
-                    <p className="text-xs mt-1">Útil para verificação de pagamentos</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </Label>
-            <Input
-              id="bank-name"
-              placeholder="Ex: Nubank"
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-            />
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="bank-name">
+                Instituição Bancária
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="ml-1">
+                      <Info className="h-4 w-4 text-muted-foreground inline" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Nome do seu banco (ex: Nubank, Banco do Brasil)</p>
+                      <p className="text-xs mt-1">Útil para verificação de pagamentos</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                id="bank-name"
+                placeholder="Ex: Nubank"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pix-city">
+                Cidade <span className="text-destructive">*</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="ml-1">
+                      <Info className="h-4 w-4 text-muted-foreground inline" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Cidade que aparecerá no código PIX (obrigatório BACEN)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                id="pix-city"
+                placeholder="Ex: São Paulo"
+                value={pixCity}
+                onChange={(e) => setPixCity(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          <Button onClick={savePixConfig} disabled={isUpdating || !keyValue} className="w-full">
-            {isUpdating ? "Salvando..." : "Salvar Chave PIX"}
+          <Button onClick={savePixConfig} disabled={isUpdating || !keyValue || !pixCity} className="w-full">
+            {isUpdating ? "Salvando..." : "Salvar Configuração PIX"}
           </Button>
 
           {profile?.pix_key_value && (
@@ -311,7 +339,7 @@ export function PixKeyForm() {
                 <CardContent className="space-y-4">
                   <Button 
                     onClick={generatePixCode} 
-                    disabled={isGenerating || !profile?.name || !profile?.city}
+                    disabled={isGenerating || !profile?.name || !pixCity}
                     className="w-full"
                     size="lg"
                   >
@@ -328,11 +356,12 @@ export function PixKeyForm() {
                     )}
                   </Button>
 
-                  {(!profile?.name || !profile?.city) && (
+                  {(!profile?.name || !pixCity) && (
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        Complete seu nome e cidade em Configurações para gerar o código PIX
+                        {!profile?.name && "Complete seu nome nas Configurações. "}
+                        {!pixCity && "Informe a cidade no formulário acima."}
                       </AlertDescription>
                     </Alert>
                   )}

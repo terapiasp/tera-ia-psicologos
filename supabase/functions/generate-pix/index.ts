@@ -245,7 +245,9 @@ serve(async (req) => {
       });
     }
 
-    if (!profile.pix_key_value || !profile.name || !profile.city) {
+    // Cidade virá do frontend, mas validar se existe
+    const cidade = profile.city;
+    if (!profile.pix_key_value || !profile.name || !cidade) {
       return new Response(JSON.stringify({ 
         error: "Dados incompletos. Configure chave PIX, nome e cidade." 
       }), { 
@@ -294,7 +296,7 @@ serve(async (req) => {
     const codigoCopiaCola = gerarBRCode({
       chavePix: profile.pix_key_value,
       nome: profile.name,
-      cidade: profile.city,
+      cidade: cidade,
       valor,
       descricao
     });
