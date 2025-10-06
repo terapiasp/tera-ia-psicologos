@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Home, Settings, Users, ChevronLeft, ChevronRight, Shield } from "lucide-react";
+import { CalendarDays, FileText, Home, Settings, Users, ChevronLeft, ChevronRight, Shield, DollarSign } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,11 @@ const navigation = [
     name: "Agenda",
     href: "/agenda",
     icon: CalendarDays
+  },
+  {
+    name: "Pagamentos",
+    href: "/pagamentos",
+    icon: DollarSign
   },
   {
     name: "Relatórios",
