@@ -212,6 +212,7 @@ export type Database = {
           created_by: string | null
           id: string
           patient_id: string | null
+          pix_payment_id: string | null
           receiver_bank: string | null
           receiver_name: string | null
           reference: string | null
@@ -230,6 +231,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           patient_id?: string | null
+          pix_payment_id?: string | null
           receiver_bank?: string | null
           receiver_name?: string | null
           reference?: string | null
@@ -248,6 +250,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           patient_id?: string | null
+          pix_payment_id?: string | null
           receiver_bank?: string | null
           receiver_name?: string | null
           reference?: string | null
@@ -266,6 +269,88 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transfers_pix_payment_id_fkey"
+            columns: ["pix_payment_id"]
+            isOneToOne: false
+            referencedRelation: "pix_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pix_payments: {
+        Row: {
+          amount: number
+          city: string
+          created_at: string
+          description: string | null
+          generated_at: string | null
+          id: string
+          paid_at: string | null
+          patient_id: string | null
+          pix_bank_name: string | null
+          pix_code: string | null
+          pix_key_value: string
+          qr_code_url: string | null
+          receiver_name: string
+          session_id: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          city: string
+          created_at?: string
+          description?: string | null
+          generated_at?: string | null
+          id?: string
+          paid_at?: string | null
+          patient_id?: string | null
+          pix_bank_name?: string | null
+          pix_code?: string | null
+          pix_key_value: string
+          qr_code_url?: string | null
+          receiver_name: string
+          session_id?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          city?: string
+          created_at?: string
+          description?: string | null
+          generated_at?: string | null
+          id?: string
+          paid_at?: string | null
+          patient_id?: string | null
+          pix_bank_name?: string | null
+          pix_code?: string | null
+          pix_key_value?: string
+          qr_code_url?: string | null
+          receiver_name?: string
+          session_id?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_payments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_payments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
         ]
