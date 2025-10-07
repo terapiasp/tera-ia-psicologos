@@ -30,6 +30,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PixKeyForm } from "@/components/pagamentos/PixKeyForm";
+import { PixQrCodeGenerator } from "@/components/pagamentos/PixQrCodeGenerator";
 import { TransfersTable } from "@/components/pagamentos/TransfersTable";
 
 type FilterType = 'all' | 'pending' | 'paid';
@@ -447,8 +448,9 @@ export default function Pagamentos() {
             </TabsContent>
 
             {/* Configurações PIX Tab */}
-            <TabsContent value="configuracoes">
+            <TabsContent value="configuracoes" className="space-y-6">
               <PixKeyForm />
+              <PixQrCodeGenerator />
             </TabsContent>
           </Tabs>
         </main>
