@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Key, CreditCard, Info, Trash2, Eye, Edit, CheckCircle2 } from "lucide-react";
+import { Key, CreditCard, Info, Trash2, Eye, Edit, CheckCircle2, QrCode, Copy, Check } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +21,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { TipoCobranca } from "@/hooks/useProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 type PixKeyType = 'email' | 'cpf' | 'cnpj' | 'telefone' | 'random';
 
@@ -56,6 +58,35 @@ export function PixKeyForm() {
   const [keyValue, setKeyValue] = useState('');
   const [tipoCobranca, setTipoCobranca] = useState<TipoCobranca>('DIA_FIXO');
   const [parametroCobranca, setParametroCobranca] = useState(10);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // Buscar PIX padrão do psicólogo
+  const { data: defaultPixPayment, refetch: refetchPixPayment } = useQuery({
+    queryKey: ['default-pix-payment', profile?.user_id],
+    queryFn: async () => {
+      if (!profile?.user_id) return null;
+      
+      const { data, error } = await supabase
+        .from('pix_payments')
+        .select('*')
+        .eq('user_id', profile.user_id)
+        .is('patient_id', null)
+        .is('session_id', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.user_id && !!profile?.pix_key_value,
+    refetchInterval: (query) => {
+      // Se ainda não tem QR Code, recarrega a cada 3 segundos
+      const data = query.state.data;
+      if (data && !data.qr_code_url) return 3000;
+      return false;
+    },
+  });
 
   useEffect(() => {
     if (profile) {
@@ -151,7 +182,7 @@ export function PixKeyForm() {
     setKeyValue(formatted);
   };
 
-  const savePixConfig = () => {
+  const savePixConfig = async () => {
     // Validação de campos obrigatórios
     if (!city.trim()) {
       toast({
@@ -202,7 +233,8 @@ export function PixKeyForm() {
     try {
       const bankName = bank === 'outro' ? customBank : BRAZILIAN_BANKS.find(b => b.value === bank)?.label || bank;
       
-      updateProfile({
+      // Atualizar perfil
+      await updateProfile({
         city: city.trim(),
         pix_bank_name: bankName,
         pix_key_type: keyType,
@@ -210,9 +242,34 @@ export function PixKeyForm() {
         pix_updated_at: new Date().toISOString(),
       });
 
+      // Criar PIX padrão do psicólogo (sem valor, sem paciente)
+      if (profile?.user_id) {
+        const { error: pixError } = await supabase
+          .from('pix_payments')
+          .insert({
+            user_id: profile.user_id,
+            patient_id: null,
+            session_id: null,
+            pix_key_value: keyValue,
+            receiver_name: profile.name,
+            city: city.trim(),
+            pix_bank_name: bankName,
+            amount: 0,
+            description: 'Chave PIX padrão',
+            status: 'pending',
+          });
+
+        if (pixError) {
+          console.error('Erro ao criar PIX padrão:', pixError);
+        } else {
+          // Recarregar o PIX payment
+          setTimeout(() => refetchPixPayment(), 1000);
+        }
+      }
+
       toast({
         title: "Chave PIX salva",
-        description: "Sua chave PIX foi configurada com sucesso",
+        description: "Sua chave PIX foi configurada. Aguarde a geração do QR Code...",
       });
       
       // Sai do modo edição após salvar
@@ -281,6 +338,18 @@ export function PixKeyForm() {
     }
   };
 
+  const handleCopyPixCode = () => {
+    if (defaultPixPayment?.pix_code) {
+      navigator.clipboard.writeText(defaultPixPayment.pix_code);
+      setCopiedCode(true);
+      toast({
+        title: "Código copiado",
+        description: "O código PIX foi copiado para a área de transferência",
+      });
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
   const getKeyPlaceholder = (type: PixKeyType) => {
     switch (type) {
       case 'cpf':
@@ -313,8 +382,8 @@ export function PixKeyForm() {
         </CardHeader>
         <CardContent className="p-4 md:p-6">
           {!isEditing && profile?.pix_key_value ? (
-            // Estado Configurado - View compacto
-            <div className="space-y-4 animate-fade-in">
+            // Estado Configurado - View compacto com QR Code
+            <div className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between p-4 bg-success/10 border border-success/20 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-success/20 rounded-full">
@@ -360,6 +429,73 @@ export function PixKeyForm() {
                   </Button>
                 </div>
               </div>
+
+              {/* QR Code e Código Copia e Cola */}
+              {defaultPixPayment && (
+                <Card className="border-primary/20">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-2">
+                      <QrCode className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-base">Sua Chave PIX Padrão</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs">
+                      Use este QR Code e código para receber pagamentos sem valor específico
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {defaultPixPayment.qr_code_url ? (
+                      <>
+                        {/* QR Code */}
+                        <div className="flex justify-center p-4 bg-white rounded-lg border">
+                          <img 
+                            src={defaultPixPayment.qr_code_url} 
+                            alt="QR Code PIX"
+                            className="w-48 h-48 object-contain"
+                          />
+                        </div>
+
+                        {/* Código Copia e Cola */}
+                        {defaultPixPayment.pix_code && (
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium">Código Copia e Cola</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                value={defaultPixPayment.pix_code}
+                                readOnly
+                                className="font-mono text-xs"
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={handleCopyPixCode}
+                                className="shrink-0"
+                              >
+                                {copiedCode ? (
+                                  <Check className="h-4 w-4 text-success" />
+                                ) : (
+                                  <Copy className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="animate-pulse space-y-2">
+                          <QrCode className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                          <p className="text-sm text-muted-foreground">
+                            Gerando QR Code PIX...
+                          </p>
+                          <p className="text-xs text-muted-foreground/70">
+                            Isso pode levar alguns segundos
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : (
             // Estado de Edição - Formulário completo
