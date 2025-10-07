@@ -256,7 +256,6 @@ export function PixKeyForm() {
             city: city.trim(),
             pix_bank_name: bankName,
             amount: '0.00',
-            description: '***',
             status: 'pending',
           });
 
