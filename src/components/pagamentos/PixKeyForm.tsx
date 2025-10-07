@@ -135,6 +135,10 @@ export function PixKeyForm() {
       case 'telefone':
         // Remove tudo que não é número
         cleaned = cleaned.replace(/\D/g, '');
+        // Remove +55 se existir para mostrar apenas DDD + número
+        if (cleaned.startsWith('55') && cleaned.length > 11) {
+          cleaned = cleaned.slice(2);
+        }
         // Apenas DDD + número (11 dígitos)
         return cleaned.slice(0, 11);
       
@@ -147,6 +151,19 @@ export function PixKeyForm() {
       default:
         return value;
     }
+  };
+  
+  // Função para preparar o valor para salvar no banco
+  const preparePixKeyForSave = (value: string, type: PixKeyType): string => {
+    if (type === 'telefone') {
+      const numbers = value.replace(/\D/g, '');
+      // Adiciona +55 se não tiver
+      if (!numbers.startsWith('55')) {
+        return '+55' + numbers;
+      }
+      return '+' + numbers;
+    }
+    return value;
   };
 
   const validatePixKey = (value: string, type: PixKeyType): boolean => {
@@ -225,12 +242,15 @@ export function PixKeyForm() {
     try {
       const bankName = bank === 'outro' ? customBank : BRAZILIAN_BANKS.find(b => b.value === bank)?.label || bank;
       
+      // Preparar chave PIX para salvar (adiciona +55 para telefone)
+      const pixKeyToSave = preparePixKeyForSave(keyValue, keyType);
+      
       // Atualizar perfil
       await updateProfile({
         city: city.trim(),
         pix_bank_name: bankName,
         pix_key_type: keyType,
-        pix_key_value: keyValue,
+        pix_key_value: pixKeyToSave,
         pix_updated_at: new Date().toISOString(),
       });
 
@@ -242,7 +262,7 @@ export function PixKeyForm() {
             user_id: profile.user_id,
             patient_id: null,
             session_id: null,
-            pix_key_value: keyValue,
+            pix_key_value: pixKeyToSave,
             pix_key_type: keyType,
             receiver_name: profile.name,
             city: city.trim(),
