@@ -254,8 +254,8 @@ export function PixKeyForm() {
             receiver_name: profile.name,
             city: city.trim(),
             pix_bank_name: bankName,
-            amount: 0,
-            description: 'Chave PIX padrão',
+            amount: '0.00',
+            description: '***',
             status: 'pending',
           });
 

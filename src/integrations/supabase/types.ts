@@ -282,7 +282,7 @@ export type Database = {
       }
       pix_payments: {
         Row: {
-          amount: number
+          amount: string
           city: string
           created_at: string
           description: string | null
@@ -301,7 +301,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          amount: number
+          amount?: string
           city: string
           created_at?: string
           description?: string | null
@@ -320,7 +320,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          amount?: number
+          amount?: string
           city?: string
           created_at?: string
           description?: string | null
