@@ -292,6 +292,7 @@ export type Database = {
           patient_id: string | null
           pix_bank_name: string | null
           pix_code: string | null
+          pix_key_type: string | null
           pix_key_value: string
           qr_code_url: string | null
           receiver_name: string
@@ -311,6 +312,7 @@ export type Database = {
           patient_id?: string | null
           pix_bank_name?: string | null
           pix_code?: string | null
+          pix_key_type?: string | null
           pix_key_value: string
           qr_code_url?: string | null
           receiver_name: string
@@ -330,6 +332,7 @@ export type Database = {
           patient_id?: string | null
           pix_bank_name?: string | null
           pix_code?: string | null
+          pix_key_type?: string | null
           pix_key_value?: string
           qr_code_url?: string | null
           receiver_name?: string

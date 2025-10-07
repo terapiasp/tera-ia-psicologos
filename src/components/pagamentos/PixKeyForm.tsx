@@ -251,6 +251,7 @@ export function PixKeyForm() {
             patient_id: null,
             session_id: null,
             pix_key_value: keyValue,
+            pix_key_type: keyType,
             receiver_name: profile.name,
             city: city.trim(),
             pix_bank_name: bankName,
