@@ -135,16 +135,8 @@ export function PixKeyForm() {
       case 'telefone':
         // Remove tudo que não é número
         cleaned = cleaned.replace(/\D/g, '');
-        // Aplica máscara +55 (XX) XXXXX-XXXX
-        if (cleaned.length <= 13) {
-          if (!cleaned.startsWith('55')) {
-            cleaned = '55' + cleaned;
-          }
-          cleaned = cleaned.replace(/(\d{2})(\d)/, '+$1 ($2');
-          cleaned = cleaned.replace(/(\d{2})\)(\d)/, '$1) $2');
-          cleaned = cleaned.replace(/(\d{5})(\d)/, '$1-$2');
-        }
-        return cleaned.slice(0, 19);
+        // Apenas DDD + número (11 dígitos)
+        return cleaned.slice(0, 11);
       
       case 'email':
         return value.toLowerCase();
@@ -167,7 +159,7 @@ export function PixKeyForm() {
         return cnpj.length === 14;
       case 'telefone':
         const phone = value.replace(/\D/g, '');
-        return phone.length === 13;
+        return phone.length === 11;
       case 'email':
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
       case 'random':
@@ -372,7 +364,7 @@ export function PixKeyForm() {
       case 'cnpj':
         return '00.000.000/0000-00';
       case 'telefone':
-        return '+55 (00) 00000-0000';
+        return 'DDD + Número (11 dígitos)';
       case 'email':
         return 'seu@email.com';
       case 'random':
