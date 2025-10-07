@@ -286,6 +286,20 @@ export function PixKeyForm() {
 
   const handleDeletePixKey = async () => {
     try {
+      // Excluir o PIX padrão do banco
+      if (profile?.user_id) {
+        const { error: deleteError } = await supabase
+          .from('pix_payments')
+          .delete()
+          .eq('user_id', profile.user_id)
+          .is('patient_id', null)
+          .is('session_id', null);
+
+        if (deleteError) {
+          console.error('Erro ao excluir PIX padrão:', deleteError);
+        }
+      }
+
       await updateProfile({
         city: null,
         pix_bank_name: null,
