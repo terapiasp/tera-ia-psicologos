@@ -59,12 +59,24 @@ export function PixKeyForm() {
   const [tipoCobranca, setTipoCobranca] = useState<TipoCobranca>('DIA_FIXO');
   const [parametroCobranca, setParametroCobranca] = useState(10);
   const [copiedCode, setCopiedCode] = useState(false);
+  
+  // Estados para chave PIX alternativa
+  const [showAlternativeKey, setShowAlternativeKey] = useState(false);
+  const [isEditingAlt, setIsEditingAlt] = useState(false);
+  const [showDeleteDialogAlt, setShowDeleteDialogAlt] = useState(false);
+  const [showDetailsDialogAlt, setShowDetailsDialogAlt] = useState(false);
+  const [cityAlt, setCityAlt] = useState('');
+  const [bankAlt, setBankAlt] = useState('');
+  const [customBankAlt, setCustomBankAlt] = useState('');
+  const [keyTypeAlt, setKeyTypeAlt] = useState<PixKeyType>('email');
+  const [keyValueAlt, setKeyValueAlt] = useState('');
+  const [copiedCodeAlt, setCopiedCodeAlt] = useState(false);
 
-  // Buscar PIX padrão do psicólogo
-  const { data: defaultPixPayment, refetch: refetchPixPayment } = useQuery({
-    queryKey: ['default-pix-payment', profile?.user_id],
+  // Buscar chaves PIX do psicólogo (máximo 2)
+  const { data: pixPayments, refetch: refetchPixPayments } = useQuery({
+    queryKey: ['pix-payments', profile?.user_id],
     queryFn: async () => {
-      if (!profile?.user_id) return null;
+      if (!profile?.user_id) return [];
       
       const { data, error } = await supabase
         .from('pix_payments')
@@ -72,21 +84,23 @@ export function PixKeyForm() {
         .eq('user_id', profile.user_id)
         .is('patient_id', null)
         .is('session_id', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: true })
+        .limit(2);
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!profile?.user_id && !!profile?.pix_key_value,
+    enabled: !!profile?.user_id,
     refetchInterval: (query) => {
-      // Se ainda não tem QR Code, recarrega a cada 3 segundos
+      // Se algum não tem QR Code, recarrega a cada 3 segundos
       const data = query.state.data;
-      if (data && !data.qr_code_url) return 3000;
+      if (data && data.some((pix: any) => !pix.qr_code_url)) return 3000;
       return false;
     },
   });
+
+  const defaultPixPayment = pixPayments?.[0];
+  const alternativePixPayment = pixPayments?.[1];
 
   useEffect(() => {
     if (profile) {
@@ -103,6 +117,16 @@ export function PixKeyForm() {
       }
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (alternativePixPayment) {
+      setCityAlt(alternativePixPayment.city || '');
+      setBankAlt(alternativePixPayment.pix_bank_name || '');
+      setKeyTypeAlt((alternativePixPayment.pix_key_type as PixKeyType) || 'email');
+      setKeyValueAlt(alternativePixPayment.pix_key_value || '');
+      setShowAlternativeKey(true);
+    }
+  }, [alternativePixPayment]);
 
   const formatPixKey = (value: string, type: PixKeyType): string => {
     // Remove tudo que não é número ou letra
@@ -311,7 +335,7 @@ export function PixKeyForm() {
           console.error('Erro ao criar PIX padrão:', pixError);
         } else {
           // Recarregar o PIX payment
-          setTimeout(() => refetchPixPayment(), 1000);
+          setTimeout(() => refetchPixPayments(), 1000);
         }
       }
 
@@ -369,12 +393,180 @@ export function PixKeyForm() {
       setKeyValue('');
       setIsEditing(true);
       setShowDeleteDialog(false);
+      refetchPixPayments();
     } catch (error) {
       console.error('Erro ao excluir chave PIX:', error);
       toast({
         title: "Erro",
         description: "Não foi possível excluir a chave PIX",
         variant: "destructive",
+      });
+    }
+  };
+
+  // Funções para chave PIX alternativa
+  const savePixConfigAlt = async () => {
+    if (!cityAlt.trim()) {
+      toast({
+        title: "Cidade obrigatória",
+        description: "Por favor, informe a cidade em que reside",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!bankAlt) {
+      toast({
+        title: "Banco obrigatório",
+        description: "Por favor, selecione sua instituição bancária",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (bankAlt === 'outro' && !customBankAlt.trim()) {
+      toast({
+        title: "Nome do banco obrigatório",
+        description: "Por favor, informe o nome da instituição bancária",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!keyValueAlt.trim()) {
+      toast({
+        title: "Chave PIX obrigatória",
+        description: "Por favor, informe sua chave PIX",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validatePixKey(keyValueAlt, keyTypeAlt)) {
+      toast({
+        title: "Chave PIX inválida",
+        description: `A chave informada não é válida para o tipo ${keyTypeAlt}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const bankName = bankAlt === 'outro' ? customBankAlt : BRAZILIAN_BANKS.find(b => b.value === bankAlt)?.label || bankAlt;
+      
+      if (profile?.user_id) {
+        const { error: pixError } = await supabase
+          .from('pix_payments')
+          .insert({
+            user_id: profile.user_id,
+            patient_id: null,
+            session_id: null,
+            pix_key_value: keyValueAlt,
+            pix_key_type: keyTypeAlt,
+            receiver_name: profile.name,
+            city: cityAlt.trim(),
+            pix_bank_name: bankName,
+            amount: '0.00',
+            description: 'Pagamento PIX Alternativo',
+            status: 'pending',
+          });
+
+        if (pixError) {
+          console.error('Erro ao criar PIX alternativo:', pixError);
+          toast({
+            title: "Erro",
+            description: "Não foi possível criar a chave PIX alternativa",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setTimeout(() => refetchPixPayments(), 1000);
+      }
+
+      toast({
+        title: "Chave PIX Alternativa salva",
+        description: "Sua chave PIX alternativa foi configurada. Aguarde a geração do QR Code...",
+      });
+      
+      setIsEditingAlt(false);
+    } catch (error) {
+      console.error('Erro ao salvar chave PIX alternativa:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a chave PIX alternativa. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePixKeyAlt = async () => {
+    try {
+      if (profile?.user_id && alternativePixPayment?.id) {
+        const { error: deleteError } = await supabase
+          .from('pix_payments')
+          .delete()
+          .eq('id', alternativePixPayment.id);
+
+        if (deleteError) {
+          console.error('Erro ao excluir PIX alternativo:', deleteError);
+          toast({
+            title: "Erro",
+            description: "Não foi possível excluir a chave PIX alternativa",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Chave PIX Alternativa excluída",
+        description: "Sua chave PIX alternativa foi removida",
+      });
+
+      setCityAlt('');
+      setBankAlt('');
+      setCustomBankAlt('');
+      setKeyTypeAlt('email');
+      setKeyValueAlt('');
+      setIsEditingAlt(false);
+      setShowDeleteDialogAlt(false);
+      setShowAlternativeKey(false);
+      refetchPixPayments();
+    } catch (error) {
+      console.error('Erro ao excluir chave PIX alternativa:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a chave PIX alternativa",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleKeyValueChangeAlt = (value: string) => {
+    const formatted = formatPixKey(value, keyTypeAlt);
+    setKeyValueAlt(formatted);
+  };
+
+  const handleCopyPixCodeAlt = () => {
+    if (alternativePixPayment?.pix_code) {
+      navigator.clipboard.writeText(alternativePixPayment.pix_code);
+      setCopiedCodeAlt(true);
+      toast({
+        title: "Código copiado",
+        description: "O código PIX alternativo foi copiado para a área de transferência",
+      });
+      setTimeout(() => setCopiedCodeAlt(false), 2000);
+    }
+  };
+
+  const handleCopyPixKeyAlt = () => {
+    if (alternativePixPayment?.pix_key_value && alternativePixPayment?.pix_key_type) {
+      const copyableValue = getCopyablePixKey(alternativePixPayment.pix_key_value, alternativePixPayment.pix_key_type as PixKeyType);
+      navigator.clipboard.writeText(copyableValue);
+      toast({
+        title: "Chave copiada",
+        description: "A chave PIX alternativa foi copiada sem formatação",
       });
     }
   };
@@ -682,6 +874,265 @@ export function PixKeyForm() {
         </CardContent>
       </Card>
 
+      {/* Botão Adicionar Chave PIX Alternativa */}
+      {defaultPixPayment && !showAlternativeKey && !alternativePixPayment && (
+        <Card className="border-dashed">
+          <CardContent className="p-4 md:p-6">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setShowAlternativeKey(true);
+                setIsEditingAlt(true);
+              }}
+            >
+              <Key className="h-4 w-4 mr-2" />
+              Adicionar Chave PIX Alternativa
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Chave PIX Alternativa */}
+      {showAlternativeKey && (
+        <Card>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <Key className="h-5 w-5" />
+              Chave PIX Alternativa
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Configure uma segunda chave PIX para receber pagamentos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            {!isEditingAlt && alternativePixPayment ? (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center justify-between gap-3 p-3 md:p-4 bg-success/10 border border-success/20 rounded-lg">
+                  <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                    <div className="p-1.5 md:p-2 bg-success/20 rounded-full shrink-0">
+                      <Key className="h-4 w-4 md:h-5 md:w-5 text-success" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-semibold text-foreground text-sm md:text-base">Chave PIX Alternativa</h4>
+                        <Badge variant="outline" className="bg-success/20 text-success border-success/30 text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Ativa
+                        </Badge>
+                      </div>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-0.5 truncate">
+                        {alternativePixPayment.pix_bank_name} • {alternativePixPayment.pix_key_type?.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowDetailsDialogAlt(true)}
+                      className="h-8 w-8 md:h-9 md:w-9"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopyPixKeyAlt}
+                      className="h-8 w-8 md:h-9 md:w-9"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowDeleteDialogAlt(true)}
+                      className="h-8 w-8 md:h-9 md:w-9 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {alternativePixPayment && (
+                  <Card className="border-primary/20">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-2">
+                        <QrCode className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-base">Chave PIX Alternativa</CardTitle>
+                      </div>
+                      <CardDescription className="text-xs">
+                        Use este QR Code e código para receber pagamentos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {alternativePixPayment.qr_code_url ? (
+                        <>
+                          <div className="flex justify-center p-4 bg-white rounded-lg border">
+                            <img 
+                              src={alternativePixPayment.qr_code_url} 
+                              alt="QR Code PIX Alternativo"
+                              className="w-48 h-48 object-contain"
+                            />
+                          </div>
+
+                          {alternativePixPayment.pix_code && (
+                            <div className="space-y-2">
+                              <Label className="text-xs font-medium">Código Copia e Cola</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={alternativePixPayment.pix_code}
+                                  readOnly
+                                  className="font-mono text-xs"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={handleCopyPixCodeAlt}
+                                  className="shrink-0"
+                                >
+                                  {copiedCodeAlt ? (
+                                    <Check className="h-4 w-4 text-success" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="animate-pulse space-y-2">
+                            <QrCode className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                            <p className="text-sm text-muted-foreground">
+                              Gerando QR Code PIX...
+                            </p>
+                            <p className="text-xs text-muted-foreground/70">
+                              Isso pode levar alguns segundos
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="city-alt">
+                    Cidade em que reside <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="city-alt"
+                    placeholder="Ex: São Paulo"
+                    value={cityAlt}
+                    onChange={(e) => setCityAlt(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bank-alt">
+                    Instituição Bancária <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={bankAlt} onValueChange={setBankAlt}>
+                    <SelectTrigger id="bank-alt">
+                      <SelectValue placeholder="Selecione o banco" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BRAZILIAN_BANKS.map((bankOption) => (
+                        <SelectItem key={bankOption.value} value={bankOption.value}>
+                          {bankOption.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {bankAlt === 'outro' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-bank-alt">
+                      Nome do Banco <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="custom-bank-alt"
+                      placeholder="Digite o nome da instituição"
+                      value={customBankAlt}
+                      onChange={(e) => setCustomBankAlt(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="pix-type-alt">
+                      Tipo de Chave <span className="text-destructive">*</span>
+                    </Label>
+                    <Select 
+                      value={keyTypeAlt} 
+                      onValueChange={(value) => {
+                        setKeyTypeAlt(value as PixKeyType);
+                        setKeyValueAlt('');
+                      }}
+                    >
+                      <SelectTrigger id="pix-type-alt">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="email">E-mail</SelectItem>
+                        <SelectItem value="cpf">CPF</SelectItem>
+                        <SelectItem value="cnpj">CNPJ</SelectItem>
+                        <SelectItem value="telefone">Telefone</SelectItem>
+                        <SelectItem value="random">Chave Aleatória</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pix-key-alt">
+                      Chave PIX <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="pix-key-alt"
+                      placeholder={getKeyPlaceholder(keyTypeAlt)}
+                      value={keyValueAlt}
+                      onChange={(e) => handleKeyValueChangeAlt(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (alternativePixPayment) {
+                        setIsEditingAlt(false);
+                      } else {
+                        setShowAlternativeKey(false);
+                      }
+                    }}
+                    disabled={isUpdating}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={savePixConfigAlt} 
+                    disabled={isUpdating || !cityAlt || !bankAlt || !keyValueAlt || (bankAlt === 'outro' && !customBankAlt)} 
+                    className="flex-1"
+                  >
+                    {isUpdating ? "Salvando..." : "Salvar Chave PIX Alternativa"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dialog de Confirmação de Exclusão */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -760,6 +1211,91 @@ export function PixKeyForm() {
           </div>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowDetailsDialog(false)}>
+              Fechar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de Confirmação de Exclusão - Alternativa */}
+      <AlertDialog open={showDeleteDialogAlt} onOpenChange={setShowDeleteDialogAlt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Chave PIX Alternativa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir sua chave PIX alternativa? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePixKeyAlt}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de Detalhes - Alternativa */}
+      <AlertDialog open={showDetailsDialogAlt} onOpenChange={setShowDetailsDialogAlt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Detalhes da Chave PIX Alternativa
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="text-muted-foreground">Cidade</Label>
+              <p className="font-medium mt-1">{alternativePixPayment?.city || '-'}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Instituição Bancária</Label>
+              <p className="font-medium mt-1">{alternativePixPayment?.pix_bank_name || '-'}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Tipo de Chave</Label>
+              <p className="font-medium mt-1">{alternativePixPayment?.pix_key_type?.toUpperCase() || '-'}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Chave PIX</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded border break-all">
+                  {alternativePixPayment?.pix_key_value && alternativePixPayment?.pix_key_type 
+                    ? formatPixKeyForDisplay(alternativePixPayment.pix_key_value, alternativePixPayment.pix_key_type as PixKeyType)
+                    : '-'}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (alternativePixPayment?.pix_key_value) {
+                      navigator.clipboard.writeText(alternativePixPayment.pix_key_value);
+                      toast({
+                        title: "Copiado!",
+                        description: "Chave PIX copiada para a área de transferência",
+                      });
+                    }
+                  }}
+                >
+                  <Key className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            {alternativePixPayment?.created_at && (
+              <div>
+                <Label className="text-muted-foreground">Data de Criação</Label>
+                <p className="text-sm mt-1">
+                  {new Date(alternativePixPayment.created_at).toLocaleString('pt-BR')}
+                </p>
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowDetailsDialogAlt(false)}>
               Fechar
             </AlertDialogAction>
           </AlertDialogFooter>
