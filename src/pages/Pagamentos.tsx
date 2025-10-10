@@ -149,12 +149,11 @@ export default function Pagamentos() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <Sidebar />
-      
-      <div className="md:pl-64 pt-14">
-        <main className="p-4 md:p-8">
-          <div className="mb-3 md:mb-8">
-            <h1 className="text-xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">Pagamentos</h1>
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 p-4 md:p-6 md:ml-64 w-full min-w-0 space-y-4 md:space-y-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Pagamentos</h1>
             <p className="text-sm md:text-base text-muted-foreground">
               Gerencie cobranças, transferências e configure suas preferências de recebimento
             </p>
