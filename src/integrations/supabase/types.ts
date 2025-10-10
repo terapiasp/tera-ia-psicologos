@@ -280,6 +280,51 @@ export type Database = {
           },
         ]
       }
+      pix_codes: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          pix_code: string | null
+          pix_key_type: string
+          pix_key_value: string
+          qr_code_url: string | null
+          txid: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          pix_code?: string | null
+          pix_key_type: string
+          pix_key_value: string
+          qr_code_url?: string | null
+          txid: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          pix_code?: string | null
+          pix_key_type?: string
+          pix_key_value?: string
+          qr_code_url?: string | null
+          txid?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pix_payments: {
         Row: {
           amount: string
