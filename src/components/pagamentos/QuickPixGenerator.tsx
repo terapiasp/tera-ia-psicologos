@@ -26,28 +26,34 @@ export const QuickPixGenerator = () => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
-  // Fetch PIX keys (primary and alternative)
+  // Fetch PIX keys from pix_payments (chaves configuradas com pix_code)
   const { data: pixKeys } = useQuery({
-    queryKey: ['pix-keys-for-quick'],
+    queryKey: ['pix-keys-for-quick', profile?.user_id],
     queryFn: async () => {
+      if (!profile?.user_id) return [];
+      
       const { data, error } = await supabase
         .from('pix_payments')
-        .select('*')
+        .select('id, pix_key_type, pix_key_value, pix_code, receiver_name')
+        .eq('user_id', profile.user_id)
         .order('created_at', { ascending: true })
         .limit(2);
 
       if (error) throw error;
       return data || [];
     },
+    enabled: !!profile?.user_id,
   });
 
-  // Pre-select primary PIX key
+  // Pre-select primary PIX key and its pix_code
   useEffect(() => {
     if (pixKeys && pixKeys.length > 0 && !selectedKeyType) {
       const primaryKey = pixKeys[0];
-      setSelectedKeyType(primaryKey.pix_key_type || '');
-      setSelectedKeyValue(primaryKey.pix_key_value || '');
-      setSelectedPixCode(primaryKey.pix_code || '');
+      if (primaryKey.pix_code) {
+        setSelectedKeyType(primaryKey.pix_key_type || '');
+        setSelectedKeyValue(primaryKey.pix_key_value || '');
+        setSelectedPixCode(primaryKey.pix_code);
+      }
     }
   }, [pixKeys, selectedKeyType]);
 
@@ -72,7 +78,7 @@ export const QuickPixGenerator = () => {
   };
 
   const handleGenerate = () => {
-    if (!selectedKeyType || !selectedKeyValue || !amount) {
+    if (!selectedKeyType || !selectedKeyValue || !selectedPixCode || !amount) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha a chave PIX e o valor.",
@@ -80,6 +86,14 @@ export const QuickPixGenerator = () => {
       });
       return;
     }
+
+    console.log('Gerando PIX Rápido com:', {
+      pix_key_type: selectedKeyType,
+      pix_key_value: selectedKeyValue,
+      pix_code: selectedPixCode,
+      amount: parseFloat(amount),
+      description: description || undefined,
+    });
 
     createQuickPix.mutate({
       pix_key_type: selectedKeyType,
@@ -151,10 +165,11 @@ export const QuickPixGenerator = () => {
                 value={selectedKeyValue}
                 onValueChange={(value) => {
                   const selectedKey = pixKeys.find(k => k.pix_key_value === value);
-                  if (selectedKey) {
+                  if (selectedKey && selectedKey.pix_code) {
+                    console.log('Chave PIX selecionada:', selectedKey);
                     setSelectedKeyType(selectedKey.pix_key_type || '');
                     setSelectedKeyValue(selectedKey.pix_key_value || '');
-                    setSelectedPixCode(selectedKey.pix_code || '');
+                    setSelectedPixCode(selectedKey.pix_code);
                   }
                 }}
               >
