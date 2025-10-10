@@ -411,10 +411,10 @@ export function PixKeyForm() {
           {!isEditing && profile?.pix_key_value ? (
             // Estado Configurado - View compacto com QR Code
             <div className="space-y-6 animate-fade-in">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-success/10 border border-success/20 rounded-lg">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="p-2 bg-success/20 rounded-full shrink-0">
-                    <Key className="h-5 w-5 text-success" />
+              <div className="flex items-center justify-between gap-3 p-3 md:p-4 bg-success/10 border border-success/20 rounded-lg">
+                <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                  <div className="p-1.5 md:p-2 bg-success/20 rounded-full shrink-0">
+                    <Key className="h-4 w-4 md:h-5 md:w-5 text-success" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -429,33 +429,30 @@ export function PixKeyForm() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => setShowDetailsDialog(true)}
-                    className="flex-1 md:flex-none h-9"
+                    className="h-8 w-8 md:h-9 md:w-9"
                   >
-                    <Eye className="h-4 w-4 md:mr-0" />
-                    <span className="ml-2 md:hidden">Ver</span>
+                    <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => setIsEditing(true)}
-                    className="flex-1 md:flex-none h-9"
+                    className="h-8 w-8 md:h-9 md:w-9"
                   >
-                    <Edit className="h-4 w-4 md:mr-0" />
-                    <span className="ml-2 md:hidden">Editar</span>
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => setShowDeleteDialog(true)}
-                    className="flex-1 md:flex-none h-9 text-destructive hover:text-destructive"
+                    className="h-8 w-8 md:h-9 md:w-9 text-destructive hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4 md:mr-0" />
-                    <span className="ml-2 md:hidden">Excluir</span>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
