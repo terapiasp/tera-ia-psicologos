@@ -639,7 +639,7 @@ export function PixKeyForm() {
         <CardHeader className="p-4 md:p-6">
           <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
             <Key className="h-5 w-5" />
-            Configurar Chave PIX
+            Chave PIX Principal
           </CardTitle>
           <CardDescription className="text-sm">
             Configure sua chave PIX para receber pagamentos dos seus pacientes
