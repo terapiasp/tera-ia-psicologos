@@ -411,48 +411,51 @@ export function PixKeyForm() {
           {!isEditing && profile?.pix_key_value ? (
             // Estado Configurado - View compacto com QR Code
             <div className="space-y-6 animate-fade-in">
-              <div className="flex items-center justify-between p-4 bg-success/10 border border-success/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-success/20 rounded-full">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-success/10 border border-success/20 rounded-lg">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="p-2 bg-success/20 rounded-full shrink-0">
                     <Key className="h-5 w-5 text-success" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-foreground">Chave PIX Configurada</h4>
-                      <Badge variant="outline" className="bg-success/20 text-success border-success/30">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-semibold text-foreground text-sm md:text-base">Chave PIX Configurada</h4>
+                      <Badge variant="outline" className="bg-success/20 text-success border-success/30 text-xs">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
                         Ativa
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 truncate">
                       {profile.pix_bank_name} • {profile.pix_key_type?.toUpperCase()}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="sm"
                     onClick={() => setShowDetailsDialog(true)}
-                    className="h-9 w-9"
+                    className="flex-1 md:flex-none h-9"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 md:mr-0" />
+                    <span className="ml-2 md:hidden">Ver</span>
                   </Button>
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="sm"
                     onClick={() => setIsEditing(true)}
-                    className="h-9 w-9"
+                    className="flex-1 md:flex-none h-9"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 md:mr-0" />
+                    <span className="ml-2 md:hidden">Editar</span>
                   </Button>
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="sm"
                     onClick={() => setShowDeleteDialog(true)}
-                    className="h-9 w-9 text-destructive hover:text-destructive"
+                    className="flex-1 md:flex-none h-9 text-destructive hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 md:mr-0" />
+                    <span className="ml-2 md:hidden">Excluir</span>
                   </Button>
                 </div>
               </div>
