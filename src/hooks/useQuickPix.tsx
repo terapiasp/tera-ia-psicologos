@@ -49,6 +49,7 @@ export const useQuickPix = () => {
     mutationFn: async (data: {
       pix_key_type: string;
       pix_key_value: string;
+      pix_code: string;
       amount: number;
       description?: string;
     }) => {
@@ -72,6 +73,7 @@ export const useQuickPix = () => {
           txid,
           pix_key_type: data.pix_key_type,
           pix_key_value: data.pix_key_value,
+          pix_code: data.pix_code,
           amount: data.amount,
           description: data.description || null,
           type: 'quick',

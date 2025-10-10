@@ -22,6 +22,7 @@ export const QuickPixGenerator = () => {
   
   const [selectedKeyType, setSelectedKeyType] = useState("");
   const [selectedKeyValue, setSelectedKeyValue] = useState("");
+  const [selectedPixCode, setSelectedPixCode] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
@@ -46,6 +47,7 @@ export const QuickPixGenerator = () => {
       const primaryKey = pixKeys[0];
       setSelectedKeyType(primaryKey.pix_key_type || '');
       setSelectedKeyValue(primaryKey.pix_key_value || '');
+      setSelectedPixCode(primaryKey.pix_code || '');
     }
   }, [pixKeys, selectedKeyType]);
 
@@ -82,6 +84,7 @@ export const QuickPixGenerator = () => {
     createQuickPix.mutate({
       pix_key_type: selectedKeyType,
       pix_key_value: selectedKeyValue,
+      pix_code: selectedPixCode,
       amount: parseFloat(amount),
       description: description || undefined,
     });
@@ -151,6 +154,7 @@ export const QuickPixGenerator = () => {
                   if (selectedKey) {
                     setSelectedKeyType(selectedKey.pix_key_type || '');
                     setSelectedKeyValue(selectedKey.pix_key_value || '');
+                    setSelectedPixCode(selectedKey.pix_code || '');
                   }
                 }}
               >
