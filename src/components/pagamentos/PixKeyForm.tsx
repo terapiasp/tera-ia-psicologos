@@ -112,25 +112,14 @@ export function PixKeyForm() {
       case 'cpf':
         // Remove tudo que não é número
         cleaned = cleaned.replace(/\D/g, '');
-        // Aplica máscara XXX.XXX.XXX-XX
-        if (cleaned.length <= 11) {
-          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
-          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
-          cleaned = cleaned.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        }
-        return cleaned.slice(0, 14);
+        // Apenas números (sem formatação visual)
+        return cleaned.slice(0, 11);
       
       case 'cnpj':
         // Remove tudo que não é número
         cleaned = cleaned.replace(/\D/g, '');
-        // Aplica máscara XX.XXX.XXX/XXXX-XX
-        if (cleaned.length <= 14) {
-          cleaned = cleaned.replace(/(\d{2})(\d)/, '$1.$2');
-          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1.$2');
-          cleaned = cleaned.replace(/(\d{3})(\d)/, '$1/$2');
-          cleaned = cleaned.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
-        }
-        return cleaned.slice(0, 18);
+        // Apenas números (sem formatação visual)
+        return cleaned.slice(0, 14);
       
       case 'telefone':
         // Remove tudo que não é número
@@ -139,7 +128,7 @@ export function PixKeyForm() {
         if (cleaned.startsWith('55') && cleaned.length > 11) {
           cleaned = cleaned.slice(2);
         }
-        // Apenas DDD + número (11 dígitos)
+        // Apenas DDD + número (11 dígitos) sem +55
         return cleaned.slice(0, 11);
       
       case 'email':
@@ -153,17 +142,63 @@ export function PixKeyForm() {
     }
   };
   
-  // Função para preparar o valor para salvar no banco
-  const preparePixKeyForSave = (value: string, type: PixKeyType): string => {
-    if (type === 'telefone') {
-      const numbers = value.replace(/\D/g, '');
-      // Adiciona +55 se não tiver
-      if (!numbers.startsWith('55')) {
-        return '+55' + numbers;
-      }
-      return '+' + numbers;
+  // Formatação visual para exibição (com máscaras)
+  const formatPixKeyForDisplay = (value: string, type: PixKeyType): string => {
+    const cleaned = value.replace(/\D/g, '');
+    
+    switch (type) {
+      case 'cpf':
+        // XXX.XXX.XXX-XX
+        let cpf = cleaned;
+        cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+        cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+        cpf = cpf.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        return cpf;
+      
+      case 'cnpj':
+        // XX.XXX.XXX/XXXX-XX
+        let cnpj = cleaned;
+        cnpj = cnpj.replace(/(\d{2})(\d)/, '$1.$2');
+        cnpj = cnpj.replace(/(\d{3})(\d)/, '$1.$2');
+        cnpj = cnpj.replace(/(\d{3})(\d)/, '$1/$2');
+        cnpj = cnpj.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+        return cnpj;
+      
+      case 'telefone':
+        // Remove +55 e formata (XX) XXXXX-XXXX
+        const phone = cleaned.replace(/^55/, '');
+        return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      
+      case 'email':
+        return value;
+      
+      case 'random':
+        return value;
+      
+      default:
+        return value;
     }
-    return value;
+  };
+  
+  // Copiar valor da chave sem formatação
+  const getCopyablePixKey = (value: string, type: PixKeyType): string => {
+    switch (type) {
+      case 'cpf':
+      case 'cnpj':
+        // Apenas números
+        return value.replace(/\D/g, '');
+      case 'telefone':
+        // Apenas números sem +55
+        return value.replace(/\D/g, '').replace(/^55/, '');
+      case 'email':
+        // Normal com @
+        return value;
+      case 'random':
+        // Com hífens
+        return value;
+      default:
+        return value;
+    }
   };
 
   const validatePixKey = (value: string, type: PixKeyType): boolean => {
@@ -242,8 +277,8 @@ export function PixKeyForm() {
     try {
       const bankName = bank === 'outro' ? customBank : BRAZILIAN_BANKS.find(b => b.value === bank)?.label || bank;
       
-      // Preparar chave PIX para salvar (adiciona +55 para telefone)
-      const pixKeyToSave = preparePixKeyForSave(keyValue, keyType);
+      // Preparar chave PIX para salvar (sem +55, apenas números limpos)
+      const pixKeyToSave = keyValue;
       
       // Atualizar perfil
       await updateProfile({
@@ -377,6 +412,17 @@ export function PixKeyForm() {
     }
   };
 
+  const handleCopyPixKey = () => {
+    if (profile?.pix_key_value && profile?.pix_key_type) {
+      const copyableValue = getCopyablePixKey(profile.pix_key_value, profile.pix_key_type as PixKeyType);
+      navigator.clipboard.writeText(copyableValue);
+      toast({
+        title: "Chave copiada",
+        description: "A chave PIX foi copiada sem formatação",
+      });
+    }
+  };
+
   const getKeyPlaceholder = (type: PixKeyType) => {
     switch (type) {
       case 'cpf':
@@ -441,10 +487,10 @@ export function PixKeyForm() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleCopyPixKey}
                     className="h-8 w-8 md:h-9 md:w-9"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Copy className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
@@ -768,8 +814,10 @@ export function PixKeyForm() {
             <div>
               <Label className="text-muted-foreground">Chave PIX</Label>
               <div className="flex items-center gap-2 mt-1">
-                <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded border">
-                  {profile?.pix_key_value || '-'}
+                <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded border break-all">
+                  {profile?.pix_key_value && profile?.pix_key_type 
+                    ? formatPixKeyForDisplay(profile.pix_key_value, profile.pix_key_type as PixKeyType)
+                    : '-'}
                 </code>
                 <Button
                   variant="outline"
