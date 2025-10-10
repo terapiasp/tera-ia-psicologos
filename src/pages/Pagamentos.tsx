@@ -449,7 +449,6 @@ export default function Pagamentos() {
             {/* Configurações PIX Tab */}
             <TabsContent value="configuracoes" className="space-y-6">
               <PixKeyForm />
-              <PixQrCodeGenerator />
             </TabsContent>
           </Tabs>
         </main>
