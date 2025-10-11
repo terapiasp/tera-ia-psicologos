@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PixKeyForm } from "@/components/pagamentos/PixKeyForm";
 import { PixQrCodeGenerator } from "@/components/pagamentos/PixQrCodeGenerator";
 import { TransfersTable } from "@/components/pagamentos/TransfersTable";
-import { QuickPixGenerator } from "@/components/pagamentos/QuickPixGenerator";
+import { QuickPixBanner } from "@/components/pagamentos/QuickPixBanner";
 
 type FilterType = 'all' | 'pending' | 'paid';
 
@@ -237,7 +237,7 @@ export default function Pagamentos() {
 
             {/* Cobranças Tab */}
             <TabsContent value="cobrancas" className="space-y-4 md:space-y-6">
-              <QuickPixGenerator />
+              <QuickPixBanner />
               
               <Card>
                 <CardHeader className="p-4 md:p-6">
