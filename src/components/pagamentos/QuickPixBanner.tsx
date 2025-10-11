@@ -195,7 +195,7 @@ export function QuickPixBanner() {
       <div className="flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
+          <Zap className="h-5 w-5 text-green-600" />
           <h3 className="font-semibold text-foreground">PIX Rápido</h3>
         </div>
 
