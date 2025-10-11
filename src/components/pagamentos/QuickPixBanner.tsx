@@ -141,7 +141,7 @@ export function QuickPixBanner() {
                   R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
                 </span>
                 {quickPix.description && (
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 pointer-events-none">
                     {quickPix.description}
                   </Badge>
                 )}
@@ -173,7 +173,7 @@ export function QuickPixBanner() {
               <span className="text-2xl md:text-3xl font-bold text-foreground">
                 R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
               </span>
-              <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20">
+              <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 hover:bg-green-600/10 hover:text-green-600">
                 <Sparkles className="h-3 w-3" />
                 PIX Rápido
               </Badge>
