@@ -53,6 +53,22 @@ export function QuickPixBanner() {
     }
   }, [pixKeys, selectedPixKey]);
 
+  // Format PIX key display label
+  const formatPixKeyLabel = (key: any, index: number) => {
+    const priority = index === 0 ? "(principal)" : "(alternativa)";
+    const typeMap: Record<string, string> = {
+      cpf: "CPF",
+      cnpj: "CNPJ",
+      email: "Email",
+      telefone: "Telefone",
+      aleatoria: "Aleatória"
+    };
+    const type = typeMap[key.pix_key_type] || key.pix_key_type;
+    const institution = key.pix_bank_name || "Banco";
+    
+    return `${priority} ${type} ${institution}`;
+  };
+
   const handleSuggestedValueClick = (value: number) => {
     setSelectedAmount(value.toString());
     setCustomAmount(value.toString());
@@ -236,9 +252,9 @@ export function QuickPixBanner() {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {pixKeys.map((key) => (
+                {pixKeys.map((key, index) => (
                   <SelectItem key={key.id} value={key.pix_key_value}>
-                    {key.receiver_name || key.pix_key_value.substring(0, 20)}
+                    {formatPixKeyLabel(key, index)}
                   </SelectItem>
                 ))}
               </SelectContent>
