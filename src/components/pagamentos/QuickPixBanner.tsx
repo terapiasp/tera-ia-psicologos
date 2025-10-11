@@ -277,12 +277,17 @@ export function QuickPixBanner() {
 
           {/* Description */}
           <div className="md:col-span-4">
-            <label className="text-xs text-muted-foreground mb-1 block">Descrição (opcional)</label>
+            <label className="text-xs text-muted-foreground mb-1 block">
+              Descrição (opcional) 
+              <span className="ml-2 text-xs">
+                {description.length}/25
+              </span>
+            </label>
             <Input
-              placeholder="Ex: Sessão de terapia"
+              placeholder="Ex: Sessão de terapia (até 25 caracteres)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              maxLength={40}
+              maxLength={25}
               className="h-9"
             />
           </div>
