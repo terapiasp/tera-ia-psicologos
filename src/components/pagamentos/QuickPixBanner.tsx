@@ -34,7 +34,7 @@ export function QuickPixBanner() {
       
       const { data, error } = await supabase
         .from('pix_payments')
-        .select('id, pix_key_type, pix_key_value, pix_code, receiver_name')
+        .select('id, pix_key_type, pix_key_value, pix_code, receiver_name, pix_bank_name')
         .eq('user_id', profile.user_id)
         .not('pix_code', 'is', null)
         .order('created_at', { ascending: true })
