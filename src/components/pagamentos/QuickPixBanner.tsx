@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 export function QuickPixBanner() {
   const { profile } = useProfile();
   const { quickPix, createQuickPix, deleteQuickPix } = useQuickPix();
-  const { getCommonValues } = useSessionValues();
+  const { getSuggestedValues } = useSessionValues();
   const { toast } = useToast();
 
   const [selectedAmount, setSelectedAmount] = useState("");
@@ -24,7 +24,7 @@ export function QuickPixBanner() {
   const [description, setDescription] = useState("");
   const [selectedPixKey, setSelectedPixKey] = useState<any>(null);
 
-  const suggestedValues = getCommonValues();
+  const suggestedValues = getSuggestedValues();
 
   // Fetch configured PIX keys
   const { data: pixKeys } = useQuery({
@@ -55,7 +55,7 @@ export function QuickPixBanner() {
 
   const handleSuggestedValueClick = (value: number) => {
     setSelectedAmount(value.toString());
-    setCustomAmount("");
+    setCustomAmount(value.toString());
   };
 
   const handleCustomAmountChange = (value: string) => {
@@ -199,20 +199,22 @@ export function QuickPixBanner() {
           <h3 className="font-semibold text-foreground">PIX Rápido</h3>
         </div>
 
-        {/* Suggested values */}
+        {/* Suggested values - Up to 6, wrapped in 2 rows on mobile */}
         {suggestedValues.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-muted-foreground shrink-0">Valores comuns:</span>
-            {suggestedValues.slice(0, 4).map((item) => (
-              <Badge
-                key={item.value}
-                variant={selectedAmount === item.value.toString() ? "default" : "outline"}
-                className="cursor-pointer hover:bg-primary/20 transition-colors"
-                onClick={() => handleSuggestedValueClick(item.value)}
-              >
-                R$ {item.value}
-              </Badge>
-            ))}
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-muted-foreground">Valores comuns:</span>
+            <div className="grid grid-cols-3 md:flex md:flex-wrap gap-2">
+              {suggestedValues.map((value) => (
+                <Badge
+                  key={value}
+                  variant={selectedAmount === value.toString() ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-primary/20 transition-colors text-center justify-center"
+                  onClick={() => handleSuggestedValueClick(value)}
+                >
+                  R$ {value}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
 

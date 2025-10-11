@@ -61,9 +61,28 @@ export const useSessionValues = () => {
     enabled: !!user?.id,
   });
 
-  // Get common session values (most frequently used)
-  const getCommonValues = () => {
-    return sessionValues.slice(0, 5); // Top 5 most used values
+  // Get suggested values for Quick PIX
+  const getSuggestedValues = () => {
+    if (sessionValues.length === 0) return [];
+    
+    const suggestions = new Set<number>();
+    
+    // Add top 2 most used values
+    const topValues = sessionValues.slice(0, 2);
+    topValues.forEach(item => suggestions.add(item.value));
+    
+    // Get the most used value as base
+    const baseValue = sessionValues[0].value;
+    
+    // Add multiples: x2, x4, x8
+    suggestions.add(baseValue * 2);
+    suggestions.add(baseValue * 4);
+    suggestions.add(baseValue * 8);
+    
+    // Convert to sorted array and limit to 6
+    return Array.from(suggestions)
+      .sort((a, b) => a - b)
+      .slice(0, 6);
   };
 
   // Get next/previous value for navigation
@@ -94,7 +113,7 @@ export const useSessionValues = () => {
   return {
     sessionValues,
     isLoading,
-    getCommonValues,
+    getSuggestedValues,
     getNavigationValue,
   };
 };
