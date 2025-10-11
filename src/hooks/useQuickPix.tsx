@@ -42,6 +42,11 @@ export const useQuickPix = () => {
       return data as QuickPixCode | null;
     },
     enabled: !!user?.id,
+    // Refetch every 2 seconds if QR code is not ready yet
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      return data && !data.qr_code_url ? 2000 : false;
+    },
   });
 
   // Create new quick PIX (deletes previous if exists)

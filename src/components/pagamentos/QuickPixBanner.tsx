@@ -121,10 +121,40 @@ export function QuickPixBanner() {
     );
   }
 
-  // PIX generated - Show static preview
+  // PIX generated - Show preview or loading
   if (quickPix) {
+    // Still waiting for n8n to generate QR code
+    const isWaitingForQrCode = !quickPix.qr_code_url;
+    
+    if (isWaitingForQrCode) {
+      return (
+        <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-border/50 rounded-lg p-6 mb-4 md:mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex flex-col items-center justify-center gap-4 py-8">
+            <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">Gerando QR Code PIX...</h3>
+              <p className="text-sm text-muted-foreground">
+                Estamos processando sua solicitação. Aguarde alguns instantes.
+              </p>
+              <div className="flex items-center gap-2 justify-center mt-4">
+                <span className="text-2xl font-bold text-foreground">
+                  R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
+                </span>
+                {quickPix.description && (
+                  <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 pointer-events-none">
+                    {quickPix.description}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // QR Code ready - show complete preview
     return (
-      <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-border/50 rounded-lg p-4 mb-4 md:mb-6">
+      <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-border/50 rounded-lg p-4 mb-4 md:mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           {/* QR Code */}
           {quickPix.qr_code_url && (
@@ -143,7 +173,7 @@ export function QuickPixBanner() {
               <span className="text-2xl md:text-3xl font-bold text-foreground">
                 R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
               </span>
-              <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 pointer-events-none">
+              <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 hover:bg-green-600/10 hover:text-green-600">
                 <Sparkles className="h-3 w-3" />
                 PIX Rápido
               </Badge>
