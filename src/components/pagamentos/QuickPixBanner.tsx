@@ -250,7 +250,7 @@ export function QuickPixBanner() {
                   
                   return (
                     <SelectItem key={key.id} value={key.pix_key_value}>
-                      <span className="font-bold">{priority}</span> {type} {institution}
+                      <span className="font-semibold">{priority}</span> {type} {institution}
                     </SelectItem>
                   );
                 })}
