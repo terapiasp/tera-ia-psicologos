@@ -284,7 +284,7 @@ export function QuickPixBanner() {
               </span>
             </label>
             <Input
-              placeholder="Ex: Sessão de terapia (até 25 caracteres)"
+              placeholder="Ex: Sessão de terapia"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={25}
