@@ -121,35 +121,51 @@ export function QuickPixBanner() {
     );
   }
 
-  // PIX generated - Show complete view
+  // PIX generated - Show preview or loading
   if (quickPix) {
-    const hasQrCode = !!quickPix.qr_code_url;
-    const createdAt = new Date(quickPix.created_at).getTime();
-    const now = Date.now();
-    const elapsedMinutes = (now - createdAt) / (1000 * 60);
-    const isGeneratingQrCode = !hasQrCode && elapsedMinutes < 2;
+    // Still waiting for n8n to generate QR code
+    const isWaitingForQrCode = !quickPix.qr_code_url;
+    
+    if (isWaitingForQrCode) {
+      return (
+        <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-border/50 rounded-lg p-6 mb-4 md:mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex flex-col items-center justify-center gap-4 py-8">
+            <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">Gerando QR Code PIX...</h3>
+              <p className="text-sm text-muted-foreground">
+                Estamos processando sua solicitação. Aguarde alguns instantes.
+              </p>
+              <div className="flex items-center gap-2 justify-center mt-4">
+                <span className="text-2xl font-bold text-foreground">
+                  R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
+                </span>
+                {quickPix.description && (
+                  <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 pointer-events-none">
+                    {quickPix.description}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
+    // QR Code ready - show complete preview
     return (
       <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-border/50 rounded-lg p-4 mb-4 md:mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-          {/* QR Code or Loading */}
-          <div className="shrink-0">
-            {hasQrCode ? (
+          {/* QR Code */}
+          {quickPix.qr_code_url && (
+            <div className="shrink-0">
               <img 
                 src={quickPix.qr_code_url} 
                 alt="QR Code PIX" 
                 className="w-24 h-24 md:w-28 md:h-28 rounded-md border border-border"
               />
-            ) : isGeneratingQrCode ? (
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-md border border-border bg-muted flex items-center justify-center">
-                <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
-              </div>
-            ) : (
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-md border border-border bg-muted flex items-center justify-center">
-                <DollarSign className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Info */}
           <div className="flex-1 space-y-2 min-w-0">
@@ -164,12 +180,6 @@ export function QuickPixBanner() {
             </div>
             {quickPix.description && (
               <p className="text-sm text-muted-foreground">{quickPix.description}</p>
-            )}
-            {isGeneratingQrCode && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Gerando QR Code...
-              </p>
             )}
             <div className="flex items-center gap-2 flex-wrap">
               <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all max-w-full">
