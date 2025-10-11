@@ -42,17 +42,17 @@ export const useQuickPix = () => {
       return data as QuickPixCode | null;
     },
     enabled: !!user?.id,
-    // Refetch every 2 seconds if QR code is not ready yet, but only for 30 seconds max
+    // Only refetch if QR code is missing AND was created recently (less than 2 minutes ago)
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data || data.qr_code_url) return false;
       
-      // Stop refetching after 30 seconds (created_at + 30s)
       const createdAt = new Date(data.created_at).getTime();
       const now = Date.now();
-      const elapsedSeconds = (now - createdAt) / 1000;
+      const elapsedMinutes = (now - createdAt) / (1000 * 60);
       
-      return elapsedSeconds < 30 ? 2000 : false;
+      // Only refetch for the first 2 minutes
+      return elapsedMinutes < 2 ? 2000 : false;
     },
   });
 
