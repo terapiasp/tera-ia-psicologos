@@ -126,27 +126,50 @@ export function QuickPixBanner() {
     // Still waiting for n8n to generate QR code
     const isWaitingForQrCode = !quickPix.qr_code_url;
     
+    // Check if waiting too long (more than 30 seconds)
+    const createdAt = new Date(quickPix.created_at).getTime();
+    const now = Date.now();
+    const elapsedSeconds = (now - createdAt) / 1000;
+    const isTimedOut = elapsedSeconds > 30;
+    
     if (isWaitingForQrCode) {
       return (
         <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-border/50 rounded-lg p-6 mb-4 md:mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex flex-col items-center justify-center gap-4 py-8">
-            <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">Gerando QR Code PIX...</h3>
-              <p className="text-sm text-muted-foreground">
-                Estamos processando sua solicitação. Aguarde alguns instantes.
-              </p>
-              <div className="flex items-center gap-2 justify-center mt-4">
-                <span className="text-2xl font-bold text-foreground">
-                  R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
-                </span>
-                {quickPix.description && (
-                  <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 pointer-events-none">
-                    {quickPix.description}
-                  </Badge>
-                )}
-              </div>
-            </div>
+            {!isTimedOut ? (
+              <>
+                <Loader2 className="h-12 w-12 text-green-600 animate-spin" />
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-semibold text-foreground">Gerando QR Code PIX...</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Estamos processando sua solicitação. Aguarde alguns instantes.
+                  </p>
+                  <div className="flex items-center gap-2 justify-center mt-4">
+                    <span className="text-2xl font-bold text-foreground">
+                      R$ {parseFloat(String(quickPix.amount || "0")).toFixed(2)}
+                    </span>
+                    {quickPix.description && (
+                      <Badge variant="secondary" className="gap-1 bg-green-600/10 text-green-600 border-green-600/20 pointer-events-none">
+                        {quickPix.description}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <X className="h-12 w-12 text-destructive" />
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-semibold text-foreground">Tempo limite excedido</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Não foi possível gerar o QR Code. Tente novamente.
+                  </p>
+                </div>
+                <Button onClick={handleNewGeneration} variant="outline">
+                  Tentar Novamente
+                </Button>
+              </>
+            )}
           </div>
         </div>
       );
