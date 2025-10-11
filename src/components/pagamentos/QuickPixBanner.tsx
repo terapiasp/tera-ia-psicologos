@@ -237,7 +237,7 @@ export function QuickPixBanner() {
               </SelectTrigger>
               <SelectContent>
                 {pixKeys.map((key, index) => {
-                  const priority = index === 0 ? "(principal)" : "(alternativa)";
+                  const priority = index === 0 ? "principal" : "alternativa";
                   const typeMap: Record<string, string> = {
                     cpf: "CPF",
                     cnpj: "CNPJ",
