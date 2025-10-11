@@ -23,6 +23,7 @@ export function QuickPixBanner() {
   const [customAmount, setCustomAmount] = useState("");
   const [description, setDescription] = useState("");
   const [selectedPixKey, setSelectedPixKey] = useState<any>(null);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const suggestedValues = getSuggestedValues();
 
@@ -52,6 +53,43 @@ export function QuickPixBanner() {
       setSelectedPixKey(pixKeys[0]);
     }
   }, [pixKeys, selectedPixKey]);
+
+  // Timeout for QR Code generation - 10 seconds
+  useEffect(() => {
+    if (quickPix && !quickPix.qr_code_url) {
+      // Clear any existing timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Set new timeout
+      const newTimeoutId = setTimeout(() => {
+        toast({
+          title: "Tempo esgotado",
+          description: "O QR Code não foi gerado. Tente novamente.",
+          variant: "destructive",
+        });
+        
+        // Delete the PIX code and reset form
+        if (quickPix?.id) {
+          deleteQuickPix.mutate(quickPix.id);
+        }
+      }, 10000); // 10 seconds
+
+      setTimeoutId(newTimeoutId);
+
+      // Cleanup
+      return () => {
+        if (newTimeoutId) {
+          clearTimeout(newTimeoutId);
+        }
+      };
+    } else if (quickPix && quickPix.qr_code_url && timeoutId) {
+      // QR Code generated successfully, clear timeout
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
+  }, [quickPix, quickPix?.qr_code_url]);
 
   const handleSuggestedValueClick = (value: number) => {
     setSelectedAmount(value.toString());
