@@ -26,22 +26,32 @@ export function QuickPixBanner() {
 
   const suggestedValues = getSuggestedValues();
 
-  // Fetch configured PIX keys
+  // Fetch configured PIX key from profile
   const { data: pixKeys } = useQuery({
-    queryKey: ['pix-keys-configured', profile?.user_id],
+    queryKey: ['pix-keys-profile', profile?.user_id],
     queryFn: async () => {
       if (!profile?.user_id) return [];
       
       const { data, error } = await supabase
-        .from('pix_payments')
-        .select('id, pix_key_type, pix_key_value, pix_code, receiver_name, pix_bank_name')
+        .from('profiles')
+        .select('pix_key_type, pix_key_value, pix_bank_name')
         .eq('user_id', profile.user_id)
-        .not('pix_code', 'is', null)
-        .order('created_at', { ascending: true })
-        .limit(3);
+        .not('pix_key_value', 'is', null)
+        .single();
 
       if (error) throw error;
-      return data || [];
+      
+      // Return as array with single configured PIX key
+      if (data && data.pix_key_value) {
+        return [{
+          id: 'profile-pix',
+          pix_key_type: data.pix_key_type,
+          pix_key_value: data.pix_key_value,
+          pix_bank_name: data.pix_bank_name,
+        }];
+      }
+      
+      return [];
     },
     enabled: !!profile?.user_id,
   });
@@ -64,7 +74,7 @@ export function QuickPixBanner() {
   };
 
   const handleGenerate = () => {
-    if (!selectedPixKey?.pix_code || !selectedAmount) {
+    if (!selectedPixKey || !selectedAmount) {
       toast({
         title: "Campos obrigatórios",
         description: "Selecione uma chave PIX e informe o valor.",
@@ -73,10 +83,13 @@ export function QuickPixBanner() {
       return;
     }
 
+    // Use the static PIX code from profile
+    const pixCode = profile?.pix_key_value || selectedPixKey.pix_key_value;
+    
     createQuickPix.mutate({
       pix_key_type: selectedPixKey.pix_key_type,
       pix_key_value: selectedPixKey.pix_key_value,
-      pix_code: selectedPixKey.pix_code,
+      pix_code: pixCode,
       amount: parseFloat(selectedAmount),
       description: description || undefined,
     });
@@ -222,7 +235,7 @@ export function QuickPixBanner() {
 
         {/* Form */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-          {/* PIX Key selector */}
+          {/* PIX Key - always show as principal since it's from profile */}
           <div className="md:col-span-3">
             <label className="text-xs text-muted-foreground mb-1 block">Chave PIX</label>
             <Select
@@ -236,8 +249,7 @@ export function QuickPixBanner() {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {pixKeys.map((key, index) => {
-                  const priority = index === 0 ? "principal" : "alternativa";
+                {pixKeys.map((key) => {
                   const typeMap: Record<string, string> = {
                     cpf: "CPF",
                     cnpj: "CNPJ",
@@ -250,7 +262,7 @@ export function QuickPixBanner() {
                   
                   return (
                     <SelectItem key={key.id} value={key.pix_key_value}>
-                      <span className="font-semibold">{priority}</span> {type} {institution}
+                      <span className="font-semibold">principal</span> {type} {institution}
                     </SelectItem>
                   );
                 })}
