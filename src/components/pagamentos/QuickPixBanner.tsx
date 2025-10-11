@@ -279,7 +279,7 @@ export function QuickPixBanner() {
             <Button
               onClick={handleGenerate}
               disabled={!selectedPixKey || !selectedAmount || createQuickPix.isPending}
-              className="w-full h-9"
+              className="w-full h-9 bg-green-600 hover:bg-green-700 text-white"
             >
               <Zap className="h-4 w-4 mr-2" />
               {createQuickPix.isPending ? "Gerando..." : "Gerar PIX"}
